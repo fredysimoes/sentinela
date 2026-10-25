@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  Platform,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
@@ -322,13 +324,26 @@ export default function App() {
         console.warn('Erro ao subscrever watchPosition:', err);
       }
 
-      // 6. Watch compass / gyroscope orientation heading
+      // 6. Watch compass / gyroscope orientation heading (throttled to keep 60 FPS)
       try {
+        let lastHeadingTime = 0;
+        let lastHeadingVal = 0;
+
         headingSubscription = await Location.watchHeadingAsync((headingData) => {
           const heading =
             headingData.trueHeading >= 0 ? headingData.trueHeading : headingData.magHeading;
           if (typeof heading === 'number' && !isNaN(heading)) {
-            setUserHeading(Math.round(heading));
+            const rounded = Math.round(heading);
+            const now = Date.now();
+            const diff = Math.abs(rounded - lastHeadingVal);
+            const wrappedDiff = Math.min(diff, 360 - diff);
+
+            // Throttle: only update state if 150ms has elapsed AND heading changed by at least 2.5 degrees
+            if (now - lastHeadingTime >= 150 && wrappedDiff >= 2.5) {
+              lastHeadingTime = now;
+              lastHeadingVal = rounded;
+              setUserHeading(rounded);
+            }
           }
         });
       } catch (err) {
@@ -848,6 +863,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#0F172A',
+    paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 0,
   },
   header: {
     flexDirection: 'row',
@@ -948,12 +964,12 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     position: 'absolute',
-    bottom: 24,
-    left: 16,
-    right: 16,
+    bottom: Platform.OS === 'android' ? 24 : 20,
+    left: 14,
+    right: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   reportBtn: {
     flex: 1,

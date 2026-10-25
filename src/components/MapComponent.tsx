@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo, memo } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,6 +12,89 @@ import { PedestrianRoute } from '../types/navigation';
 import { CATEGORIES } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
+
+// -------------------------------------------------------------
+// High Performance Memoized Markers (prevents re-rendering 500 views)
+// -------------------------------------------------------------
+const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  const status = place.pharmacyStatus || getPharmacyStatus(place);
+  return (
+    <Marker
+      coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+      onPress={onSelect}
+      tracksViewChanges={false}
+    >
+      <View style={styles.pharmacyPinContainer}>
+        <View
+          style={[
+            styles.pharmacyRing,
+            {
+              borderColor: status.ringColor,
+              shadowColor: status.ringColor,
+              backgroundColor: status.isOpen
+                ? 'rgba(34, 197, 94, 0.2)'
+                : 'rgba(239, 68, 68, 0.15)',
+            },
+          ]}
+        >
+          <View style={styles.pharmacyInnerCore}>
+            <Ionicons name="medical" size={17} color={status.ringColor} />
+          </View>
+        </View>
+        <View style={[styles.pharmacyBadge, { backgroundColor: status.ringColor }]}>
+          <Text style={styles.pharmacyBadgeText}>{status.badgeText}</Text>
+        </View>
+      </View>
+    </Marker>
+  );
+});
+
+const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  const isPSP = place.type === 'psp';
+  const isGNR = place.type === 'gnr';
+  const policeColor = isPSP ? '#3B82F6' : isGNR ? '#10B981' : '#6366F1';
+  const policeTag = isPSP ? 'PSP' : isGNR ? 'GNR' : 'PJ';
+  const policeIcon = isPSP ? 'shield-sharp' : isGNR ? 'shield-checkmark' : 'briefcase';
+
+  return (
+    <Marker
+      coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+      onPress={onSelect}
+      tracksViewChanges={false}
+    >
+      <View style={[styles.policePin, { borderColor: policeColor }]}>
+        <View style={[styles.policeIconWrap, { backgroundColor: policeColor }]}>
+          <Ionicons name={policeIcon as any} size={15} color="#FFFFFF" />
+        </View>
+        <View style={[styles.policeBadge, { backgroundColor: policeColor }]}>
+          <Text style={styles.policeBadgeText}>{policeTag}</Text>
+        </View>
+      </View>
+    </Marker>
+  );
+});
+
+const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSelect: () => void }) => {
+  const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
+  return (
+    <Marker
+      coordinate={{ latitude: incident.latitude, longitude: incident.longitude }}
+      onPress={onSelect}
+      tracksViewChanges={false}
+    >
+      <View style={[styles.markerPin, { borderColor: meta.color }]}>
+        <View style={[styles.markerIconWrap, { backgroundColor: meta.color }]}>
+          <Ionicons name={meta.icon as any} size={16} color="#FFFFFF" />
+        </View>
+        {incident.confirmations > 0 && (
+          <View style={styles.votesBadge}>
+            <Text style={styles.votesBadgeText}>{incident.confirmations}</Text>
+          </View>
+        )}
+      </View>
+    </Marker>
+  );
+});
 
 interface MapComponentProps {
   userLocation: UserLocation | null;
@@ -30,7 +113,7 @@ interface MapComponentProps {
   pickingLocation?: boolean;
 }
 
-export const MapComponent: React.FC<MapComponentProps> = ({
+export const MapComponent: React.FC<MapComponentProps> = memo(({
   userLocation,
   userHeading = 0,
   incidents,
@@ -188,29 +271,30 @@ export const MapComponent: React.FC<MapComponentProps> = ({
     }
   };
 
-  // Filter incidents
-  const showIncidents =
-    selectedCategoryFilter === 'all' ||
-    (selectedCategoryFilter !== 'police' && selectedCategoryFilter !== 'pharmacy');
-
-  const filteredIncidents = showIncidents
-    ? incidents.filter((item) => {
-        if (selectedCategoryFilter === 'all') return true;
-        return item.category === selectedCategoryFilter;
-      })
-    : [];
-
-  // Filter safe places (Police vs Pharmacies)
-  const filteredSafePlaces = safePlaces.filter((place) => {
-    if (selectedCategoryFilter === 'all') return true;
+  // Memoized filter of safe places (limits visible markers to 60 to prevent Android frame drops)
+  const filteredSafePlaces = useMemo(() => {
     if (selectedCategoryFilter === 'police') {
-      return place.type === 'psp' || place.type === 'gnr' || place.type === 'pj';
+      return safePlaces.filter((p) => p.type === 'psp' || p.type === 'gnr' || p.type === 'pj');
     }
     if (selectedCategoryFilter === 'pharmacy') {
-      return place.type === 'pharmacy';
+      return safePlaces.filter((p) => p.type === 'pharmacy').slice(0, 50);
     }
-    return false;
-  });
+    // 'all': Show all police stations + nearest 35 pharmacies
+    const police = safePlaces.filter((p) => p.type === 'psp' || p.type === 'gnr' || p.type === 'pj');
+    const pharmacies = safePlaces.filter((p) => p.type === 'pharmacy').slice(0, 35);
+    return [...police, ...pharmacies];
+  }, [safePlaces, selectedCategoryFilter]);
+
+  // Memoized filter of incidents
+  const filteredIncidents = useMemo(() => {
+    const showIncidents =
+      selectedCategoryFilter === 'all' ||
+      (selectedCategoryFilter !== 'police' && selectedCategoryFilter !== 'pharmacy');
+
+    if (!showIncidents) return [];
+    if (selectedCategoryFilter === 'all') return incidents;
+    return incidents.filter((item) => item.category === selectedCategoryFilter);
+  }, [incidents, selectedCategoryFilter]);
 
   return (
     <View style={styles.container}>
@@ -336,107 +420,32 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         {/* Safe Places (Police Stations & Pharmacies) */}
         {filteredSafePlaces.map((place) => {
           if (place.type === 'pharmacy') {
-            const status = place.pharmacyStatus || getPharmacyStatus(place);
             return (
-              <Marker
+              <PharmacyMarker
                 key={place.id}
-                coordinate={{
-                  latitude: place.latitude,
-                  longitude: place.longitude,
-                }}
-                onPress={() => onSelectSafePlace(place)}
-                tracksViewChanges={false}
-              >
-                <View style={styles.pharmacyPinContainer}>
-                  {/* Status Indicator Outer Ring */}
-                  <View
-                    style={[
-                      styles.pharmacyRing,
-                      {
-                        borderColor: status.ringColor,
-                        shadowColor: status.ringColor,
-                        backgroundColor: status.isOpen
-                          ? 'rgba(34, 197, 94, 0.2)'
-                          : 'rgba(239, 68, 68, 0.15)',
-                      },
-                    ]}
-                  >
-                    <View style={styles.pharmacyInnerCore}>
-                      <Ionicons name="medical" size={17} color={status.ringColor} />
-                    </View>
-                  </View>
-
-                  {/* Status Badge Tag */}
-                  <View
-                    style={[
-                      styles.pharmacyBadge,
-                      {
-                        backgroundColor: status.ringColor,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.pharmacyBadgeText}>{status.badgeText}</Text>
-                  </View>
-                </View>
-              </Marker>
+                place={place}
+                onSelect={() => onSelectSafePlace(place)}
+              />
             );
           }
 
-          // Police Markers (PSP, GNR, PJ)
-          const isPSP = place.type === 'psp';
-          const isGNR = place.type === 'gnr';
-          const policeColor = isPSP ? '#3B82F6' : isGNR ? '#10B981' : '#6366F1';
-          const policeTag = isPSP ? 'PSP' : isGNR ? 'GNR' : 'PJ';
-          const policeIcon = isPSP ? 'shield-sharp' : isGNR ? 'shield-checkmark' : 'briefcase';
-
           return (
-            <Marker
+            <PoliceMarker
               key={place.id}
-              coordinate={{
-                latitude: place.latitude,
-                longitude: place.longitude,
-              }}
-              onPress={() => onSelectSafePlace(place)}
-              tracksViewChanges={false}
-            >
-              <View style={[styles.policePin, { borderColor: policeColor }]}>
-                <View style={[styles.policeIconWrap, { backgroundColor: policeColor }]}>
-                  <Ionicons name={policeIcon as any} size={15} color="#FFFFFF" />
-                </View>
-                <View style={[styles.policeBadge, { backgroundColor: policeColor }]}>
-                  <Text style={styles.policeBadgeText}>{policeTag}</Text>
-                </View>
-              </View>
-            </Marker>
+              place={place}
+              onSelect={() => onSelectSafePlace(place)}
+            />
           );
         })}
 
         {/* Community Hazard Incidents */}
-        {filteredIncidents.map((incident) => {
-          const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
-          return (
-            <Marker
-              key={incident.id}
-              coordinate={{
-                latitude: incident.latitude,
-                longitude: incident.longitude,
-              }}
-              onPress={() => onSelectIncident(incident)}
-              tracksViewChanges={false}
-            >
-              <View style={[styles.markerPin, { borderColor: meta.color }]}>
-                <View style={[styles.markerIconWrap, { backgroundColor: meta.color }]}>
-                  <Ionicons name={meta.icon as any} size={16} color="#FFFFFF" />
-                </View>
-                {incident.confirmations > 0 && (
-                  <View style={styles.votesBadge}>
-                    <Text style={styles.votesBadgeText}>{incident.confirmations}</Text>
-                  </View>
-                )}
-              </View>
-            </Marker>
-          );
-        })}
+        {filteredIncidents.map((incident) => (
+          <IncidentMarker
+            key={incident.id}
+            incident={incident}
+            onSelect={() => onSelectIncident(incident)}
+          />
+        ))}
       </MapView>
 
       {/* Floating Map Controls Column (Compass, 3D/2D, Recenter) */}
@@ -505,7 +514,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
