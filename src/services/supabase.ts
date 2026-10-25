@@ -11,8 +11,11 @@ import { Incident, SOSAlert } from '../types';
  * 2. Project API anon key (ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...)
  * =========================================================================
  */
-export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://SUBSTITUA_PELO_SEU_PROJECT_URL.supabase.co';
-export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'SUBSTITUA_PELA_SUA_ANON_KEY';
+export const SUPABASE_URL =
+  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://luzkwitvodcheeurvgij.supabase.co';
+export const SUPABASE_ANON_KEY =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1emt3aXR2b2RjaGVldXJ2Z2lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MzU5NDcsImV4cCI6MjEwODUxMTk0N30.t9H1gV4r74wfyMhrN7grsToGMmGaEx_zSD-xy-8A0gY';
 
 export function isSupabaseConfigured(): boolean {
   return (
