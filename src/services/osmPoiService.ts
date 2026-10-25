@@ -1,0 +1,130 @@
+import { SafePlace, SafePlaceType } from '../types';
+import { parseOsmOpeningHours } from '../utils/pharmacySchedule';
+
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+];
+
+// In-memory cache by bounding box key to avoid redundant requests
+const CACHED_REGIONS: Map<string, SafePlace[]> = new Map();
+
+/**
+ * Dynamically queries OpenStreetMap Overpass API for real police stations and pharmacies
+ * in the user's visible map region (bounding box).
+ */
+export async function fetchOsmPlacesInBoundingBox(params: {
+  minLat: number;
+  minLon: number;
+  maxLat: number;
+  maxLon: number;
+}): Promise<SafePlace[]> {
+  const { minLat, minLon, maxLat, maxLon } = params;
+
+  // Round key to ~1km grid
+  const key = `${minLat.toFixed(2)},${minLon.toFixed(2)},${maxLat.toFixed(2)},${maxLon.toFixed(2)}`;
+  if (CACHED_REGIONS.has(key)) {
+    return CACHED_REGIONS.get(key)!;
+  }
+
+  const query = `[out:json][timeout:10];
+(
+  node["amenity"="police"](${minLat},${minLon},${maxLat},${maxLon});
+  node["amenity"="pharmacy"](${minLat},${minLon},${maxLat},${maxLon});
+);
+out center 60;`;
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      const resp = await fetch(endpoint + '?data=' + encodeURIComponent(query), {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'SentinelaPedestrianSafety/1.0',
+        },
+      });
+      clearTimeout(timeout);
+
+      if (!resp.ok) continue;
+
+      const data = await resp.json();
+      if (!data?.elements) continue;
+
+      const places: SafePlace[] = [];
+
+      for (const el of data.elements) {
+        const tags = el.tags || {};
+        const lat = el.lat || el.center?.lat;
+        const lon = el.lon || el.center?.lon;
+
+        if (!lat || !lon) continue;
+
+        if (tags.amenity === 'pharmacy') {
+          const rawName = tags.name || tags['name:pt'] || 'Farmácia';
+          const { hours, hoursDescription } = parseOsmOpeningHours(tags.opening_hours);
+          const street = tags['addr:street']
+            ? `${tags['addr:street']}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`
+            : 'Portugal';
+          const city = tags['addr:city'] || tags['addr:suburb'] || '';
+          const phone = tags.phone || tags['contact:phone'];
+
+          places.push({
+            id: `osm-pharm-${el.id}`,
+            type: 'pharmacy',
+            name: rawName,
+            address: street,
+            city: city || 'Local',
+            district: '',
+            phone,
+            latitude: lat,
+            longitude: lon,
+            hours,
+            hoursDescription,
+          });
+        } else if (tags.amenity === 'police') {
+          const nameLower = (tags.name || tags.operator || '').toLowerCase();
+          let type: SafePlaceType = 'psp';
+          if (nameLower.includes('gnr') || nameLower.includes('republicana')) {
+            type = 'gnr';
+          } else if (nameLower.includes('pj') || nameLower.includes('judiciária')) {
+            type = 'pj';
+          }
+
+          const rawName =
+            tags.name ||
+            (type === 'psp' ? 'Esquadra da PSP' : type === 'gnr' ? 'Posto da GNR' : 'Polícia Judiciária');
+
+          const street = tags['addr:street']
+            ? `${tags['addr:street']}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`
+            : 'Portugal';
+          const city = tags['addr:city'] || tags['addr:suburb'] || '';
+          const phone = tags.phone || tags['contact:phone'] || '112';
+
+          places.push({
+            id: `osm-police-${el.id}`,
+            type,
+            name: rawName,
+            address: street,
+            city: city || 'Local',
+            district: '',
+            phone,
+            latitude: lat,
+            longitude: lon,
+            hoursDescription: 'Atendimento Permanente 24 Horas',
+          });
+        }
+      }
+
+      CACHED_REGIONS.set(key, places);
+      return places;
+    } catch (e) {
+      // Try next mirror
+      continue;
+    }
+  }
+
+  return [];
+}

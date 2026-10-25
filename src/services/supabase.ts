@@ -1,0 +1,232 @@
+import { createClient, RealtimeChannel } from '@supabase/supabase-js';
+import { Incident, SOSAlert } from '../types';
+
+/**
+ * =========================================================================
+ * SUPABASE CONFIGURATION
+ * =========================================================================
+ * Substitua os valores abaixo pelos do seu projeto Supabase:
+ * Dashboard do Supabase -> Project Settings -> API:
+ * 1. Project URL (ex: https://xyzcompany.supabase.co)
+ * 2. Project API anon key (ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...)
+ * =========================================================================
+ */
+export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://SUBSTITUA_PELO_SEU_PROJECT_URL.supabase.co';
+export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'SUBSTITUA_PELA_SUA_ANON_KEY';
+
+export function isSupabaseConfigured(): boolean {
+  return (
+    Boolean(SUPABASE_URL) &&
+    Boolean(SUPABASE_ANON_KEY) &&
+    !SUPABASE_URL.includes('SUBSTITUA') &&
+    !SUPABASE_ANON_KEY.includes('SUBSTITUA')
+  );
+}
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+});
+
+/**
+ * Fetch all active community incidents from Supabase (ordered by most recent)
+ */
+export async function fetchOnlineIncidents(): Promise<Incident[]> {
+  if (!isSupabaseConfigured()) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('incidents')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error || !data) {
+      console.warn('Erro ao carregar incidentes do Supabase:', error);
+      return [];
+    }
+
+    return data.map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description || '',
+      category: row.category,
+      severity: row.severity,
+      latitude: parseFloat(row.latitude),
+      longitude: parseFloat(row.longitude),
+      createdAt: new Date(row.created_at).getTime(),
+      confirmations: row.confirmations || 1,
+      dismissals: row.dismissals || 0,
+      verified: row.verified || false,
+    }));
+  } catch (err) {
+    console.warn('Falha na ligação ao Supabase:', err);
+    return [];
+  }
+}
+
+/**
+ * Inserts a new community incident report into Supabase
+ */
+export async function createOnlineIncident(incident: Incident): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  try {
+    const { error } = await supabase.from('incidents').insert([
+      {
+        id: incident.id,
+        title: incident.title,
+        description: incident.description,
+        category: incident.category,
+        severity: incident.severity,
+        latitude: incident.latitude,
+        longitude: incident.longitude,
+        confirmations: incident.confirmations,
+        dismissals: incident.dismissals,
+        created_at: new Date(incident.createdAt).toISOString(),
+      },
+    ]);
+
+    if (error) {
+      console.warn('Erro ao guardar incidente no Supabase:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('Erro ao enviar incidente para Supabase:', err);
+    return false;
+  }
+}
+
+/**
+ * Confirms / Upvotes an incident in Supabase
+ */
+export async function confirmIncidentOnline(id: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  try {
+    const { error } = await supabase.rpc('increment_confirmations', { incident_id: id });
+    if (error) {
+      // Fallback direct update if RPC is not defined
+      const { data } = await supabase.from('incidents').select('confirmations').eq('id', id).single();
+      if (data) {
+        await supabase
+          .from('incidents')
+          .update({ confirmations: (data.confirmations || 0) + 1 })
+          .eq('id', id);
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Dismisses / Downvotes an incident in Supabase
+ */
+export async function dismissIncidentOnline(id: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  try {
+    const { data } = await supabase.from('incidents').select('dismissals').eq('id', id).single();
+    if (data) {
+      await supabase
+        .from('incidents')
+        .update({ dismissals: (data.dismissals || 0) + 1 })
+        .eq('id', id);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Broadcasts an active SOS emergency alert to the Supabase community
+ */
+export async function broadcastOnlineSOS(sos: SOSAlert): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  try {
+    const { error } = await supabase.from('sos_alerts').insert([
+      {
+        id: sos.id,
+        user_id: sos.userId,
+        user_name: sos.userName,
+        latitude: sos.latitude,
+        longitude: sos.longitude,
+        timestamp: new Date(sos.timestamp).toISOString(),
+        status: sos.status,
+      },
+    ]);
+
+    return !error;
+  } catch (err) {
+    console.warn('Erro ao transmitir SOS para Supabase:', err);
+    return false;
+  }
+}
+
+/**
+ * Subscribes to Realtime Incidents (new hazards and vote updates across all phones)
+ */
+export function subscribeToOnlineIncidents(onChange: () => void): RealtimeChannel | null {
+  if (!isSupabaseConfigured()) return null;
+
+  try {
+    const channel = supabase
+      .channel('public:incidents')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'incidents' },
+        () => {
+          onChange();
+        }
+      )
+      .subscribe();
+
+    return channel;
+  } catch (err) {
+    console.warn('Erro ao subscrever Realtime Supabase:', err);
+    return null;
+  }
+}
+
+/**
+ * Subscribes to Realtime SOS Alerts (emergencies happening right now near you)
+ */
+export function subscribeToOnlineSOS(onSOS: (sos: SOSAlert) => void): RealtimeChannel | null {
+  if (!isSupabaseConfigured()) return null;
+
+  try {
+    const channel = supabase
+      .channel('public:sos_alerts')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'sos_alerts' },
+        (payload) => {
+          const row = payload.new;
+          if (row) {
+            onSOS({
+              id: row.id,
+              userId: row.user_id,
+              userName: row.user_name || 'Utilizador Sentinela',
+              latitude: parseFloat(row.latitude),
+              longitude: parseFloat(row.longitude),
+              timestamp: new Date(row.timestamp).getTime(),
+              status: row.status || 'active',
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return channel;
+  } catch (err) {
+    console.warn('Erro ao subscrever SOS Realtime Supabase:', err);
+    return null;
+  }
+}

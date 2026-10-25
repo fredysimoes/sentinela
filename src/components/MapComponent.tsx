@@ -1,0 +1,836 @@
+import React, { useRef, useEffect } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
+import MapView, { Marker, Circle, Polyline } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
+import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace } from '../types';
+import { PedestrianRoute } from '../types/navigation';
+import { CATEGORIES } from '../constants/categories';
+import { SafePlaceWithDistance } from '../services/safePlacesService';
+import { getPharmacyStatus } from '../utils/pharmacySchedule';
+
+interface MapComponentProps {
+  userLocation: UserLocation | null;
+  userHeading?: number;
+  incidents: Incident[];
+  activeSOSAlerts: SOSAlert[];
+  safePlaces: SafePlaceWithDistance[];
+  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy';
+  activeRoute?: PedestrianRoute | null;
+  isNavigating?: boolean;
+  onSelectIncident: (incident: Incident) => void;
+  onSelectSafePlace: (place: SafePlace) => void;
+  onSelectSOS: (sos: SOSAlert) => void;
+  onMapLongPress?: (coordinate: { latitude: number; longitude: number }) => void;
+  onRegionChangeComplete?: (region: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }) => void;
+  pickingLocation?: boolean;
+}
+
+export const MapComponent: React.FC<MapComponentProps> = ({
+  userLocation,
+  userHeading = 0,
+  incidents,
+  activeSOSAlerts,
+  safePlaces,
+  selectedCategoryFilter,
+  activeRoute,
+  isNavigating = false,
+  onSelectIncident,
+  onSelectSafePlace,
+  onSelectSOS,
+  onMapLongPress,
+  onRegionChangeComplete,
+  pickingLocation = false,
+}) => {
+  const mapRef = useRef<MapView | null>(null);
+  const [is3DMode, setIs3DMode] = React.useState(false);
+  const [followHeading, setFollowHeading] = React.useState(false);
+  const [isUserInteracting, setIsUserInteracting] = React.useState(false);
+
+  const initialRegion = {
+    latitude: userLocation?.latitude ?? 38.7223,
+    longitude: userLocation?.longitude ?? -9.1393,
+    latitudeDelta: 0.012,
+    longitudeDelta: 0.012,
+  };
+
+  const isDriving = activeRoute?.mode === 'driving';
+  const navZoom = isDriving ? 17.5 : 18.5;
+
+  // When navigation starts, automatically activate 3D perspective and follow heading
+  useEffect(() => {
+    if (isNavigating) {
+      setIs3DMode(true);
+      setFollowHeading(true);
+      setIsUserInteracting(false);
+
+      if (userLocation && mapRef.current) {
+        mapRef.current.animateCamera(
+          {
+            center: {
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            },
+            pitch: 55,
+            heading: userHeading,
+            zoom: navZoom,
+          },
+          { duration: 800 }
+        );
+      }
+    } else {
+      // Reset pitch to 0 when exiting navigation
+      if (mapRef.current && userLocation) {
+        mapRef.current.animateCamera(
+          {
+            pitch: 0,
+            heading: 0,
+            zoom: 16.5,
+          },
+          { duration: 600 }
+        );
+      }
+      setIs3DMode(false);
+      setFollowHeading(false);
+      setIsUserInteracting(false);
+    }
+  }, [isNavigating, navZoom]);
+
+  // Dynamic Camera tracking when moving / orienting in navigation mode
+  useEffect(() => {
+    if (isNavigating && !isUserInteracting && userLocation && mapRef.current) {
+      mapRef.current.animateCamera(
+        {
+          center: {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+          },
+          pitch: is3DMode ? 55 : 0,
+          heading: followHeading ? userHeading : 0,
+          zoom: navZoom,
+        },
+        { duration: 400 }
+      );
+    }
+  }, [userLocation?.latitude, userLocation?.longitude, userHeading, is3DMode, followHeading, isUserInteracting, isNavigating, navZoom]);
+
+  // Animate to user on initial load if not navigating or previewing route
+  useEffect(() => {
+    if (userLocation && mapRef.current && !activeRoute && !isNavigating) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.012,
+          longitudeDelta: 0.012,
+        },
+        800
+      );
+    }
+  }, [userLocation?.latitude, userLocation?.longitude, !!activeRoute, isNavigating]);
+
+  // Fit route coordinates when previewing
+  useEffect(() => {
+    if (activeRoute && activeRoute.coordinates.length > 1 && mapRef.current && !isNavigating) {
+      mapRef.current.fitToCoordinates(activeRoute.coordinates, {
+        edgePadding: { top: 140, right: 60, bottom: 220, left: 60 },
+        animated: true,
+      });
+    }
+  }, [activeRoute?.id, isNavigating]);
+
+  const handleRecenter = () => {
+    setIsUserInteracting(false);
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateCamera(
+        {
+          center: {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+          },
+          pitch: is3DMode ? 55 : 0,
+          heading: followHeading ? userHeading : 0,
+          zoom: isNavigating ? navZoom : 17,
+        },
+        { duration: 500 }
+      );
+    }
+  };
+
+  const toggle3DMode = () => {
+    const next3D = !is3DMode;
+    setIs3DMode(next3D);
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateCamera(
+        {
+          pitch: next3D ? 55 : 0,
+          heading: followHeading ? userHeading : 0,
+        },
+        { duration: 500 }
+      );
+    }
+  };
+
+  const toggleHeadingFollow = () => {
+    const nextFollow = !followHeading;
+    setFollowHeading(nextFollow);
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateCamera(
+        {
+          heading: nextFollow ? userHeading : 0,
+        },
+        { duration: 400 }
+      );
+    }
+  };
+
+  // Filter incidents
+  const showIncidents =
+    selectedCategoryFilter === 'all' ||
+    (selectedCategoryFilter !== 'police' && selectedCategoryFilter !== 'pharmacy');
+
+  const filteredIncidents = showIncidents
+    ? incidents.filter((item) => {
+        if (selectedCategoryFilter === 'all') return true;
+        return item.category === selectedCategoryFilter;
+      })
+    : [];
+
+  // Filter safe places (Police vs Pharmacies)
+  const filteredSafePlaces = safePlaces.filter((place) => {
+    if (selectedCategoryFilter === 'all') return true;
+    if (selectedCategoryFilter === 'police') {
+      return place.type === 'psp' || place.type === 'gnr' || place.type === 'pj';
+    }
+    if (selectedCategoryFilter === 'pharmacy') {
+      return place.type === 'pharmacy';
+    }
+    return false;
+  });
+
+  return (
+    <View style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={initialRegion}
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        showsCompass={false}
+        userInterfaceStyle="dark"
+        onPanDrag={() => setIsUserInteracting(true)}
+        onRegionChangeComplete={onRegionChangeComplete}
+        onLongPress={(e) => {
+          if (onMapLongPress) {
+            onMapLongPress(e.nativeEvent.coordinate);
+          }
+        }}
+      >
+        {/* User safety radius halo */}
+        {userLocation && (
+          <Circle
+            center={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            }}
+            radius={80}
+            strokeColor="rgba(56, 189, 248, 0.35)"
+            fillColor="rgba(56, 189, 248, 0.08)"
+          />
+        )}
+
+        {/* Directional Pedestrian Marker with Gyroscope/Compass Cone of Light */}
+        {userLocation && (
+          <Marker
+            coordinate={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            zIndex={999}
+            flat={false}
+          >
+            <View style={styles.userMarkerContainer}>
+              {/* Flashlight / Vision Cone */}
+              <View
+                style={[
+                  styles.flashlightConeWrap,
+                  {
+                    transform: [{ rotate: `${userHeading}deg` }],
+                  },
+                ]}
+              >
+                <View style={styles.flashlightOuterBeam} />
+                <View style={styles.flashlightInnerBeam} />
+              </View>
+
+              {/* Glowing Avatar Disc */}
+              <View style={styles.userAvatarDisc}>
+                <View
+                  style={[
+                    styles.userAvatarCore,
+                    {
+                      transform: [{ rotate: `${userHeading}deg` }],
+                    },
+                  ]}
+                >
+                  <View style={styles.userPointerTriangle} />
+                </View>
+              </View>
+            </View>
+          </Marker>
+        )}
+
+        {/* Active Pedestrian Route */}
+        {activeRoute && (
+          <>
+            <Polyline
+              coordinates={activeRoute.coordinates}
+              strokeColor="#0F172A"
+              strokeWidth={7}
+            />
+            <Polyline
+              coordinates={activeRoute.coordinates}
+              strokeColor={activeRoute.isSafe ? '#10B981' : '#F59E0B'}
+              strokeWidth={4.5}
+            />
+          </>
+        )}
+
+        {/* Active SOS Danger Zones */}
+        {activeSOSAlerts.map((sos) => (
+          <React.Fragment key={sos.id}>
+            <Circle
+              center={{
+                latitude: sos.latitude,
+                longitude: sos.longitude,
+              }}
+              radius={200}
+              strokeColor="rgba(239, 68, 68, 0.8)"
+              fillColor="rgba(239, 68, 68, 0.22)"
+            />
+            <Marker
+              coordinate={{
+                latitude: sos.latitude,
+                longitude: sos.longitude,
+              }}
+              onPress={() => onSelectSOS(sos)}
+            >
+              <View style={styles.sosMarkerContainer}>
+                <View style={styles.sosMarkerPulse} />
+                <View style={styles.sosMarker}>
+                  <Ionicons name="megaphone" size={18} color="#FFFFFF" />
+                </View>
+                <View style={styles.sosMarkerBadge}>
+                  <Text style={styles.sosMarkerBadgeText}>SOS</Text>
+                </View>
+              </View>
+            </Marker>
+          </React.Fragment>
+        ))}
+
+        {/* Safe Places (Police Stations & Pharmacies) */}
+        {filteredSafePlaces.map((place) => {
+          if (place.type === 'pharmacy') {
+            const status = place.pharmacyStatus || getPharmacyStatus(place);
+            return (
+              <Marker
+                key={place.id}
+                coordinate={{
+                  latitude: place.latitude,
+                  longitude: place.longitude,
+                }}
+                onPress={() => onSelectSafePlace(place)}
+                tracksViewChanges={false}
+              >
+                <View style={styles.pharmacyPinContainer}>
+                  {/* Status Indicator Outer Ring */}
+                  <View
+                    style={[
+                      styles.pharmacyRing,
+                      {
+                        borderColor: status.ringColor,
+                        shadowColor: status.ringColor,
+                        backgroundColor: status.isOpen
+                          ? 'rgba(34, 197, 94, 0.2)'
+                          : 'rgba(239, 68, 68, 0.15)',
+                      },
+                    ]}
+                  >
+                    <View style={styles.pharmacyInnerCore}>
+                      <Ionicons name="medical" size={17} color={status.ringColor} />
+                    </View>
+                  </View>
+
+                  {/* Status Badge Tag */}
+                  <View
+                    style={[
+                      styles.pharmacyBadge,
+                      {
+                        backgroundColor: status.ringColor,
+                      },
+                    ]}
+                  >
+                    <Text style={styles.pharmacyBadgeText}>{status.badgeText}</Text>
+                  </View>
+                </View>
+              </Marker>
+            );
+          }
+
+          // Police Markers (PSP, GNR, PJ)
+          const isPSP = place.type === 'psp';
+          const isGNR = place.type === 'gnr';
+          const policeColor = isPSP ? '#3B82F6' : isGNR ? '#10B981' : '#6366F1';
+          const policeTag = isPSP ? 'PSP' : isGNR ? 'GNR' : 'PJ';
+          const policeIcon = isPSP ? 'shield-sharp' : isGNR ? 'shield-checkmark' : 'briefcase';
+
+          return (
+            <Marker
+              key={place.id}
+              coordinate={{
+                latitude: place.latitude,
+                longitude: place.longitude,
+              }}
+              onPress={() => onSelectSafePlace(place)}
+              tracksViewChanges={false}
+            >
+              <View style={[styles.policePin, { borderColor: policeColor }]}>
+                <View style={[styles.policeIconWrap, { backgroundColor: policeColor }]}>
+                  <Ionicons name={policeIcon as any} size={15} color="#FFFFFF" />
+                </View>
+                <View style={[styles.policeBadge, { backgroundColor: policeColor }]}>
+                  <Text style={styles.policeBadgeText}>{policeTag}</Text>
+                </View>
+              </View>
+            </Marker>
+          );
+        })}
+
+        {/* Community Hazard Incidents */}
+        {filteredIncidents.map((incident) => {
+          const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
+          return (
+            <Marker
+              key={incident.id}
+              coordinate={{
+                latitude: incident.latitude,
+                longitude: incident.longitude,
+              }}
+              onPress={() => onSelectIncident(incident)}
+              tracksViewChanges={false}
+            >
+              <View style={[styles.markerPin, { borderColor: meta.color }]}>
+                <View style={[styles.markerIconWrap, { backgroundColor: meta.color }]}>
+                  <Ionicons name={meta.icon as any} size={16} color="#FFFFFF" />
+                </View>
+                {incident.confirmations > 0 && (
+                  <View style={styles.votesBadge}>
+                    <Text style={styles.votesBadgeText}>{incident.confirmations}</Text>
+                  </View>
+                )}
+              </View>
+            </Marker>
+          );
+        })}
+      </MapView>
+
+      {/* Floating Map Controls Column (Compass, 3D/2D, Recenter) */}
+      <View style={styles.floatingControlsStack}>
+        {/* Gyroscope/Compass Heading Button */}
+        <TouchableOpacity
+          style={[styles.floatingControlBtn, followHeading && styles.floatingControlBtnActive]}
+          onPress={toggleHeadingFollow}
+          activeOpacity={0.8}
+        >
+          <View style={{ transform: [{ rotate: `${-userHeading}deg` }] }}>
+            <Ionicons
+              name="compass-outline"
+              size={22}
+              color={followHeading ? '#38BDF8' : '#94A3B8'}
+            />
+          </View>
+        </TouchableOpacity>
+
+        {/* 3D / 2D Perspective Toggle */}
+        <TouchableOpacity
+          style={[styles.floatingControlBtn, is3DMode && styles.floatingControlBtnActive]}
+          onPress={toggle3DMode}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={[
+              styles.floatingControlText,
+              is3DMode && styles.floatingControlTextActive,
+            ]}
+          >
+            {is3DMode ? '3D' : '2D'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Recenter GPS */}
+        <TouchableOpacity
+          style={styles.floatingControlBtn}
+          onPress={handleRecenter}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="locate" size={22} color="#38BDF8" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Re-center Navigation Pill (shown if user panned away during active navigation) */}
+      {isNavigating && isUserInteracting && (
+        <TouchableOpacity
+          style={styles.recenterNavPill}
+          onPress={handleRecenter}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="navigate" size={16} color="#0F172A" />
+          <Text style={styles.recenterNavPillText}>Recentrar Navegação 3D</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Picking Location Indicator */}
+      {pickingLocation && (
+        <View style={styles.pickingBanner}>
+          <Ionicons name="pin" size={16} color="#FFFFFF" />
+          <Text style={styles.pickingBannerText}>
+            Pressione longamente no mapa para escolher o ponto do alerta
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    position: 'relative',
+    backgroundColor: '#0F172A',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  floatingControlsStack: {
+    position: 'absolute',
+    right: 16,
+    bottom: 110,
+    gap: 10,
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  floatingControlBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#1E293B',
+    borderWidth: 1.5,
+    borderColor: '#334155',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  floatingControlBtnActive: {
+    borderColor: '#38BDF8',
+    backgroundColor: '#0F172A',
+  },
+  floatingControlText: {
+    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  floatingControlTextActive: {
+    color: '#38BDF8',
+  },
+  recenterNavPill: {
+    position: 'absolute',
+    bottom: 110,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#38BDF8',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 100,
+  },
+  recenterNavPillText: {
+    color: '#0F172A',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  userMarkerContainer: {
+    width: 140,
+    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flashlightConeWrap: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flashlightOuterBeam: {
+    position: 'absolute',
+    top: 14,
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 38,
+    borderRightWidth: 38,
+    borderBottomWidth: 56,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'rgba(56, 189, 248, 0.22)',
+    transform: [{ rotate: '180deg' }],
+  },
+  flashlightInnerBeam: {
+    position: 'absolute',
+    top: 26,
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 20,
+    borderRightWidth: 20,
+    borderBottomWidth: 44,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'rgba(56, 189, 248, 0.45)',
+    transform: [{ rotate: '180deg' }],
+  },
+  userAvatarDisc: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(56, 189, 248, 0.35)',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  userAvatarCore: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#0284C7',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 1.5,
+  },
+  userPointerTriangle: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 3.5,
+    borderRightWidth: 3.5,
+    borderBottomWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#FFFFFF',
+  },
+  pickingBanner: {
+    position: 'absolute',
+    top: 14,
+    alignSelf: 'center',
+    backgroundColor: '#0284C7',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  pickingBannerText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  markerPin: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#0F172A',
+    borderWidth: 2.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  markerIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  votesBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#10B981',
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#0F172A',
+  },
+  votesBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  sosMarkerContainer: {
+    width: 52,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sosMarkerPulse: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(239, 68, 68, 0.35)',
+  },
+  sosMarker: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EF4444',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sosMarkerBadge: {
+    position: 'absolute',
+    bottom: -2,
+    backgroundColor: '#991B1B',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  sosMarkerBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+
+  // Pharmacy Pins with Dynamic Open/Closed Status Ring
+  pharmacyPinContainer: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pharmacyRing: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  pharmacyInnerCore: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pharmacyBadge: {
+    position: 'absolute',
+    bottom: -3,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#0F172A',
+  },
+  pharmacyBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  },
+
+  // Police Pins (PSP, GNR, PJ)
+  policePin: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#0F172A',
+    borderWidth: 2.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  policeIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  policeBadge: {
+    position: 'absolute',
+    bottom: -4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#0F172A',
+  },
+  policeBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+});
