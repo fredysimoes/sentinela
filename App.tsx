@@ -51,6 +51,7 @@ import {
   createOnlineIncident,
   confirmIncidentOnline,
   dismissIncidentOnline,
+  deleteIncidentOnline,
   broadcastOnlineSOS,
   subscribeToOnlineIncidents,
   subscribeToOnlineSOS,
@@ -320,10 +321,13 @@ export default function App() {
         console.warn('Erro ao obter localização inicial:', e);
       }
 
-      // 4. Load persisted real community incidents (clean of all demo seeds)
+      // 4. Load persisted real community incidents (clean of all demo seeds and resolved/dismissed items)
       const storedIncidents = await loadIncidents(initialLat, initialLon);
       const cleanStored = storedIncidents.filter(
-        (i) => !i.id.startsWith('seed-') && i.dismissals <= i.confirmations
+        (i) =>
+          !i.id.startsWith('seed-') &&
+          (i.dismissals || 0) < (i.confirmations || 1) &&
+          (i.dismissals || 0) < 5
       );
       setIncidents(cleanStored);
 
@@ -332,9 +336,13 @@ export default function App() {
         try {
           const online = await fetchOnlineIncidents();
           const cleanOnline = online.filter(
-            (i) => !i.id.startsWith('seed-') && i.dismissals <= i.confirmations
+            (i) =>
+              !i.id.startsWith('seed-') &&
+              (i.dismissals || 0) < (i.confirmations || 1) &&
+              (i.dismissals || 0) < 5
           );
           setIncidents(cleanOnline);
+          await saveIncidents(cleanOnline);
         } catch (e) {
           console.warn('Erro ao carregar dados online do Supabase:', e);
         }
@@ -420,9 +428,13 @@ export default function App() {
         subscribeToOnlineIncidents(async () => {
           const fresh = await fetchOnlineIncidents();
           const cleanFresh = fresh.filter(
-            (i) => !i.id.startsWith('seed-') && i.dismissals <= i.confirmations
+            (i) =>
+              !i.id.startsWith('seed-') &&
+              (i.dismissals || 0) < (i.confirmations || 1) &&
+              (i.dismissals || 0) < 5
           );
           setIncidents(cleanFresh);
+          await saveIncidents(cleanFresh);
         });
 
         subscribeToOnlineSOS((newSOS) => {
@@ -556,25 +568,25 @@ export default function App() {
     }
   };
 
-  // Handle downvoting an incident (removes immediately if dismissals > confirmations)
+  // Handle downvoting an incident (removes immediately if dismissals >= confirmations)
   const handleDismissIncident = (id: string) => {
     const target = incidents.find((item) => item.id === id);
     if (!target) return;
 
-    const nextDismissals = target.dismissals + 1;
-    const confirmations = target.confirmations;
+    const nextDismissals = (target.dismissals || 0) + 1;
+    const confirmations = target.confirmations || 1;
 
-    // Rule: if dismissals > confirmations, the incident disappears immediately from the map!
-    if (nextDismissals > confirmations) {
+    // Rule: if dismissals >= confirmations, the incident disappears immediately from the map!
+    if (nextDismissals >= confirmations) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       const remaining = incidents.filter((item) => item.id !== id);
       setIncidents(remaining);
       saveIncidents(remaining);
       setSelectedIncident(null);
-      dismissIncidentOnline(id);
+      deleteIncidentOnline(id);
       Alert.alert(
         'Aviso Removido',
-        'Este aviso foi removido do mapa porque a comunidade indicou que já não é verídico ou já foi resolvido.'
+        'Este aviso foi removido do mapa porque a comunidade indicou que já foi resolvido ou é falso.'
       );
     } else {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -591,6 +603,16 @@ export default function App() {
         });
       }
     }
+  };
+
+  // Direct manual deletion of an incident from map & Supabase
+  const handleDeleteIncident = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    const remaining = incidents.filter((item) => item.id !== id);
+    setIncidents(remaining);
+    saveIncidents(remaining);
+    setSelectedIncident(null);
+    deleteIncidentOnline(id);
   };
 
   // Handle SOS Creation
@@ -886,6 +908,7 @@ export default function App() {
           onClose={() => setSelectedIncident(null)}
           onConfirm={handleConfirmIncident}
           onDismiss={handleDismissIncident}
+          onDelete={handleDeleteIncident}
           onNavigate={(inc) =>
             handleRequestNavigation(inc.title, {
               latitude: inc.latitude,

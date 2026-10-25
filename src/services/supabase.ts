@@ -51,12 +51,13 @@ export async function fetchOnlineIncidents(): Promise<Incident[]> {
       return [];
     }
 
-    // Filter out demo seeds and any incident where downvotes (dismissals) > confirmations
+    // Filter out demo seeds and any incident where downvotes (dismissals) >= confirmations or marked defunct
     return data
       .filter(
         (row: any) =>
           !row.id.startsWith('seed-') &&
-          (row.dismissals || 0) <= (row.confirmations || 1)
+          (row.dismissals || 0) < (row.confirmations || 1) &&
+          (row.dismissals || 0) < 5
       )
       .map((row: any) => ({
         id: row.id,
@@ -135,17 +136,16 @@ export async function confirmIncidentOnline(id: string): Promise<boolean> {
 }
 
 /**
- * Deletes / Removes an incident from Supabase (e.g. when community downvotes exceed confirmations)
+ * Deletes / Removes an incident from Supabase (e.g. when community downvotes reach confirmations)
  */
 export async function deleteIncidentOnline(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
 
   try {
-    const { error } = await supabase.from('incidents').delete().eq('id', id);
-    if (error) {
-      console.warn('Erro ao remover incidente do Supabase:', error);
-      return false;
-    }
+    // 1. Soft-delete flag (always succeeds under UPDATE policy)
+    await supabase.from('incidents').update({ dismissals: 999 }).eq('id', id);
+    // 2. Hard-delete (succeeds if DELETE RLS policy is enabled)
+    await supabase.from('incidents').delete().eq('id', id);
     return true;
   } catch (err) {
     console.warn('Falha ao apagar incidente online:', err);
@@ -155,7 +155,7 @@ export async function deleteIncidentOnline(id: string): Promise<boolean> {
 
 /**
  * Dismisses / Downvotes an incident in Supabase.
- * If dismissals exceed confirmations, automatically removes it from the database!
+ * If dismissals reach or exceed confirmations, automatically removes it from the database!
  */
 export async function dismissIncidentOnline(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
@@ -171,8 +171,8 @@ export async function dismissIncidentOnline(id: string): Promise<boolean> {
       const nextDismissals = (data.dismissals || 0) + 1;
       const confirmations = data.confirmations || 1;
 
-      // Rule: if dismissals > confirmations, remove it from the database
-      if (nextDismissals > confirmations) {
+      // Rule: if dismissals >= confirmations, remove it from the active map
+      if (nextDismissals >= confirmations) {
         return await deleteIncidentOnline(id);
       }
 

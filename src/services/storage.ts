@@ -17,9 +17,12 @@ export async function loadIncidents(_userLat?: number, _userLon?: number): Promi
     const raw = await AsyncStorage.getItem(STORAGE_KEYS.INCIDENTS);
     if (raw) {
       const parsed: Incident[] = JSON.parse(raw);
-      // Clean out demo/seed data and any incident with more negative than positive votes
+      // Clean out demo/seed data and any incident with dismissals >= confirmations or marked defunct
       const valid = parsed.filter(
-        (item) => !item.id.startsWith('seed-') && item.dismissals <= item.confirmations
+        (item) =>
+          !item.id.startsWith('seed-') &&
+          (item.dismissals || 0) < (item.confirmations || 1) &&
+          (item.dismissals || 0) < 5
       );
       // Save cleaned array back to storage
       await saveIncidents(valid);
@@ -34,9 +37,12 @@ export async function loadIncidents(_userLat?: number, _userLon?: number): Promi
 
 export async function saveIncidents(incidents: Incident[]): Promise<void> {
   try {
-    // Only persist valid real incidents where confirmations >= dismissals
+    // Only persist valid real incidents where confirmations > dismissals
     const validOnly = incidents.filter(
-      (item) => !item.id.startsWith('seed-') && item.dismissals <= item.confirmations
+      (item) =>
+        !item.id.startsWith('seed-') &&
+        (item.dismissals || 0) < (item.confirmations || 1) &&
+        (item.dismissals || 0) < 5
     );
     await AsyncStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(validOnly));
   } catch (error) {

@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   Linking,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
@@ -18,6 +19,7 @@ interface IncidentDetailSheetProps {
   onClose: () => void;
   onConfirm: (incidentId: string) => void;
   onDismiss: (incidentId: string) => void;
+  onDelete?: (incidentId: string) => void;
   onNavigate?: (incident: Incident) => void;
 }
 
@@ -27,6 +29,7 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
   onClose,
   onConfirm,
   onDismiss,
+  onDelete,
   onNavigate,
 }) => {
   if (!incident) return null;
@@ -54,6 +57,28 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
   const handleDownvote = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onDismiss(incident.id);
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Remover Ocorrência',
+      'Deseja remover definitivamente esta ocorrência do mapa?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            if (onDelete) {
+              onDelete(incident.id);
+            } else {
+              onDismiss(incident.id);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -143,6 +168,16 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
       >
         <Ionicons name="map-outline" size={18} color="#FFFFFF" />
         <Text style={styles.mapsBtnText}>Ver no Google Maps</Text>
+      </TouchableOpacity>
+
+      {/* Delete / Remove Incident Button */}
+      <TouchableOpacity
+        style={styles.deleteBtn}
+        onPress={handleDelete}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="trash-outline" size={16} color="#EF4444" />
+        <Text style={styles.deleteBtnText}>Remover Ocorrência do Mapa</Text>
       </TouchableOpacity>
     </View>
   );
@@ -309,5 +344,18 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 14,
+  },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    marginTop: 8,
+    gap: 6,
+  },
+  deleteBtnText: {
+    color: '#EF4444',
+    fontWeight: '700',
+    fontSize: 13,
   },
 });
