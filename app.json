@@ -20,6 +20,11 @@
     },
     "android": {
       "package": "com.sentinela.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSySentinelaDefaultApiKey1234567890abcdef"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
