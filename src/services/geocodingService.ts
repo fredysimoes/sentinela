@@ -254,3 +254,72 @@ export async function searchAddressSuggestions(
 
   return results.slice(0, 8);
 }
+
+/**
+ * Reverse geocodes a coordinate to find place, street, or POI name (Google Maps style)
+ */
+export async function reverseGeocodeCoordinate(
+  latitude: number,
+  longitude: number
+): Promise<{ title: string; subtitle: string }> {
+  // First check if this coordinate is right next to a known safe place (< 40m)
+  for (const p of SAFE_PLACES_PORTUGAL) {
+    const d = calculateDistanceMeters(latitude, longitude, p.latitude, p.longitude);
+    if (d <= 40) {
+      return {
+        title: p.name,
+        subtitle: `${p.address ? p.address + ', ' : ''}${p.city || 'Portugal'}`,
+      };
+    }
+  }
+
+  // Real-time reverse geocode from Nominatim / OpenStreetMap
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3500);
+
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'SentinelaMobileSafety/2.0',
+        'Accept-Language': 'pt-PT,pt;q=0.9',
+      },
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      const addr = data.address || {};
+
+      const title =
+        data.name ||
+        addr.supermarket ||
+        addr.shop ||
+        addr.amenity ||
+        addr.building ||
+        addr.road ||
+        addr.pedestrian ||
+        'Ponto Selecionado';
+
+      const parts = [
+        addr.road && addr.road !== title ? addr.road : null,
+        addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city,
+      ].filter(Boolean);
+
+      const subtitle = parts.length > 0 ? parts.join(', ') : 'Portugal';
+
+      return {
+        title: title.trim(),
+        subtitle,
+      };
+    }
+  } catch (err) {
+    console.warn('Erro ao obter reverse geocode:', err);
+  }
+
+  return {
+    title: 'Ponto Selecionado',
+    subtitle: `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
+  };
+}

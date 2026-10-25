@@ -40,9 +40,11 @@ import { ReportModal } from './src/components/ReportModal';
 import { SOSModal } from './src/components/SOSModal';
 import { IncidentDetailSheet } from './src/components/IncidentDetailSheet';
 import { SafePlaceDetailSheet } from './src/components/SafePlaceDetailSheet';
+import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedPlaceSheet';
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
 import { calculateDistanceMeters } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
+import { reverseGeocodeCoordinate } from './src/services/geocodingService';
 import {
   isSupabaseConfigured,
   fetchOnlineIncidents,
@@ -101,6 +103,7 @@ export default function App() {
   // Filtering & Modal States
   const [selectedFilter, setSelectedFilter] = useState<IncidentCategory | 'all' | 'police' | 'pharmacy'>('all');
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
@@ -110,6 +113,39 @@ export default function App() {
     body: string;
     type: 'sos_alert' | 'proximity_alert';
   } | null>(null);
+
+  const handleSelectMapPoint = (point: SelectedMapPoint) => {
+    Haptics.selectionAsync();
+    setSelectedIncident(null);
+    setSelectedSafePlace(null);
+    setSelectedMapPoint(point);
+  };
+
+  const handleMapClickCoordinate = async (coord: { latitude: number; longitude: number }) => {
+    // If a sheet was already open, tap on empty map dismisses it
+    if (selectedMapPoint || selectedIncident || selectedSafePlace) {
+      setSelectedMapPoint(null);
+      setSelectedIncident(null);
+      setSelectedSafePlace(null);
+      return;
+    }
+
+    // Tapped on the map: drop pin and reverse geocode location name
+    Haptics.selectionAsync();
+    setSelectedMapPoint({
+      name: 'A carregar local...',
+      latitude: coord.latitude,
+      longitude: coord.longitude,
+    });
+
+    const geo = await reverseGeocodeCoordinate(coord.latitude, coord.longitude);
+    setSelectedMapPoint({
+      name: geo.title,
+      subtitle: geo.subtitle,
+      latitude: coord.latitude,
+      longitude: coord.longitude,
+    });
+  };
 
   // Navigation States
   const [navState, setNavState] = useState<NavigationState | null>(null);
@@ -775,16 +811,21 @@ export default function App() {
           selectedCategoryFilter={selectedFilter}
           activeRoute={navState ? navState.route : (showRoutePreview ? previewSafeRoute : null)}
           isNavigating={!!navState}
+          selectedMapPoint={selectedMapPoint}
           onSelectIncident={(inc) => {
             Haptics.selectionAsync();
             setSelectedSafePlace(null);
+            setSelectedMapPoint(null);
             setSelectedIncident(inc);
           }}
           onSelectSafePlace={(place) => {
             Haptics.selectionAsync();
             setSelectedIncident(null);
+            setSelectedMapPoint(null);
             setSelectedSafePlace(place);
           }}
+          onSelectMapPoint={handleSelectMapPoint}
+          onMapClickCoordinate={handleMapClickCoordinate}
           onSelectSOS={(sos) => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             Alert.alert(
@@ -866,6 +907,25 @@ export default function App() {
               longitude: place.longitude,
             })
           }
+        />
+      )}
+
+      {/* Selected Map Point Destination Sheet (POI / Supermarket / Dropped Pin) */}
+      {selectedMapPoint && (
+        <SelectedPlaceSheet
+          place={selectedMapPoint}
+          userLocation={userLocation}
+          transportMode={transportMode}
+          onClose={() => setSelectedMapPoint(null)}
+          onNavigate={(name, coord, mode) => {
+            setSelectedMapPoint(null);
+            handleRequestNavigation(name, coord, mode);
+          }}
+          onReportHere={(coord) => {
+            setSelectedMapPoint(null);
+            setTargetCoordinate(coord);
+            setShowReportModal(true);
+          }}
         />
       )}
 

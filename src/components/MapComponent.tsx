@@ -12,6 +12,7 @@ import { PedestrianRoute } from '../types/navigation';
 import { CATEGORIES } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
+import { SelectedMapPoint } from './SelectedPlaceSheet';
 
 // -------------------------------------------------------------
 // High Performance Memoized Markers (prevents re-rendering 500 views)
@@ -105,9 +106,12 @@ interface MapComponentProps {
   selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy';
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
+  selectedMapPoint?: SelectedMapPoint | null;
   onSelectIncident: (incident: Incident) => void;
   onSelectSafePlace: (place: SafePlace) => void;
   onSelectSOS: (sos: SOSAlert) => void;
+  onSelectMapPoint?: (point: SelectedMapPoint) => void;
+  onMapClickCoordinate?: (coord: { latitude: number; longitude: number }) => void;
   onMapLongPress?: (coordinate: { latitude: number; longitude: number }) => void;
   onRegionChangeComplete?: (region: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }) => void;
   pickingLocation?: boolean;
@@ -122,9 +126,12 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   selectedCategoryFilter,
   activeRoute,
   isNavigating = false,
+  selectedMapPoint = null,
   onSelectIncident,
   onSelectSafePlace,
   onSelectSOS,
+  onSelectMapPoint,
+  onMapClickCoordinate,
   onMapLongPress,
   onRegionChangeComplete,
   pickingLocation = false,
@@ -308,6 +315,22 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
         userInterfaceStyle="dark"
         onPanDrag={() => setIsUserInteracting(true)}
         onRegionChangeComplete={onRegionChangeComplete}
+        onPoiClick={(e) => {
+          if (onSelectMapPoint) {
+            onSelectMapPoint({
+              name: e.nativeEvent.name || 'Ponto de Interesse',
+              latitude: e.nativeEvent.coordinate.latitude,
+              longitude: e.nativeEvent.coordinate.longitude,
+            });
+          }
+        }}
+        onPress={(e) => {
+          if (e.nativeEvent.action !== 'marker-press') {
+            if (onMapClickCoordinate) {
+              onMapClickCoordinate(e.nativeEvent.coordinate);
+            }
+          }
+        }}
         onLongPress={(e) => {
           if (onMapLongPress) {
             onMapLongPress(e.nativeEvent.coordinate);
@@ -446,6 +469,30 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             onSelect={() => onSelectIncident(incident)}
           />
         ))}
+
+        {/* Selected Map Destination Pin (POI, Shop, Supermarket, or Tapped Point) */}
+        {selectedMapPoint && (
+          <Marker
+            coordinate={{
+              latitude: selectedMapPoint.latitude,
+              longitude: selectedMapPoint.longitude,
+            }}
+            zIndex={1002}
+            anchor={{ x: 0.5, y: 1.0 }}
+          >
+            <View style={styles.selectedPointMarker}>
+              <View style={styles.selectedPointPulse} />
+              <View style={styles.selectedPointPin}>
+                <Ionicons name="location" size={32} color="#38BDF8" />
+              </View>
+              <View style={styles.selectedPointBadge}>
+                <Text style={styles.selectedPointBadgeText} numberOfLines={1}>
+                  {selectedMapPoint.name}
+                </Text>
+              </View>
+            </View>
+          </Marker>
+        )}
       </MapView>
 
       {/* Floating Map Controls Column (Compass, 3D/2D, Recenter) */}
@@ -841,5 +888,49 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '900',
     letterSpacing: 0.5,
+  },
+
+  // Selected Map Point Pin (POI / Custom Point)
+  selectedPointMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 140,
+  },
+  selectedPointPulse: {
+    position: 'absolute',
+    bottom: 2,
+    width: 18,
+    height: 8,
+    borderRadius: 9,
+    backgroundColor: 'rgba(56, 189, 248, 0.45)',
+    transform: [{ scaleX: 1.8 }],
+  },
+  selectedPointPin: {
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.7,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  selectedPointBadge: {
+    backgroundColor: '#0F172A',
+    borderColor: '#38BDF8',
+    borderWidth: 1.5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginTop: 2,
+    maxWidth: 130,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  selectedPointBadgeText: {
+    color: '#F8FAFC',
+    fontSize: 10,
+    fontWeight: '800',
+    textAlign: 'center',
   },
 });
