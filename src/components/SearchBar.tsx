@@ -88,14 +88,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     Keyboard.dismiss();
   };
 
-  const getSuggestionEta = (itemLat: number, itemLon: number): string | null => {
+  const getSuggestionEta = (itemLat: number, itemLon: number, distanceMeters?: number): string | null => {
     if (!userLocation) return null;
-    const dist = calculateDistanceMeters(
-      userLocation.latitude,
-      userLocation.longitude,
-      itemLat,
-      itemLon
-    );
+    const dist =
+      distanceMeters ??
+      calculateDistanceMeters(
+        userLocation.latitude,
+        userLocation.longitude,
+        itemLat,
+        itemLon
+      );
     const distText = formatDistance(dist);
     const speed = transportMode === 'driving' ? 500 : 75; // meters per minute
     const mins = Math.max(1, Math.round(dist / speed));
@@ -238,9 +240,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             data={suggestions}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"
+            keyboardDismissMode="on-drag"
+            nestedScrollEnabled={true}
+            style={styles.dropdownList}
+            contentContainerStyle={styles.dropdownListContent}
             renderItem={({ item }) => {
               const iconInfo = getItemIcon(item.type);
-              const eta = getSuggestionEta(item.latitude, item.longitude);
+              const eta = getSuggestionEta(item.latitude, item.longitude, item.distanceMeters);
 
               return (
                 <TouchableOpacity
@@ -385,14 +391,20 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: '#38BDF8',
-    maxHeight: 280,
-    zIndex: 10000,
+    maxHeight: 300,
+    zIndex: 99999,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 12,
-    elevation: 12,
+    elevation: 35,
     overflow: 'hidden',
+  },
+  dropdownList: {
+    maxHeight: 245,
+  },
+  dropdownListContent: {
+    flexGrow: 1,
   },
   dropdownHeader: {
     flexDirection: 'row',

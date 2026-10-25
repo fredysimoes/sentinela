@@ -1,4 +1,5 @@
 import { SAFE_PLACES_PORTUGAL } from '../data/safePlaces';
+import { calculateDistanceMeters } from '../utils/geo';
 
 export interface AddressSuggestion {
   id: string;
@@ -7,6 +8,7 @@ export interface AddressSuggestion {
   latitude: number;
   longitude: number;
   type: 'police' | 'pharmacy' | 'street' | 'place';
+  distanceMeters?: number;
 }
 
 function normalizeStr(str: string): string {
@@ -32,14 +34,41 @@ export async function searchAddressSuggestions(
   const results: AddressSuggestion[] = [];
 
   // 1. Instant local match from pre-loaded official catalog (0ms latency)
-  const localMatches = SAFE_PLACES_PORTUGAL.filter((place) => {
+  let localMatches = SAFE_PLACES_PORTUGAL.filter((place) => {
     const matchName = normalizeStr(place.name).includes(normQuery);
     const matchAddr = normalizeStr(place.address || '').includes(normQuery);
     const matchCity = normalizeStr(place.city || '').includes(normQuery);
     return matchName || matchAddr || matchCity;
-  }).slice(0, 4);
+  });
 
-  for (const p of localMatches) {
+  if (userLocation) {
+    localMatches = [...localMatches].sort((a, b) => {
+      const distA = calculateDistanceMeters(
+        userLocation.latitude,
+        userLocation.longitude,
+        a.latitude,
+        a.longitude
+      );
+      const distB = calculateDistanceMeters(
+        userLocation.latitude,
+        userLocation.longitude,
+        b.latitude,
+        b.longitude
+      );
+      return distA - distB;
+    });
+  }
+
+  for (const p of localMatches.slice(0, 3)) {
+    const dist = userLocation
+      ? calculateDistanceMeters(
+          userLocation.latitude,
+          userLocation.longitude,
+          p.latitude,
+          p.longitude
+        )
+      : undefined;
+
     results.push({
       id: `local-${p.id}`,
       title: p.name,
@@ -47,6 +76,7 @@ export async function searchAddressSuggestions(
       latitude: p.latitude,
       longitude: p.longitude,
       type: p.type === 'pharmacy' ? 'pharmacy' : 'police',
+      distanceMeters: dist,
     });
   }
 
@@ -115,6 +145,15 @@ export async function searchAddressSuggestions(
           );
 
           if (!alreadyExists) {
+            const dist = userLocation
+              ? calculateDistanceMeters(
+                  userLocation.latitude,
+                  userLocation.longitude,
+                  lat,
+                  lon
+                )
+              : undefined;
+
             results.push({
               id: `photon-${props.osm_id || Math.random()}`,
               title,
@@ -122,6 +161,7 @@ export async function searchAddressSuggestions(
               latitude: lat,
               longitude: lon,
               type: props.osm_key === 'highway' ? 'street' : 'place',
+              distanceMeters: dist,
             });
           }
         }
@@ -176,6 +216,15 @@ export async function searchAddressSuggestions(
                 addr.municipality ||
                 'Portugal';
 
+              const dist = userLocation
+                ? calculateDistanceMeters(
+                    userLocation.latitude,
+                    userLocation.longitude,
+                    lat,
+                    lon
+                  )
+                : undefined;
+
               results.push({
                 id: `nom-${item.place_id || item.osm_id}`,
                 title: title.trim(),
@@ -183,6 +232,7 @@ export async function searchAddressSuggestions(
                 latitude: lat,
                 longitude: lon,
                 type: 'street',
+                distanceMeters: dist,
               });
             }
           }
@@ -191,6 +241,15 @@ export async function searchAddressSuggestions(
     } catch {
       // ignore
     }
+  }
+
+  // Sort strictly by proximity to user GPS location (Google Maps style)
+  if (userLocation) {
+    results.sort((a, b) => {
+      const distA = a.distanceMeters ?? 999999999;
+      const distB = b.distanceMeters ?? 999999999;
+      return distA - distB;
+    });
   }
 
   return results.slice(0, 8);

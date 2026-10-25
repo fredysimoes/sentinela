@@ -189,6 +189,39 @@ export default function App() {
     setNavState(null);
   };
 
+  // Update active turn-by-turn navigation state dynamically as user moves
+  useEffect(() => {
+    if (!navState || !userLocation) return;
+
+    const destCoord = navState.destinationCoord;
+    const distToDest = calculateDistanceMeters(
+      userLocation.latitude,
+      userLocation.longitude,
+      destCoord.latitude,
+      destCoord.longitude
+    );
+
+    // If within 15 meters of destination, user has arrived safely!
+    if (distToDest <= 15) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Chegou ao Destino', `Chegou com sucesso a ${navState.destinationName}!`);
+      setNavState(null);
+      return;
+    }
+
+    const speedMetersPerMin = navState.mode === 'driving' ? 500 : 75;
+    const remainingMins = Math.max(1, Math.round(distToDest / speedMetersPerMin));
+
+    setNavState((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        distanceRemainingMeters: distToDest,
+        timeRemainingMinutes: remainingMins,
+      };
+    });
+  }, [userLocation?.latitude, userLocation?.longitude]);
+
   // Initialize App, Location, Heading/Compass, and Notifications
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription | null = null;
@@ -639,7 +672,7 @@ export default function App() {
                 selectedFilter === 'all' && styles.filterChipTextActive,
               ]}
             >
-              Todos ({incidents.length + safePlaces.length})
+              Todos {incidents.length > 0 ? `(${incidents.length})` : ''}
             </Text>
           </TouchableOpacity>
 

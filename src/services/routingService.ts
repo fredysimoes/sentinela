@@ -69,7 +69,8 @@ function decodeValhallaPolyline(str: string, precision: number = 6): RouteCoordi
  */
 async function fetchValhallaRoute(
   coords: RouteCoordinate[],
-  mode: TransportMode = 'walking'
+  mode: TransportMode = 'walking',
+  avoidLocations?: RouteCoordinate[]
 ): Promise<{
   coordinates: RouteCoordinate[];
   distance: number;
@@ -79,7 +80,7 @@ async function fetchValhallaRoute(
   const valhallaUrl = 'https://valhalla1.openstreetmap.de/route';
   const costing = mode === 'driving' ? 'auto' : 'pedestrian';
 
-  const body = {
+  const body: any = {
     locations: coords.map((c) => ({
       lat: c.latitude,
       lon: c.longitude,
@@ -98,6 +99,13 @@ async function fetchValhallaRoute(
       language: 'pt-PT',
     },
   };
+
+  if (avoidLocations && avoidLocations.length > 0) {
+    body.avoid_locations = avoidLocations.map((a) => ({
+      lat: a.latitude,
+      lon: a.longitude,
+    }));
+  }
 
   try {
     const controller = new AbortController();
@@ -119,16 +127,34 @@ async function fetchValhallaRoute(
     const trip = data?.trip;
     if (!trip || !trip.legs || trip.legs.length === 0) return null;
 
-    const leg = trip.legs[0];
-    const geoCoordinates = decodeValhallaPolyline(leg.shape, 6);
+    // Accumulate all legs (crucial when waypoints/detours are present!)
+    const geoCoordinates: RouteCoordinate[] = [];
+    const steps: RouteStep[] = [];
 
-    const steps: RouteStep[] = (leg.maneuvers || []).map((m: any) => ({
-      instruction: m.instruction || 'Siga o percurso',
-      distanceMeters: Math.round((m.length || 0) * 1000),
-      durationSeconds: Math.round(m.time || 0),
-      maneuverType: m.type?.toString() || 'turn',
-      streetName: Array.isArray(m.street_names) ? m.street_names.join(', ') : undefined,
-    }));
+    for (const leg of trip.legs) {
+      if (leg.shape) {
+        const legCoords = decodeValhallaPolyline(leg.shape, 6);
+        if (geoCoordinates.length > 0 && legCoords.length > 0) {
+          geoCoordinates.push(...legCoords.slice(1));
+        } else {
+          geoCoordinates.push(...legCoords);
+        }
+      }
+
+      if (Array.isArray(leg.maneuvers)) {
+        for (const m of leg.maneuvers) {
+          steps.push({
+            instruction: m.instruction || 'Siga o percurso',
+            distanceMeters: Math.round((m.length || 0) * 1000),
+            durationSeconds: Math.round(m.time || 0),
+            maneuverType: m.type?.toString() || 'turn',
+            streetName: Array.isArray(m.street_names) ? m.street_names.join(', ') : undefined,
+          });
+        }
+      }
+    }
+
+    if (geoCoordinates.length === 0) return null;
 
     // Realistic duration from Valhalla summary (in seconds)
     const rawSeconds = trip.summary?.time || 0;
@@ -195,15 +221,19 @@ async function fetchOsrmRoute(
       })
     );
 
-    const rawSteps = route.legs?.[0]?.steps || [];
-    const steps: RouteStep[] = rawSteps.map((s: any) => ({
-      instruction: s.maneuver?.instruction || s.name || 'Continue no percurso',
-      distanceMeters: Math.round(s.distance || 0),
-      durationSeconds: Math.round(s.duration || 0),
-      maneuverType: s.maneuver?.type || 'turn',
-      maneuverModifier: s.maneuver?.modifier,
-      streetName: s.name,
-    }));
+    const steps: RouteStep[] = [];
+    for (const leg of route.legs || []) {
+      for (const s of leg.steps || []) {
+        steps.push({
+          instruction: s.maneuver?.instruction || s.name || 'Continue no percurso',
+          distanceMeters: Math.round(s.distance || 0),
+          durationSeconds: Math.round(s.duration || 0),
+          maneuverType: s.maneuver?.type || 'turn',
+          maneuverModifier: s.maneuver?.modifier,
+          streetName: s.name,
+        });
+      }
+    }
 
     const durationMinutes =
       mode === 'walking'
@@ -364,50 +394,113 @@ export async function calculateSafeNavigationRoutes(params: {
     };
   }
 
-  // 2. Calculate evasion waypoint around primary hazard
-  const primaryHazard = hazardsOnDirect[0];
-  const dLat = destination.latitude - origin.latitude;
-  const dLon = destination.longitude - origin.longitude;
-  const len = Math.sqrt(dLat * dLat + dLon * dLon) || 1;
+  // 2. Intelligent hazard bypass
+  // Strategy A: Native Valhalla street-level avoidance (uses OSM road graph to find nearest alternative street)
+  const avoidCoords = hazardsOnDirect.map((h) => ({
+    latitude: h.latitude,
+    longitude: h.longitude,
+  }));
 
-  const offset = mode === 'driving' ? 0.0035 : 0.0025;
-  const evasionCoord: RouteCoordinate = {
-    latitude: primaryHazard.latitude - (dLon / len) * offset,
-    longitude: primaryHazard.longitude + (dLat / len) * offset,
-  };
-
-  const safeData = await fetchRouteMultiEngine([origin, evasionCoord, destination], mode);
-
-  if (safeData) {
-    const hazardsOnDetour = findHazardsNearRoute(
-      safeData.coordinates,
+  const valhallaBypass = await fetchValhallaRoute([origin, destination], mode, avoidCoords);
+  if (valhallaBypass) {
+    const hazardsOnValhallaBypass = findHazardsNearRoute(
+      valhallaBypass.coordinates,
       incidents,
       hazardThreshold,
       mode
     );
 
-    const safeDetourRoute: PedestrianRoute = {
-      id: 'route-safe-detour',
-      name: 'Rota Segura (Desvio de Proteção Valhalla)',
-      mode,
-      distanceMeters: Math.round(safeData.distance),
-      durationMinutes: safeData.durationMinutes,
-      formattedDuration: formatDuration(safeData.durationMinutes),
-      formattedDistance: formatDistance(safeData.distance),
-      estimatedArrival: calculateEstimatedArrival(safeData.durationMinutes),
-      coordinates: safeData.coordinates,
-      steps: safeData.steps,
-      isSafe: true,
-      hazardsAvoided: hazardsOnDirect,
-      hazardsOnRoute: hazardsOnDetour,
-      summary: `🛡️ Evita ${hazardsOnDirect.length} zona(s) de perigo identificada(s)`,
-    };
+    // If Valhalla avoided the hazard or reduced hazard exposure without excessive detour
+    const isReasonableDistance = valhallaBypass.distance <= directData.distance * 2.5;
+    if (hazardsOnValhallaBypass.length < hazardsOnDirect.length && isReasonableDistance) {
+      const avoided = hazardsOnDirect.filter(
+        (h) => !hazardsOnValhallaBypass.some((hb) => hb.id === h.id)
+      );
 
-    return {
-      safeRoute: safeDetourRoute,
-      directRoute,
-    };
+      const safeDetourRoute: PedestrianRoute = {
+        id: 'route-safe-valhalla',
+        name: 'Rota Segura (Desvio Inteligente Valhalla)',
+        mode,
+        distanceMeters: Math.round(valhallaBypass.distance),
+        durationMinutes: valhallaBypass.durationMinutes,
+        formattedDuration: formatDuration(valhallaBypass.durationMinutes),
+        formattedDistance: formatDistance(valhallaBypass.distance),
+        estimatedArrival: calculateEstimatedArrival(valhallaBypass.durationMinutes),
+        coordinates: valhallaBypass.coordinates,
+        steps: valhallaBypass.steps,
+        isSafe: hazardsOnValhallaBypass.length === 0,
+        hazardsAvoided: avoided,
+        hazardsOnRoute: hazardsOnValhallaBypass,
+        summary: `🛡️ Evita ${avoided.length} zona(s) de perigo identificada(s)`,
+      };
+
+      return {
+        safeRoute: safeDetourRoute,
+        directRoute,
+      };
+    }
   }
 
+  // Strategy B: Lateral waypoint detour (tests both right and left offsets around the hazard)
+  const primaryHazard = hazardsOnDirect[0];
+  const dLat = destination.latitude - origin.latitude;
+  const dLon = destination.longitude - origin.longitude;
+  const len = Math.sqrt(dLat * dLat + dLon * dLon) || 1;
+
+  // Realistic city block offsets (~80m for pedestrians, ~140m for vehicles)
+  const offset = mode === 'driving' ? 0.0016 : 0.0009;
+  const candidates: RouteCoordinate[] = [
+    {
+      latitude: primaryHazard.latitude - (dLon / len) * offset,
+      longitude: primaryHazard.longitude + (dLat / len) * offset,
+    },
+    {
+      latitude: primaryHazard.latitude + (dLon / len) * offset,
+      longitude: primaryHazard.longitude - (dLat / len) * offset,
+    },
+  ];
+
+  for (const evasionCoord of candidates) {
+    const safeData = await fetchRouteMultiEngine([origin, evasionCoord, destination], mode);
+
+    if (safeData && safeData.distance <= directData.distance * 2.5) {
+      const hazardsOnDetour = findHazardsNearRoute(
+        safeData.coordinates,
+        incidents,
+        hazardThreshold,
+        mode
+      );
+
+      if (hazardsOnDetour.length < hazardsOnDirect.length) {
+        const avoided = hazardsOnDirect.filter(
+          (h) => !hazardsOnDetour.some((hd) => hd.id === h.id)
+        );
+
+        const safeDetourRoute: PedestrianRoute = {
+          id: 'route-safe-detour',
+          name: 'Rota Segura (Desvio de Proteção)',
+          mode,
+          distanceMeters: Math.round(safeData.distance),
+          durationMinutes: safeData.durationMinutes,
+          formattedDuration: formatDuration(safeData.durationMinutes),
+          formattedDistance: formatDistance(safeData.distance),
+          estimatedArrival: calculateEstimatedArrival(safeData.durationMinutes),
+          coordinates: safeData.coordinates,
+          steps: safeData.steps,
+          isSafe: hazardsOnDetour.length === 0,
+          hazardsAvoided: avoided,
+          hazardsOnRoute: hazardsOnDetour,
+          summary: `🛡️ Evita ${avoided.length} zona(s) de perigo identificada(s)`,
+        };
+
+        return {
+          safeRoute: safeDetourRoute,
+          directRoute,
+        };
+      }
+    }
+  }
+
+  // If no detour is possible or all detours are blocked, return direct route with warning
   return { safeRoute: directRoute };
 }
