@@ -13,31 +13,26 @@ import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { searchAddressSuggestions, AddressSuggestion } from '../services/geocodingService';
 import { RouteCoordinate, TransportMode } from '../types/navigation';
-import { HomeAddress } from '../types';
 import { calculateDistanceMeters } from '../utils/geo';
 import { formatDuration, formatDistance } from '../services/routingService';
-import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 
 interface SearchBarProps {
   userLocation?: { latitude: number; longitude: number } | null;
   transportMode: TransportMode;
-  homeAddress?: HomeAddress | null;
   onTransportModeChange: (mode: TransportMode) => void;
   onSelectDestination: (name: string, coord: RouteCoordinate, mode: TransportMode) => void;
-  onQuickRouteToHome?: () => void;
-  onQuickRouteToPolice: () => void;
-  onQuickRouteToPharmacy: () => void;
+  onOpenSOSContacts?: () => void;
+  emergencyContactsCount?: number;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   userLocation,
   transportMode,
-  homeAddress,
   onTransportModeChange,
   onSelectDestination,
-  onQuickRouteToHome,
-  onQuickRouteToPolice,
-  onQuickRouteToPharmacy,
+  onOpenSOSContacts,
+  emergencyContactsCount = 0,
 }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
@@ -126,71 +121,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <View style={styles.wrapper}>
-      {/* Transport Mode Switcher: A Pé vs De Carro */}
-      <View style={styles.modeSelectorRow}>
-        <TouchableOpacity
-          style={[
-            styles.modeTab,
-            transportMode === 'walking' && styles.modeTabActiveWalking,
-          ]}
-          onPress={() => {
-            Haptics.selectionAsync();
-            onTransportModeChange('walking');
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="walk"
-            size={16}
-            color={transportMode === 'walking' ? '#0F172A' : '#94A3B8'}
-          />
-          <Text
-            style={[
-              styles.modeTabText,
-              transportMode === 'walking' && styles.modeTabTextActiveWalking,
-            ]}
-          >
-            A Pé (Pedestre)
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.modeTab,
-            transportMode === 'driving' && styles.modeTabActiveDriving,
-          ]}
-          onPress={() => {
-            Haptics.selectionAsync();
-            onTransportModeChange('driving');
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="car-sport"
-            size={16}
-            color={transportMode === 'driving' ? '#0F172A' : '#94A3B8'}
-          />
-          <Text
-            style={[
-              styles.modeTabText,
-              transportMode === 'driving' && styles.modeTabTextActiveDriving,
-            ]}
-          >
-            De Carro (Automóvel)
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Search Input Box */}
+      {/* Google M3 Floating Search Capsule */}
       <View style={[styles.searchBox, isFocused && styles.searchBoxFocused]}>
-        <Ionicons name="search" size={20} color={M3Colors.primary} style={styles.searchIcon} />
+        {/* Leading Sentinela Logo Badge */}
+        <View style={styles.brandBadge}>
+          <Ionicons name="shield-half" size={19} color={M3Colors.primary} />
+          <View style={styles.liveDot} />
+        </View>
 
+        {/* Input */}
         <TextInput
           style={styles.input}
           placeholder={
             transportMode === 'driving'
-              ? 'Destino de carro (ex: Aliados, Foz, Boavista...)'
-              : 'Destino a pé em segurança (rua, local...)'
+              ? 'Destino de carro seguro...'
+              : 'Destino a pé em segurança...'
           }
           placeholderTextColor={M3Colors.outline}
           value={query}
@@ -200,69 +145,58 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           autoCorrect={false}
         />
 
-        {isLoading ? (
-          <ActivityIndicator size="small" color={M3Colors.primary} style={styles.clearBtn} />
-        ) : query.length > 0 ? (
-          <TouchableOpacity onPress={handleClear} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={18} color={M3Colors.onSurfaceVariant} />
+        {/* Clear Button */}
+        {query.length > 0 && (
+          <TouchableOpacity onPress={handleClear} style={styles.iconBtn}>
+            <Ionicons name="close-circle" size={19} color={M3Colors.onSurfaceVariant} />
           </TouchableOpacity>
-        ) : null}
+        )}
+
+        {/* Loading Spinner */}
+        {isLoading && (
+          <ActivityIndicator size="small" color={M3Colors.primary} style={styles.iconBtn} />
+        )}
+
+        {/* Transport Mode Toggle Button (Walk vs Drive) */}
+        <TouchableOpacity
+          style={[styles.modeToggleBtn, transportMode === 'driving' && styles.modeToggleBtnDriving]}
+          onPress={() => {
+            Haptics.selectionAsync();
+            onTransportModeChange(transportMode === 'walking' ? 'driving' : 'walking');
+          }}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name={transportMode === 'driving' ? 'car-sport' : 'walk'}
+            size={16}
+            color={transportMode === 'driving' ? M3Colors.onPrimaryContainer : M3Colors.primary}
+          />
+        </TouchableOpacity>
+
+        {/* SOS Emergency Contacts Access Button */}
+        {onOpenSOSContacts && (
+          <TouchableOpacity
+            style={styles.contactsActionBtn}
+            onPress={onOpenSOSContacts}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="people" size={17} color={M3Colors.primary} />
+            {emergencyContactsCount > 0 && (
+              <View style={styles.contactsCountBadge}>
+                <Text style={styles.contactsCountText}>{emergencyContactsCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Quick Access Shortcuts (when not searching) */}
-      {!isFocused && query.length === 0 && (
-        <View style={styles.shortcutsRow}>
-          {/* Casa Shortcut */}
-          <TouchableOpacity
-            style={[
-              styles.shortcutChip,
-              homeAddress && styles.shortcutChipActiveHome,
-            ]}
-            onPress={onQuickRouteToHome}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name={homeAddress ? 'home' : 'home-outline'}
-              size={15}
-              color={homeAddress ? M3Colors.primary : M3Colors.onSurfaceVariant}
-            />
-            <Text
-              style={[
-                styles.shortcutText,
-                homeAddress && styles.shortcutTextActiveHome,
-              ]}
-            >
-              {homeAddress ? 'Casa' : '+ Casa'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.shortcutChip}
-            onPress={onQuickRouteToPolice}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="shield-sharp" size={15} color={M3Colors.primary} />
-            <Text style={styles.shortcutText}>Esquadra</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.shortcutChip}
-            onPress={onQuickRouteToPharmacy}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="medical" size={15} color={M3Colors.success} />
-            <Text style={styles.shortcutText}>Farmácia</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Google Maps / Waze Style Autocomplete Suggestions Dropdown */}
+      {/* Autocomplete Suggestions Dropdown (Floats over the map) */}
       {suggestions.length > 0 && (isFocused || query.trim().length >= 2) && (
         <View style={styles.dropdown}>
           <View style={styles.dropdownHeader}>
             <Text style={styles.dropdownHeaderText}>SUGESTÕES DE DESTINO</Text>
-            <TouchableOpacity onPress={() => setSuggestions([])} style={{ padding: 2 }}>
-              <Ionicons name="close" size={16} color="#94A3B8" />
+            <TouchableOpacity onPress={() => setSuggestions([])} style={{ padding: 4 }}>
+              <Ionicons name="close" size={16} color={M3Colors.onSurfaceVariant} />
             </TouchableOpacity>
           </View>
 
@@ -303,7 +237,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     </View>
                   )}
 
-                  <Ionicons name="chevron-forward" size={16} color="#475569" />
+                  <Ionicons name="chevron-forward" size={16} color={M3Colors.outline} />
                 </TouchableOpacity>
               );
             }}
@@ -317,49 +251,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 14,
-    paddingTop: 6,
-    paddingBottom: 8,
-    backgroundColor: M3Colors.surface,
+    paddingTop: 4,
+    paddingBottom: 4,
     zIndex: 9999,
     position: 'relative',
-  },
-  modeSelectorRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
-  },
-  modeTab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: M3Shapes.full,
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-  },
-  modeTabActiveWalking: {
-    backgroundColor: M3Colors.secondaryContainer,
-    borderColor: M3Colors.secondary,
-  },
-  modeTabActiveDriving: {
-    backgroundColor: M3Colors.secondaryContainer,
-    borderColor: M3Colors.secondary,
-  },
-  modeTabText: {
-    color: M3Colors.onSurfaceVariant,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  modeTabTextActiveWalking: {
-    color: M3Colors.onSecondaryContainer,
-    fontWeight: '700',
-  },
-  modeTabTextActiveDriving: {
-    color: M3Colors.onSecondaryContainer,
-    fontWeight: '700',
   },
   searchBox: {
     flexDirection: 'row',
@@ -368,54 +263,85 @@ const styles = StyleSheet.create({
     borderRadius: M3Shapes.extraLarge,
     borderWidth: 1,
     borderColor: M3Colors.outlineVariant,
-    paddingHorizontal: 16,
+    paddingLeft: 12,
+    paddingRight: 8,
     height: 52,
-    ...M3Elevation.level2,
+    ...M3Elevation.level3,
+    gap: 8,
   },
   searchBoxFocused: {
     borderColor: M3Colors.primary,
     backgroundColor: M3Colors.surfaceContainerHighest,
   },
-  searchIcon: {
-    marginRight: 10,
+  brandBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: M3Colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  liveDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: M3Colors.success,
   },
   input: {
     flex: 1,
     color: M3Colors.onSurface,
-    fontSize: 15,
-    fontWeight: '400',
+    fontSize: 14,
+    fontWeight: '500',
+    paddingVertical: 0,
   },
-  clearBtn: {
+  iconBtn: {
     padding: 6,
   },
-  shortcutsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-  },
-  shortcutChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  modeToggleBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: M3Colors.surfaceContainerLow,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: M3Colors.outlineVariant,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: M3Shapes.small,
   },
-  shortcutChipActiveHome: {
+  modeToggleBtnDriving: {
     backgroundColor: M3Colors.primaryContainer,
     borderColor: M3Colors.primary,
   },
-  shortcutText: {
-    color: M3Colors.onSurfaceVariant,
-    fontSize: 12,
-    fontWeight: '600',
+  contactsActionBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: M3Colors.surfaceContainerLow,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+    position: 'relative',
   },
-  shortcutTextActiveHome: {
-    color: M3Colors.onPrimaryContainer,
-    fontWeight: '700',
+  contactsCountBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    backgroundColor: M3Colors.primary,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contactsCountText: {
+    color: M3Colors.onPrimary,
+    fontSize: 9,
+    fontWeight: '800',
   },
   dropdown: {
     marginTop: 8,
@@ -425,7 +351,7 @@ const styles = StyleSheet.create({
     borderColor: M3Colors.outlineVariant,
     maxHeight: 280,
     overflow: 'hidden',
-    ...M3Elevation.level3,
+    ...M3Elevation.level4,
   },
   dropdownList: {
     maxHeight: 220,
@@ -448,11 +374,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  dropdownHeaderSub: {
-    color: M3Colors.primary,
-    fontSize: 11,
-    fontWeight: '600',
   },
   suggestionItem: {
     flexDirection: 'row',

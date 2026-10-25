@@ -689,196 +689,8 @@ export default function App() {
         </View>
       )}
 
-      {/* Top Header Bar */}
-      <View style={styles.header}>
-        <View style={styles.headerBrand}>
-          <View style={styles.brandIconWrap}>
-            <Ionicons name="shield-half" size={20} color={M3Colors.primary} />
-          </View>
-          <View>
-            <View style={styles.titleRow}>
-              <Text style={styles.brandTitle}>SENTINELA</Text>
-              <View style={styles.liveIndicator} />
-            </View>
-            <Text style={styles.brandSubtitle}>Segurança Comunitária</Text>
-          </View>
-        </View>
-
-        {/* Header Right Actions: Casa & Contacts */}
-        <View style={styles.headerRightActions}>
-          <TouchableOpacity
-            style={[styles.headerHomeBtn, homeAddress && styles.headerHomeBtnActive]}
-            onPress={handlePressHome}
-            onLongPress={() => setShowHomeModal(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name={homeAddress ? 'home' : 'home-outline'}
-              size={15}
-              color={homeAddress ? M3Colors.onPrimaryContainer : M3Colors.onSurfaceVariant}
-            />
-            <Text
-              style={[
-                styles.headerHomeBtnText,
-                homeAddress && styles.headerHomeBtnTextActive,
-              ]}
-            >
-              Casa
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.contactsBtn}
-            onPress={() => setShowContactsModal(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="people" size={16} color={M3Colors.primary} />
-            <Text style={styles.contactsBtnText}>
-              SOS ({emergencyContacts.filter((c) => c.phone !== '112').length})
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Address Search Bar with Autocomplete & Quick Shortcuts */}
-      {!navState && (
-        <View style={{ zIndex: 99999, elevation: 30 }}>
-          <SearchBar
-            userLocation={userLocation}
-            transportMode={transportMode}
-            homeAddress={homeAddress}
-            onTransportModeChange={setTransportMode}
-            onSelectDestination={(name, coord, mode) => handleRequestNavigation(name, coord, mode)}
-            onQuickRouteToHome={handlePressHome}
-            onQuickRouteToPolice={handleQuickRouteToPolice}
-            onQuickRouteToPharmacy={handleQuickRouteToPharmacy}
-          />
-        </View>
-      )}
-
-      {/* Categories Filter Strip */}
-      <View style={styles.filterStripContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterStrip}
-        >
-          {/* ALL Filter */}
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              selectedFilter === 'all' && styles.filterChipActive,
-            ]}
-            onPress={() => {
-              Haptics.selectionAsync();
-              setSelectedFilter('all');
-            }}
-          >
-            <Ionicons
-              name="layers-outline"
-              size={14}
-              color={selectedFilter === 'all' ? '#0F172A' : '#94A3B8'}
-            />
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedFilter === 'all' && styles.filterChipTextActive,
-              ]}
-            >
-              Todos {incidents.length > 0 ? `(${incidents.length})` : ''}
-            </Text>
-          </TouchableOpacity>
-
-          {/* POLICE Filter */}
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              selectedFilter === 'police' && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
-            ]}
-            onPress={() => {
-              Haptics.selectionAsync();
-              setSelectedFilter('police');
-            }}
-          >
-            <Ionicons
-              name="shield-sharp"
-              size={14}
-              color={selectedFilter === 'police' ? '#FFFFFF' : '#3B82F6'}
-            />
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedFilter === 'police' && { color: '#FFFFFF', fontWeight: '800' },
-              ]}
-            >
-              Polícia (PSP/GNR/PJ)
-            </Text>
-          </TouchableOpacity>
-
-          {/* PHARMACY Filter */}
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              selectedFilter === 'pharmacy' && { backgroundColor: '#10B981', borderColor: '#10B981' },
-            ]}
-            onPress={() => {
-              Haptics.selectionAsync();
-              setSelectedFilter('pharmacy');
-            }}
-          >
-            <Ionicons
-              name="medical"
-              size={14}
-              color={selectedFilter === 'pharmacy' ? '#FFFFFF' : '#10B981'}
-            />
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedFilter === 'pharmacy' && { color: '#FFFFFF', fontWeight: '800' },
-              ]}
-            >
-              Farmácias
-            </Text>
-          </TouchableOpacity>
-
-          {/* Category Chips */}
-          {(Object.keys(CATEGORIES) as IncidentCategory[]).map((catKey) => {
-            const cat = CATEGORIES[catKey];
-            const isSelected = selectedFilter === catKey;
-            const count = incidents.filter((i) => i.category === catKey).length;
-            return (
-              <TouchableOpacity
-                key={catKey}
-                style={[
-                  styles.filterChip,
-                  isSelected && { backgroundColor: cat.color, borderColor: cat.color },
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setSelectedFilter(catKey);
-                }}
-              >
-                <Ionicons
-                  name={cat.icon as any}
-                  size={14}
-                  color={isSelected ? '#FFFFFF' : cat.color}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    isSelected && { color: '#FFFFFF', fontWeight: '700' },
-                  ]}
-                >
-                  {cat.label} {count > 0 ? `(${count})` : ''}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Main Map */}
-      <View style={styles.mapContainer}>
+      {/* 1. Full-Screen Edge-to-Edge Map (Google Maps standard) */}
+      <View style={StyleSheet.absoluteFill}>
         <MapComponent
           userLocation={userLocation}
           userHeading={userHeading}
@@ -919,6 +731,170 @@ export default function App() {
           onRegionChangeComplete={handleRegionChangeComplete}
         />
       </View>
+
+      {/* 2. Google M3 Floating Search Capsule & Floating Chips Overlay */}
+      {!navState && (
+        <View style={styles.topFloatingOverlay} pointerEvents="box-none">
+          <SearchBar
+            userLocation={userLocation}
+            transportMode={transportMode}
+            onTransportModeChange={setTransportMode}
+            onSelectDestination={(name, coord, mode) => handleRequestNavigation(name, coord, mode)}
+            onOpenSOSContacts={() => setShowContactsModal(true)}
+            emergencyContactsCount={emergencyContacts.filter((c) => c.phone !== '112').length}
+          />
+
+          {/* Floating Categories Filter Chips Strip (Over the Map) */}
+          <View style={styles.floatingChipsWrapper} pointerEvents="box-none">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.floatingChipsScroll}
+            >
+              {/* Casa Quick Chip */}
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  homeAddress && styles.filterChipHomeActive,
+                ]}
+                onPress={handlePressHome}
+                onLongPress={() => setShowHomeModal(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={homeAddress ? 'home' : 'home-outline'}
+                  size={14}
+                  color={homeAddress ? M3Colors.onPrimaryContainer : M3Colors.onSurfaceVariant}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    homeAddress && styles.filterChipTextHomeActive,
+                  ]}
+                >
+                  {homeAddress ? 'Casa' : '+ Casa'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Police Quick Chip */}
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  selectedFilter === 'police' && styles.filterChipActivePolice,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setSelectedFilter(selectedFilter === 'police' ? 'all' : 'police');
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="shield-sharp"
+                  size={14}
+                  color={selectedFilter === 'police' ? '#FFFFFF' : '#3B82F6'}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selectedFilter === 'police' && styles.filterChipTextActiveWhite,
+                  ]}
+                >
+                  Polícia (PSP/GNR)
+                </Text>
+              </TouchableOpacity>
+
+              {/* Pharmacy Quick Chip */}
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  selectedFilter === 'pharmacy' && styles.filterChipActivePharmacy,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setSelectedFilter(selectedFilter === 'pharmacy' ? 'all' : 'pharmacy');
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="medical"
+                  size={14}
+                  color={selectedFilter === 'pharmacy' ? '#FFFFFF' : M3Colors.success}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selectedFilter === 'pharmacy' && styles.filterChipTextActiveWhite,
+                  ]}
+                >
+                  Farmácias
+                </Text>
+              </TouchableOpacity>
+
+              {/* All Incidents Chip */}
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  selectedFilter === 'all' && styles.filterChipActive,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setSelectedFilter('all');
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="layers-outline"
+                  size={14}
+                  color={selectedFilter === 'all' ? M3Colors.onSecondaryContainer : M3Colors.onSurfaceVariant}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selectedFilter === 'all' && styles.filterChipTextActive,
+                  ]}
+                >
+                  Todos {incidents.length > 0 ? `(${incidents.length})` : ''}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Hazard Category Chips */}
+              {(Object.keys(CATEGORIES) as IncidentCategory[]).map((catKey) => {
+                const cat = CATEGORIES[catKey];
+                const isSelected = selectedFilter === catKey;
+                const count = incidents.filter((i) => i.category === catKey).length;
+                return (
+                  <TouchableOpacity
+                    key={catKey}
+                    style={[
+                      styles.filterChip,
+                      isSelected && { backgroundColor: cat.color, borderColor: cat.color },
+                    ]}
+                    onPress={() => {
+                      Haptics.selectionAsync();
+                      setSelectedFilter(isSelected ? 'all' : catKey);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={cat.icon as any}
+                      size={14}
+                      color={isSelected ? '#FFFFFF' : cat.color}
+                    />
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        isSelected && styles.filterChipTextActiveWhite,
+                      ]}
+                    >
+                      {cat.label} {count > 0 ? `(${count})` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      )}
 
       {/* Bottom Action Floating Bar */}
       <View style={styles.bottomBar}>
@@ -1068,105 +1044,18 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: M3Colors.surface,
-    paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 0,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: M3Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: M3Colors.surfaceContainerLow,
+  topFloatingOverlay: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) + 6 : 10,
+    left: 0,
+    right: 0,
+    zIndex: 9999,
   },
-  headerBrand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  floatingChipsWrapper: {
+    marginTop: 6,
   },
-  brandIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: M3Shapes.medium,
-    backgroundColor: M3Colors.primaryContainer,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  brandTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: M3Colors.onSurface,
-    letterSpacing: 0.8,
-  },
-  liveIndicator: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: M3Colors.success,
-  },
-  brandSubtitle: {
-    fontSize: 11,
-    color: M3Colors.onSurfaceVariant,
-    fontWeight: '500',
-  },
-  headerRightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerHomeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: M3Colors.surfaceContainerHigh,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: M3Shapes.full,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-  },
-  headerHomeBtnActive: {
-    backgroundColor: M3Colors.primaryContainer,
-    borderColor: M3Colors.primary,
-  },
-  headerHomeBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: M3Colors.onSurfaceVariant,
-  },
-  headerHomeBtnTextActive: {
-    color: M3Colors.onPrimaryContainer,
-    fontWeight: '700',
-  },
-  contactsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: M3Colors.surfaceContainerHigh,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: M3Shapes.full,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-  },
-  contactsBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: M3Colors.primary,
-  },
-  filterStripContainer: {
-    backgroundColor: M3Colors.surface,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(68, 71, 78, 0.4)',
-  },
-  filterStrip: {
+  floatingChipsScroll: {
     paddingHorizontal: 14,
     gap: 8,
   },
@@ -1174,12 +1063,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: M3Shapes.small,
-    backgroundColor: M3Colors.surfaceContainerLow,
+    borderRadius: M3Shapes.full,
+    backgroundColor: 'rgba(29, 32, 36, 0.94)',
     borderWidth: 1,
     borderColor: M3Colors.outlineVariant,
+    ...M3Elevation.level2,
+  },
+  filterChipHomeActive: {
+    backgroundColor: M3Colors.primaryContainer,
+    borderColor: M3Colors.primary,
+  },
+  filterChipTextHomeActive: {
+    color: M3Colors.onPrimaryContainer,
+    fontWeight: '700',
+  },
+  filterChipActivePolice: {
+    backgroundColor: '#1D4ED8',
+    borderColor: '#3B82F6',
+  },
+  filterChipActivePharmacy: {
+    backgroundColor: '#0F5132',
+    borderColor: M3Colors.success,
   },
   filterChipActive: {
     backgroundColor: M3Colors.secondaryContainer,
@@ -1192,6 +1098,10 @@ const styles = StyleSheet.create({
   },
   filterChipTextActive: {
     color: M3Colors.onSecondaryContainer,
+    fontWeight: '700',
+  },
+  filterChipTextActiveWhite: {
+    color: '#FFFFFF',
     fontWeight: '700',
   },
   mapContainer: {
