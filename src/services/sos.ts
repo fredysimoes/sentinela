@@ -51,8 +51,24 @@ export async function createAndDispatchSOS(params: {
   };
 }
 
+export function normalizePhoneForWhatsApp(phone: string): string {
+  let cleaned = phone.replace(/[^\d+]/g, '');
+  if (cleaned.startsWith('+')) {
+    cleaned = cleaned.substring(1);
+  } else if (cleaned.startsWith('00')) {
+    cleaned = cleaned.substring(2);
+  }
+
+  // Prepend Portugal country code 351 if 9 digits (standard PT phone number)
+  if (cleaned.length === 9 && (cleaned.startsWith('9') || cleaned.startsWith('2') || cleaned.startsWith('3'))) {
+    cleaned = `351${cleaned}`;
+  }
+
+  return cleaned;
+}
+
 export async function shareSOSToWhatsApp(phone: string, message: string): Promise<void> {
-  const cleanPhone = phone.replace(/[^\d+]/g, '');
+  const cleanPhone = normalizePhoneForWhatsApp(phone);
   const encodedMsg = encodeURIComponent(message);
   const url = cleanPhone
     ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`
@@ -63,7 +79,10 @@ export async function shareSOSToWhatsApp(phone: string, message: string): Promis
     await Linking.openURL(url);
   } else {
     // Fallback directly to generic WhatsApp scheme or web
-    await Linking.openURL(`https://wa.me/?text=${encodedMsg}`);
+    const fallbackUrl = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodedMsg}`
+      : `https://wa.me/?text=${encodedMsg}`;
+    await Linking.openURL(fallbackUrl);
   }
 }
 
@@ -71,7 +90,9 @@ export async function shareSOSToSMS(phone: string, message: string): Promise<voi
   const cleanPhone = phone.replace(/[^\d+]/g, '');
   const separator = Platform.OS === 'ios' ? '&' : '?';
   const encodedMsg = encodeURIComponent(message);
-  const url = `sms:${cleanPhone}${separator}body=${encodedMsg}`;
+  const url = cleanPhone
+    ? `sms:${cleanPhone}${separator}body=${encodedMsg}`
+    : `sms:${separator}body=${encodedMsg}`;
 
   const canOpen = await Linking.canOpenURL(url);
   if (canOpen) {

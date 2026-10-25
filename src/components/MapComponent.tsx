@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import MapView, { Marker, Circle, Polyline } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
-import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace } from '../types';
+import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace, HomeAddress } from '../types';
 import { PedestrianRoute } from '../types/navigation';
 import { CATEGORIES } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
@@ -107,6 +107,7 @@ interface MapComponentProps {
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
+  homeAddress?: HomeAddress | null;
   onSelectIncident: (incident: Incident) => void;
   onSelectSafePlace: (place: SafePlace) => void;
   onSelectSOS: (sos: SOSAlert) => void;
@@ -127,6 +128,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
+  homeAddress = null,
   onSelectIncident,
   onSelectSafePlace,
   onSelectSOS,
@@ -489,6 +491,26 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
                 <Text style={styles.selectedPointBadgeText} numberOfLines={1}>
                   {selectedMapPoint.name}
                 </Text>
+              </View>
+            </View>
+          </Marker>
+        )}
+        {/* User Saved Home Marker */}
+        {homeAddress && (
+          <Marker
+            coordinate={{
+              latitude: homeAddress.latitude,
+              longitude: homeAddress.longitude,
+            }}
+            zIndex={990}
+            anchor={{ x: 0.5, y: 1.0 }}
+          >
+            <View style={styles.homeMapMarker}>
+              <View style={styles.homeMapMarkerIcon}>
+                <Ionicons name="home" size={16} color="#0F172A" />
+              </View>
+              <View style={styles.homeMapMarkerBadge}>
+                <Text style={styles.homeMapMarkerBadgeText}>Casa</Text>
               </View>
             </View>
           </Marker>
@@ -932,5 +954,40 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     textAlign: 'center',
+  },
+
+  // Home Map Marker
+  homeMapMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  homeMapMarkerIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#38BDF8',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  homeMapMarkerBadge: {
+    backgroundColor: '#0F172A',
+    borderColor: '#38BDF8',
+    borderWidth: 1.5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: 2,
+  },
+  homeMapMarkerBadgeText: {
+    color: '#38BDF8',
+    fontSize: 9,
+    fontWeight: '800',
   },
 });

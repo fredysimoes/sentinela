@@ -1,11 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Incident, EmergencyContact, SOSAlert } from '../types';
+import { Incident, EmergencyContact, SOSAlert, HomeAddress } from '../types';
 
 const STORAGE_KEYS = {
   INCIDENTS: '@sentinela_incidents_v1',
   CONTACTS: '@sentinela_emergency_contacts_v1',
   SOS_ALERTS: '@sentinela_sos_alerts_v1',
   USER_SETTINGS: '@sentinela_user_settings_v1',
+  HOME_ADDRESS: '@sentinela_home_address_v1',
 };
 
 /**
@@ -101,5 +102,30 @@ export async function saveActiveSOSAlerts(alerts: SOSAlert[]): Promise<void> {
     await AsyncStorage.setItem(STORAGE_KEYS.SOS_ALERTS, JSON.stringify(alerts));
   } catch (error) {
     console.error('Erro ao guardar alertas SOS:', error);
+  }
+}
+
+export async function loadHomeAddress(): Promise<HomeAddress | null> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.HOME_ADDRESS);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+    return null;
+  } catch (error) {
+    console.error('Erro ao ler morada de casa:', error);
+    return null;
+  }
+}
+
+export async function saveHomeAddress(home: HomeAddress | null): Promise<void> {
+  try {
+    if (home) {
+      await AsyncStorage.setItem(STORAGE_KEYS.HOME_ADDRESS, JSON.stringify(home));
+    } else {
+      await AsyncStorage.removeItem(STORAGE_KEYS.HOME_ADDRESS);
+    }
+  } catch (error) {
+    console.error('Erro ao guardar morada de casa:', error);
   }
 }

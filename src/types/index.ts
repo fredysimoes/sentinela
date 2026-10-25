@@ -70,3 +70,10 @@ export interface SafePlace {
   hours?: PharmacyHours;
   hoursDescription?: string;
 }
+
+export interface HomeAddress {
+  title: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}

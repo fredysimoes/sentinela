@@ -9,8 +9,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Contacts from 'expo-contacts';
 import Haptics from '../utils/haptics';
 import { EmergencyContact } from '../types';
 
@@ -62,6 +64,55 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
     onSaveContacts(updated);
   };
 
+  const handleImportDeviceContact = async () => {
+    try {
+      const { status } = await Contacts.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permissão de Contactos',
+          'O Sentinela necessita de aceder aos seus contactos para selecionar os números de emergência para onde enviar SMS e WhatsApp em caso de SOS.'
+        );
+        return;
+      }
+
+      const picked = await Contacts.presentContactPickerAsync();
+      if (!picked) return;
+
+      const phoneNumbers = picked.phoneNumbers || [];
+      if (phoneNumbers.length === 0 || !phoneNumbers[0]?.number) {
+        Alert.alert(
+          'Contacto Sem Telefone',
+          'O contacto selecionado não tem nenhum número de telefone associado.'
+        );
+        return;
+      }
+
+      const rawName =
+        picked.name ||
+        [picked.firstName, picked.lastName].filter(Boolean).join(' ') ||
+        'Contacto de Confiança';
+      const rawPhone = phoneNumbers[0].number;
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const newContact: EmergencyContact = {
+        id: `contact-${Date.now()}`,
+        name: rawName.trim(),
+        phone: rawPhone.trim(),
+        relation: 'Contacto Pessoal',
+      };
+
+      const updated = [newContact, ...list];
+      setList(updated);
+      onSaveContacts(updated);
+    } catch (err) {
+      console.warn('Erro ao aceder aos contactos do telemóvel:', err);
+      Alert.alert(
+        'Contactos',
+        'Não foi possível abrir a lista de contactos nativa. Pode adicionar o número manualmente.'
+      );
+    }
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <KeyboardAvoidingView
@@ -103,15 +154,27 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
               </View>
             ))}
 
-            {/* Add Contact Form Toggle */}
+            {/* Add Contact Actions */}
             {!showAddForm ? (
-              <TouchableOpacity
-                style={styles.addToggleBtn}
-                onPress={() => setShowAddForm(true)}
-              >
-                <Ionicons name="add-circle" size={20} color="#38BDF8" />
-                <Text style={styles.addToggleText}>Adicionar Novo Contacto</Text>
-              </TouchableOpacity>
+              <View style={styles.actionButtonsStack}>
+                <TouchableOpacity
+                  style={styles.importContactsBtn}
+                  onPress={handleImportDeviceContact}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="people" size={20} color="#0F172A" />
+                  <Text style={styles.importContactsText}>Importar dos Contactos do Telemóvel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.addToggleBtn}
+                  onPress={() => setShowAddForm(true)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="add-circle-outline" size={18} color="#38BDF8" />
+                  <Text style={styles.addToggleText}>Adicionar Manualmente</Text>
+                </TouchableOpacity>
+              </View>
             ) : (
               <View style={styles.addForm}>
                 <Text style={styles.formTitle}>NOVO CONTACTO</Text>
@@ -248,6 +311,29 @@ const styles = StyleSheet.create({
   deleteBtn: {
     padding: 8,
   },
+  actionButtonsStack: {
+    gap: 10,
+    marginTop: 6,
+  },
+  importContactsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#38BDF8',
+    paddingVertical: 14,
+    borderRadius: 14,
+    gap: 8,
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  importContactsText: {
+    color: '#0F172A',
+    fontWeight: '800',
+    fontSize: 14,
+  },
   addToggleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -256,10 +342,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#38BDF8',
     borderStyle: 'dashed',
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
-    marginTop: 6,
   },
   addToggleText: {
     color: '#38BDF8',

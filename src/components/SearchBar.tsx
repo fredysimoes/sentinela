@@ -13,14 +13,17 @@ import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { searchAddressSuggestions, AddressSuggestion } from '../services/geocodingService';
 import { RouteCoordinate, TransportMode } from '../types/navigation';
+import { HomeAddress } from '../types';
 import { calculateDistanceMeters } from '../utils/geo';
 import { formatDuration, formatDistance } from '../services/routingService';
 
 interface SearchBarProps {
   userLocation?: { latitude: number; longitude: number } | null;
   transportMode: TransportMode;
+  homeAddress?: HomeAddress | null;
   onTransportModeChange: (mode: TransportMode) => void;
   onSelectDestination: (name: string, coord: RouteCoordinate, mode: TransportMode) => void;
+  onQuickRouteToHome?: () => void;
   onQuickRouteToPolice: () => void;
   onQuickRouteToPharmacy: () => void;
 }
@@ -28,8 +31,10 @@ interface SearchBarProps {
 export const SearchBar: React.FC<SearchBarProps> = ({
   userLocation,
   transportMode,
+  homeAddress,
   onTransportModeChange,
   onSelectDestination,
+  onQuickRouteToHome,
   onQuickRouteToPolice,
   onQuickRouteToPharmacy,
 }) => {
@@ -206,13 +211,37 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       {/* Quick Access Shortcuts (when not searching) */}
       {!isFocused && query.length === 0 && (
         <View style={styles.shortcutsRow}>
+          {/* Casa Shortcut */}
+          <TouchableOpacity
+            style={[
+              styles.shortcutChip,
+              homeAddress && { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.12)' },
+            ]}
+            onPress={onQuickRouteToHome}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={homeAddress ? 'home' : 'home-outline'}
+              size={14}
+              color={homeAddress ? '#38BDF8' : '#94A3B8'}
+            />
+            <Text
+              style={[
+                styles.shortcutText,
+                homeAddress && { color: '#38BDF8', fontWeight: '800' },
+              ]}
+            >
+              {homeAddress ? 'Casa' : '+ Casa'}
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.shortcutChip}
             onPress={onQuickRouteToPolice}
             activeOpacity={0.8}
           >
             <Ionicons name="shield-sharp" size={14} color="#3B82F6" />
-            <Text style={styles.shortcutText}>Esquadra Mais Próxima</Text>
+            <Text style={styles.shortcutText}>Esquadra</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -221,7 +250,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             activeOpacity={0.8}
           >
             <Ionicons name="medical" size={14} color="#10B981" />
-            <Text style={styles.shortcutText}>Farmácia Aberta</Text>
+            <Text style={styles.shortcutText}>Farmácia</Text>
           </TouchableOpacity>
         </View>
       )}

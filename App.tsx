@@ -14,7 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import Haptics from './src/utils/haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { Incident, IncidentCategory, SOSAlert, EmergencyContact, UserLocation, SafePlace } from './src/types';
+import { Incident, IncidentCategory, SOSAlert, EmergencyContact, UserLocation, SafePlace, HomeAddress } from './src/types';
 import { CATEGORIES } from './src/constants/categories';
 import { getSafePlaces, SafePlaceWithDistance, loadLiveOsmPlacesForRegion } from './src/services/safePlacesService';
 import {
@@ -24,6 +24,8 @@ import {
   saveEmergencyContacts,
   loadActiveSOSAlerts,
   saveActiveSOSAlerts,
+  loadHomeAddress,
+  saveHomeAddress,
 } from './src/services/storage';
 import {
   requestNotificationPermissions,
@@ -42,6 +44,7 @@ import { IncidentDetailSheet } from './src/components/IncidentDetailSheet';
 import { SafePlaceDetailSheet } from './src/components/SafePlaceDetailSheet';
 import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedPlaceSheet';
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
+import { HomeModal } from './src/components/HomeModal';
 import { calculateDistanceMeters } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
 import { reverseGeocodeCoordinate } from './src/services/geocodingService';
@@ -105,6 +108,8 @@ export default function App() {
   const [selectedFilter, setSelectedFilter] = useState<IncidentCategory | 'all' | 'police' | 'pharmacy'>('all');
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
+  const [homeAddress, setHomeAddress] = useState<HomeAddress | null>(null);
+  const [showHomeModal, setShowHomeModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
@@ -114,6 +119,25 @@ export default function App() {
     body: string;
     type: 'sos_alert' | 'proximity_alert';
   } | null>(null);
+
+  const handleSaveHomeAddress = (home: HomeAddress | null) => {
+    setHomeAddress(home);
+    saveHomeAddress(home);
+  };
+
+  const handlePressHome = () => {
+    if (!homeAddress) {
+      Haptics.selectionAsync();
+      setShowHomeModal(true);
+      return;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    handleRequestNavigation('Casa', {
+      latitude: homeAddress.latitude,
+      longitude: homeAddress.longitude,
+    });
+  };
 
   const handleSelectMapPoint = (point: SelectedMapPoint) => {
     Haptics.selectionAsync();
@@ -353,6 +377,9 @@ export default function App() {
 
       const storedSOS = await loadActiveSOSAlerts();
       setActiveSOSAlerts(storedSOS);
+
+      const savedHome = await loadHomeAddress();
+      setHomeAddress(savedHome);
 
       // Load safe places (Police & Pharmacies across Portugal)
       const places = getSafePlaces('all', initialLat, initialLon);
@@ -676,15 +703,40 @@ export default function App() {
           </View>
         </View>
 
-        {/* Contacts button */}
-        <TouchableOpacity
-          style={styles.contactsBtn}
-          onPress={() => setShowContactsModal(true)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="people" size={18} color="#38BDF8" />
-          <Text style={styles.contactsBtnText}>SOS ({emergencyContacts.length})</Text>
-        </TouchableOpacity>
+        {/* Header Right Actions: Casa & Contacts */}
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            style={[styles.headerHomeBtn, homeAddress && styles.headerHomeBtnActive]}
+            onPress={handlePressHome}
+            onLongPress={() => setShowHomeModal(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={homeAddress ? 'home' : 'home-outline'}
+              size={15}
+              color={homeAddress ? '#0F172A' : '#94A3B8'}
+            />
+            <Text
+              style={[
+                styles.headerHomeBtnText,
+                homeAddress && styles.headerHomeBtnTextActive,
+              ]}
+            >
+              Casa
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.contactsBtn}
+            onPress={() => setShowContactsModal(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="people" size={16} color="#38BDF8" />
+            <Text style={styles.contactsBtnText}>
+              SOS ({emergencyContacts.filter((c) => c.phone !== '112').length})
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Address Search Bar with Autocomplete & Quick Shortcuts */}
@@ -693,8 +745,10 @@ export default function App() {
           <SearchBar
             userLocation={userLocation}
             transportMode={transportMode}
+            homeAddress={homeAddress}
             onTransportModeChange={setTransportMode}
             onSelectDestination={(name, coord, mode) => handleRequestNavigation(name, coord, mode)}
+            onQuickRouteToHome={handlePressHome}
             onQuickRouteToPolice={handleQuickRouteToPolice}
             onQuickRouteToPharmacy={handleQuickRouteToPharmacy}
           />
@@ -834,6 +888,7 @@ export default function App() {
           activeRoute={navState ? navState.route : (showRoutePreview ? previewSafeRoute : null)}
           isNavigating={!!navState}
           selectedMapPoint={selectedMapPoint}
+          homeAddress={homeAddress}
           onSelectIncident={(inc) => {
             Haptics.selectionAsync();
             setSelectedSafePlace(null);
@@ -980,6 +1035,7 @@ export default function App() {
         currentLocation={userLocation}
         emergencyContacts={emergencyContacts}
         onSOSCreated={handleSOSCreated}
+        onUpdateContacts={handleSaveContacts}
       />
 
       {/* Emergency Contacts Modal */}
@@ -988,6 +1044,21 @@ export default function App() {
         onClose={() => setShowContactsModal(false)}
         contacts={emergencyContacts}
         onSaveContacts={handleSaveContacts}
+      />
+
+      {/* Home Safe Route Modal */}
+      <HomeModal
+        visible={showHomeModal}
+        onClose={() => setShowHomeModal(false)}
+        currentHome={homeAddress}
+        userLocation={userLocation}
+        onSaveHome={handleSaveHomeAddress}
+        onNavigateHome={(home) => {
+          handleRequestNavigation('Casa', {
+            latitude: home.latitude,
+            longitude: home.longitude,
+          });
+        }}
       />
     </SafeAreaView>
   );
@@ -1042,6 +1113,34 @@ const styles = StyleSheet.create({
   brandSubtitle: {
     fontSize: 11,
     color: '#94A3B8',
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerHomeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  headerHomeBtnActive: {
+    backgroundColor: '#38BDF8',
+    borderColor: '#38BDF8',
+  },
+  headerHomeBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  headerHomeBtnTextActive: {
+    color: '#0F172A',
   },
   contactsBtn: {
     flexDirection: 'row',
