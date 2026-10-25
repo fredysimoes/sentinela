@@ -77,3 +77,10 @@ export interface HomeAddress {
   latitude: number;
   longitude: number;
 }
+
+export interface NotificationSettings {
+  enabled: boolean;
+  radiusMeters: number;
+  backgroundTracking: boolean;
+  categories: Record<IncidentCategory, boolean>;
+}

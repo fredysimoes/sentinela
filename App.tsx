@@ -14,7 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import Haptics from './src/utils/haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { Incident, IncidentCategory, SOSAlert, EmergencyContact, UserLocation, SafePlace, HomeAddress } from './src/types';
+import { Incident, IncidentCategory, SOSAlert, EmergencyContact, UserLocation, SafePlace, HomeAddress, NotificationSettings } from './src/types';
 import { CATEGORIES } from './src/constants/categories';
 import { getSafePlaces, SafePlaceWithDistance, loadLiveOsmPlacesForRegion } from './src/services/safePlacesService';
 import {
@@ -26,12 +26,20 @@ import {
   saveActiveSOSAlerts,
   loadHomeAddress,
   saveHomeAddress,
+  loadNotificationSettings,
+  saveNotificationSettings,
+  DEFAULT_NOTIFICATION_SETTINGS,
 } from './src/services/storage';
 import {
   requestNotificationPermissions,
   sendDangerProximityPushNotification,
   subscribeToInAppNotifications,
 } from './src/services/notifications';
+import {
+  startBackgroundLocationTracking,
+  stopBackgroundLocationTracking,
+  checkProximityAndNotify,
+} from './src/services/backgroundLocation';
 import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode } from './src/types/navigation';
 import { calculateSafeNavigationRoutes } from './src/services/routingService';
 import { NavigationBanner } from './src/components/NavigationBanner';
@@ -45,6 +53,7 @@ import { SafePlaceDetailSheet } from './src/components/SafePlaceDetailSheet';
 import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedPlaceSheet';
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
 import { HomeModal } from './src/components/HomeModal';
+import { SettingsModal } from './src/components/SettingsModal';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
 import { calculateDistanceMeters } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
@@ -115,12 +124,24 @@ export default function App() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
     body: string;
     type: 'sos_alert' | 'proximity_alert';
   } | null>(null);
+
+  const handleSaveNotificationSettings = async (newSettings: NotificationSettings) => {
+    setNotificationSettings(newSettings);
+    await saveNotificationSettings(newSettings);
+    if (newSettings.enabled && newSettings.backgroundTracking) {
+      await startBackgroundLocationTracking();
+    } else {
+      await stopBackgroundLocationTracking();
+    }
+  };
 
   const handleSaveHomeAddress = (home: HomeAddress | null) => {
     setHomeAddress(home);
@@ -358,10 +379,11 @@ export default function App() {
       setIncidents(cleanStored);
 
       // If Supabase is configured, fetch live community reports
+      let cleanOnline: Incident[] = [];
       if (isSupabaseConfigured()) {
         try {
           const online = await fetchOnlineIncidents();
-          const cleanOnline = online.filter(
+          cleanOnline = online.filter(
             (i) =>
               !i.id.startsWith('seed-') &&
               (i.dismissals || 0) < (i.confirmations || 1) &&
@@ -383,6 +405,13 @@ export default function App() {
       const savedHome = await loadHomeAddress();
       setHomeAddress(savedHome);
 
+      // Load user proximity notification settings and start background tracking if enabled
+      const savedSettings = await loadNotificationSettings();
+      setNotificationSettings(savedSettings);
+      if (savedSettings.enabled && savedSettings.backgroundTracking) {
+        startBackgroundLocationTracking();
+      }
+
       // Load safe places (Police & Pharmacies across Portugal)
       const places = getSafePlaces('all', initialLat, initialLon);
       setSafePlaces(places);
@@ -403,23 +432,14 @@ export default function App() {
             };
             setUserLocation(newLoc);
 
-            // Check if walking near any critical hazard (< 150m)
-            storedIncidents.forEach((inc) => {
-              if (inc.severity === 'critical' || inc.severity === 'high') {
-                const dist = calculateDistanceMeters(
-                  newLoc.latitude,
-                  newLoc.longitude,
-                  inc.latitude,
-                  inc.longitude
-                );
-                if (dist < 150) {
-                  sendDangerProximityPushNotification({
-                    title: inc.title,
-                    distanceMeters: dist,
-                  });
-                }
-              }
-            });
+            // Check real-time proximity to hazards using configured radius (e.g. 300m) and enabled categories
+            const currentIncidents = cleanOnline.length > 0 ? cleanOnline : cleanStored;
+            checkProximityAndNotify(
+              newLoc.latitude,
+              newLoc.longitude,
+              currentIncidents,
+              savedSettings
+            );
           }
         );
       } catch (err) {
@@ -776,6 +796,7 @@ export default function App() {
             onTransportModeChange={setTransportMode}
             onSelectDestination={(name, coord, mode) => handleRequestNavigation(name, coord, mode)}
             onOpenSOSContacts={() => setShowContactsModal(true)}
+            onOpenSettings={() => setShowSettingsModal(true)}
             emergencyContactsCount={emergencyContacts.filter((c) => c.phone !== '112').length}
           />
 
@@ -1071,6 +1092,14 @@ export default function App() {
             longitude: home.longitude,
           });
         }}
+      />
+
+      {/* Proximity & Background Notification Settings Modal */}
+      <SettingsModal
+        visible={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        settings={notificationSettings}
+        onSaveSettings={handleSaveNotificationSettings}
       />
     </SafeAreaView>
   );

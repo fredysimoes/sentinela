@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Incident, EmergencyContact, SOSAlert, HomeAddress } from '../types';
+import { Incident, EmergencyContact, SOSAlert, HomeAddress, NotificationSettings } from '../types';
 
 const STORAGE_KEYS = {
   INCIDENTS: '@sentinela_incidents_v1',
@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   SOS_ALERTS: '@sentinela_sos_alerts_v1',
   USER_SETTINGS: '@sentinela_user_settings_v1',
   HOME_ADDRESS: '@sentinela_home_address_v1',
+  NOTIFICATION_SETTINGS: '@sentinela_notification_settings_v1',
 };
 
 /**
@@ -127,5 +128,48 @@ export async function saveHomeAddress(home: HomeAddress | null): Promise<void> {
     }
   } catch (error) {
     console.error('Erro ao guardar morada de casa:', error);
+  }
+}
+
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  enabled: true,
+  radiusMeters: 300,
+  backgroundTracking: true,
+  categories: {
+    theft_risk: true,
+    harassment: true,
+    suspicious: true,
+    hazard: true,
+    dark_area: true,
+    safe_haven: false,
+  },
+};
+
+export async function loadNotificationSettings(): Promise<NotificationSettings> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATION_SETTINGS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        ...DEFAULT_NOTIFICATION_SETTINGS,
+        ...parsed,
+        categories: {
+          ...DEFAULT_NOTIFICATION_SETTINGS.categories,
+          ...(parsed.categories || {}),
+        },
+      };
+    }
+    return DEFAULT_NOTIFICATION_SETTINGS;
+  } catch (error) {
+    console.error('Erro ao ler definições de notificação:', error);
+    return DEFAULT_NOTIFICATION_SETTINGS;
+  }
+}
+
+export async function saveNotificationSettings(settings: NotificationSettings): Promise<void> {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_SETTINGS, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Erro ao guardar definições de notificação:', error);
   }
 }

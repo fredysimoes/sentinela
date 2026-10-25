@@ -23,6 +23,7 @@ interface SearchBarProps {
   onTransportModeChange: (mode: TransportMode) => void;
   onSelectDestination: (name: string, coord: RouteCoordinate, mode: TransportMode) => void;
   onOpenSOSContacts?: () => void;
+  onOpenSettings?: () => void;
   emergencyContactsCount?: number;
 }
 
@@ -32,6 +33,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onTransportModeChange,
   onSelectDestination,
   onOpenSOSContacts,
+  onOpenSettings,
   emergencyContactsCount = 0,
 }) => {
   const [query, setQuery] = useState('');
@@ -186,6 +188,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <Text style={styles.contactsCountText}>{emergencyContactsCount}</Text>
               </View>
             )}
+          </TouchableOpacity>
+        )}
+
+        {/* Proximity & Settings Button */}
+        {onOpenSettings && (
+          <TouchableOpacity
+            style={[styles.contactsActionBtn, { marginLeft: 6 }]}
+            onPress={onOpenSettings}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="options-outline" size={17} color={M3Colors.primary} />
           </TouchableOpacity>
         )}
       </View>
