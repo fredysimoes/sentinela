@@ -13,6 +13,7 @@ import { CATEGORIES } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
 import { SelectedMapPoint } from './SelectedPlaceSheet';
+import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 
 // -------------------------------------------------------------
 // High Performance Memoized Markers (prevents re-rendering 500 views)
@@ -529,7 +530,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             <Ionicons
               name="compass-outline"
               size={22}
-              color={followHeading ? '#38BDF8' : '#94A3B8'}
+              color={followHeading ? M3Colors.primary : M3Colors.onSurfaceVariant}
             />
           </View>
         </TouchableOpacity>
@@ -556,7 +557,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           onPress={handleRecenter}
           activeOpacity={0.8}
         >
-          <Ionicons name="locate" size={22} color="#38BDF8" />
+          <Ionicons name="locate" size={22} color={M3Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -567,7 +568,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           onPress={handleRecenter}
           activeOpacity={0.85}
         >
-          <Ionicons name="navigate" size={16} color="#0F172A" />
+          <Ionicons name="navigate" size={16} color={M3Colors.onPrimary} />
           <Text style={styles.recenterNavPillText}>Recentrar Navegação 3D</Text>
         </TouchableOpacity>
       )}
@@ -606,29 +607,25 @@ const styles = StyleSheet.create({
   floatingControlBtn: {
     width: 46,
     height: 46,
-    borderRadius: 23,
-    backgroundColor: '#1E293B',
-    borderWidth: 1.5,
-    borderColor: '#334155',
+    borderRadius: M3Shapes.large,
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 6,
+    ...M3Elevation.level2,
   },
   floatingControlBtnActive: {
-    borderColor: '#38BDF8',
-    backgroundColor: '#0F172A',
+    borderColor: M3Colors.secondary,
+    backgroundColor: M3Colors.secondaryContainer,
   },
   floatingControlText: {
-    color: '#94A3B8',
+    color: M3Colors.onSurfaceVariant,
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   floatingControlTextActive: {
-    color: '#38BDF8',
+    color: M3Colors.onSecondaryContainer,
   },
   recenterNavPill: {
     position: 'absolute',
@@ -637,19 +634,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#38BDF8',
+    backgroundColor: M3Colors.primary,
     paddingHorizontal: 18,
     paddingVertical: 10,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+    borderRadius: M3Shapes.full,
+    ...M3Elevation.level3,
     zIndex: 100,
   },
   recenterNavPillText: {
-    color: '#0F172A',
+    color: M3Colors.onPrimary,
     fontSize: 13,
     fontWeight: '800',
   },

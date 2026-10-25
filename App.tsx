@@ -45,6 +45,7 @@ import { SafePlaceDetailSheet } from './src/components/SafePlaceDetailSheet';
 import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedPlaceSheet';
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
 import { HomeModal } from './src/components/HomeModal';
+import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
 import { calculateDistanceMeters } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
 import { reverseGeocodeCoordinate } from './src/services/geocodingService';
@@ -692,14 +693,14 @@ export default function App() {
       <View style={styles.header}>
         <View style={styles.headerBrand}>
           <View style={styles.brandIconWrap}>
-            <Ionicons name="shield-half" size={20} color="#38BDF8" />
+            <Ionicons name="shield-half" size={20} color={M3Colors.primary} />
           </View>
           <View>
             <View style={styles.titleRow}>
               <Text style={styles.brandTitle}>SENTINELA</Text>
               <View style={styles.liveIndicator} />
             </View>
-            <Text style={styles.brandSubtitle}>Segurança Comunitária para Pedestres</Text>
+            <Text style={styles.brandSubtitle}>Segurança Comunitária</Text>
           </View>
         </View>
 
@@ -714,7 +715,7 @@ export default function App() {
             <Ionicons
               name={homeAddress ? 'home' : 'home-outline'}
               size={15}
-              color={homeAddress ? '#0F172A' : '#94A3B8'}
+              color={homeAddress ? M3Colors.onPrimaryContainer : M3Colors.onSurfaceVariant}
             />
             <Text
               style={[
@@ -731,7 +732,7 @@ export default function App() {
             onPress={() => setShowContactsModal(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="people" size={16} color="#38BDF8" />
+            <Ionicons name="people" size={16} color={M3Colors.primary} />
             <Text style={styles.contactsBtnText}>
               SOS ({emergencyContacts.filter((c) => c.phone !== '112').length})
             </Text>
@@ -921,7 +922,7 @@ export default function App() {
 
       {/* Bottom Action Floating Bar */}
       <View style={styles.bottomBar}>
-        {/* Signal Hazard Button */}
+        {/* Signal Hazard Button - M3 Extended FAB */}
         <TouchableOpacity
           style={styles.reportBtn}
           onPress={() => {
@@ -932,7 +933,7 @@ export default function App() {
           activeOpacity={0.85}
         >
           <View style={styles.reportIconCircle}>
-            <Ionicons name="add" size={22} color="#0F172A" />
+            <Ionicons name="add" size={22} color={M3Colors.onPrimary} />
           </View>
           <View>
             <Text style={styles.reportBtnTitle}>Sinalizar Perigo</Text>
@@ -940,7 +941,7 @@ export default function App() {
           </View>
         </TouchableOpacity>
 
-        {/* SOS Emergency Button */}
+        {/* SOS Emergency Button - M3 Squircle FAB */}
         <TouchableOpacity
           style={styles.sosBtn}
           onPress={() => {
@@ -949,7 +950,6 @@ export default function App() {
           }}
           activeOpacity={0.85}
         >
-          <View style={styles.sosPulse} />
           <Ionicons name="megaphone" size={24} color="#FFFFFF" />
           <Text style={styles.sosBtnText}>SOS</Text>
         </TouchableOpacity>
@@ -1067,7 +1067,7 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: M3Colors.surface,
     paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 0,
   },
   header: {
@@ -1076,9 +1076,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#0F172A',
+    backgroundColor: M3Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    borderBottomColor: M3Colors.surfaceContainerLow,
   },
   headerBrand: {
     flexDirection: 'row',
@@ -1086,10 +1086,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   brandIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    width: 38,
+    height: 38,
+    borderRadius: M3Shapes.medium,
+    backgroundColor: M3Colors.primaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1099,20 +1099,21 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   brandTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#F8FAFC',
-    letterSpacing: 1,
+    fontSize: 17,
+    fontWeight: '800',
+    color: M3Colors.onSurface,
+    letterSpacing: 0.8,
   },
   liveIndicator: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: '#10B981',
+    backgroundColor: M3Colors.success,
   },
   brandSubtitle: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: M3Colors.onSurfaceVariant,
+    fontWeight: '500',
   },
   headerRightActions: {
     flexDirection: 'row',
@@ -1123,46 +1124,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 10,
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 16,
+    borderRadius: M3Shapes.full,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: M3Colors.outlineVariant,
   },
   headerHomeBtnActive: {
-    backgroundColor: '#38BDF8',
-    borderColor: '#38BDF8',
+    backgroundColor: M3Colors.primaryContainer,
+    borderColor: M3Colors.primary,
   },
   headerHomeBtnText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#94A3B8',
+    fontWeight: '600',
+    color: M3Colors.onSurfaceVariant,
   },
   headerHomeBtnTextActive: {
-    color: '#0F172A',
+    color: M3Colors.onPrimaryContainer,
+    fontWeight: '700',
   },
   contactsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: M3Colors.surfaceContainerHigh,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 16,
+    borderRadius: M3Shapes.full,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: M3Colors.outlineVariant,
   },
   contactsBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#38BDF8',
+    color: M3Colors.primary,
   },
   filterStripContainer: {
-    backgroundColor: '#0F172A',
+    backgroundColor: M3Colors.surface,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    borderBottomColor: 'rgba(68, 71, 78, 0.4)',
   },
   filterStrip: {
     paddingHorizontal: 14,
@@ -1173,24 +1175,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#1E293B',
+    paddingVertical: 7,
+    borderRadius: M3Shapes.small,
+    backgroundColor: M3Colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: M3Colors.outlineVariant,
   },
   filterChipActive: {
-    backgroundColor: '#38BDF8',
-    borderColor: '#38BDF8',
+    backgroundColor: M3Colors.secondaryContainer,
+    borderColor: M3Colors.secondary,
   },
   filterChipText: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: M3Colors.onSurfaceVariant,
     fontWeight: '600',
   },
   filterChipTextActive: {
-    color: '#0F172A',
-    fontWeight: '800',
+    color: M3Colors.onSecondaryContainer,
+    fontWeight: '700',
   },
   mapContainer: {
     flex: 1,
@@ -1202,69 +1204,62 @@ const styles = StyleSheet.create({
     right: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   reportBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
-    borderWidth: 1.5,
-    borderColor: '#38BDF8',
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 18,
+    borderRadius: M3Shapes.large,
     gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
+    height: 56,
+    ...M3Elevation.level3,
   },
   reportIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#38BDF8',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: M3Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   reportBtnTitle: {
-    color: '#F8FAFC',
+    color: M3Colors.onSurface,
     fontSize: 14,
     fontWeight: '700',
   },
   reportBtnSub: {
-    color: '#94A3B8',
+    color: M3Colors.onSurfaceVariant,
     fontSize: 11,
   },
   sosBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EF4444',
-    paddingVertical: 14,
+    backgroundColor: M3Colors.sosBright,
     paddingHorizontal: 22,
-    borderRadius: 20,
+    borderRadius: M3Shapes.large,
     gap: 8,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    shadowColor: '#EF4444',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 10,
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    ...M3Elevation.level4,
   },
   sosPulse: {
     position: 'absolute',
     width: '100%',
     height: '100%',
-    borderRadius: 20,
-    backgroundColor: 'rgba(239, 68, 68, 0.4)',
+    borderRadius: M3Shapes.large,
+    backgroundColor: 'rgba(220, 38, 38, 0.3)',
   },
   sosBtnText: {
     color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '900',
     letterSpacing: 1,
   },

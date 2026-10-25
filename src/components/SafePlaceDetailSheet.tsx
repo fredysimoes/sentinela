@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafePlace, UserLocation } from '../types';
 import { calculateDistanceMeters, formatDistance, getGoogleMapsUrl } from '../utils/geo';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
+import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 
 interface SafePlaceDetailSheetProps {
   place: SafePlace | null;
@@ -192,25 +193,21 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#1E293B',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: M3Colors.surfaceContainer,
+    borderTopLeftRadius: M3Shapes.extraLarge,
+    borderTopRightRadius: M3Shapes.extraLarge,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 28,
     borderTopWidth: 1,
-    borderTopColor: '#334155',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 16,
+    borderTopColor: M3Colors.outlineVariant,
+    ...M3Elevation.level4,
   },
   handle: {
-    width: 40,
+    width: 32,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#475569',
+    backgroundColor: M3Colors.outlineVariant,
     alignSelf: 'center',
     marginBottom: 12,
   },
@@ -225,21 +222,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 5,
+    borderRadius: M3Shapes.small,
     borderWidth: 1,
   },
   typeBadgeText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   closeBtn: {
-    padding: 4,
+    padding: 6,
   },
   name: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#F8FAFC',
+    fontSize: 19,
+    fontWeight: '700',
+    color: M3Colors.onSurface,
     marginBottom: 6,
   },
   locationRow: {
@@ -250,7 +247,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     fontSize: 13,
-    color: '#CBD5E1',
+    color: M3Colors.onSurfaceVariant,
     flexShrink: 1,
   },
   distanceRow: {
@@ -261,16 +258,18 @@ const styles = StyleSheet.create({
   },
   distanceText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#38BDF8',
+    fontWeight: '600',
+    color: M3Colors.primary,
   },
   scheduleCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: 12,
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderRadius: M3Shapes.medium,
     padding: 14,
     marginBottom: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
+    borderLeftColor: M3Colors.success,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
   },
   scheduleHeader: {
     flexDirection: 'row',
@@ -284,7 +283,7 @@ const styles = StyleSheet.create({
   },
   scheduleBody: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: M3Colors.onSurfaceVariant,
     lineHeight: 18,
   },
   actionsRow: {
@@ -295,20 +294,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#059669',
+    backgroundColor: M3Colors.primaryContainer,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: M3Shapes.full,
     gap: 8,
     marginBottom: 12,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
+    ...M3Elevation.level2,
   },
   navigateBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
+    color: M3Colors.onPrimaryContainer,
+    fontWeight: '700',
     fontSize: 14,
   },
   actionBtn: {
@@ -317,25 +312,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: M3Shapes.full,
     gap: 8,
   },
   callBtn: {
-    backgroundColor: '#0284C7',
+    backgroundColor: M3Colors.secondaryContainer,
   },
   callBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: M3Colors.onSecondaryContainer,
+    fontWeight: '600',
     fontSize: 13,
   },
   mapsBtn: {
-    backgroundColor: '#1E293B',
-    borderWidth: 1.5,
-    borderColor: '#38BDF8',
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
   },
   mapsBtnText: {
-    color: '#38BDF8',
-    fontWeight: '700',
+    color: M3Colors.onSurface,
+    fontWeight: '600',
     fontSize: 13,
   },
 });

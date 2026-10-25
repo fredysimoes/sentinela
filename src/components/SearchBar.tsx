@@ -16,6 +16,7 @@ import { RouteCoordinate, TransportMode } from '../types/navigation';
 import { HomeAddress } from '../types';
 import { calculateDistanceMeters } from '../utils/geo';
 import { formatDuration, formatDistance } from '../services/routingService';
+import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 
 interface SearchBarProps {
   userLocation?: { latitude: number; longitude: number } | null;
@@ -182,7 +183,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
       {/* Search Input Box */}
       <View style={[styles.searchBox, isFocused && styles.searchBoxFocused]}>
-        <Ionicons name="search" size={20} color="#38BDF8" style={styles.searchIcon} />
+        <Ionicons name="search" size={20} color={M3Colors.primary} style={styles.searchIcon} />
 
         <TextInput
           style={styles.input}
@@ -191,7 +192,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               ? 'Destino de carro (ex: Aliados, Foz, Boavista...)'
               : 'Destino a pé em segurança (rua, local...)'
           }
-          placeholderTextColor="#64748B"
+          placeholderTextColor={M3Colors.outline}
           value={query}
           onChangeText={setQuery}
           onFocus={() => setIsFocused(true)}
@@ -200,10 +201,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         />
 
         {isLoading ? (
-          <ActivityIndicator size="small" color="#38BDF8" style={styles.clearBtn} />
+          <ActivityIndicator size="small" color={M3Colors.primary} style={styles.clearBtn} />
         ) : query.length > 0 ? (
           <TouchableOpacity onPress={handleClear} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={18} color="#94A3B8" />
+            <Ionicons name="close-circle" size={18} color={M3Colors.onSurfaceVariant} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -215,20 +216,20 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <TouchableOpacity
             style={[
               styles.shortcutChip,
-              homeAddress && { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.12)' },
+              homeAddress && styles.shortcutChipActiveHome,
             ]}
             onPress={onQuickRouteToHome}
             activeOpacity={0.8}
           >
             <Ionicons
               name={homeAddress ? 'home' : 'home-outline'}
-              size={14}
-              color={homeAddress ? '#38BDF8' : '#94A3B8'}
+              size={15}
+              color={homeAddress ? M3Colors.primary : M3Colors.onSurfaceVariant}
             />
             <Text
               style={[
                 styles.shortcutText,
-                homeAddress && { color: '#38BDF8', fontWeight: '800' },
+                homeAddress && styles.shortcutTextActiveHome,
               ]}
             >
               {homeAddress ? 'Casa' : '+ Casa'}
@@ -240,7 +241,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             onPress={onQuickRouteToPolice}
             activeOpacity={0.8}
           >
-            <Ionicons name="shield-sharp" size={14} color="#3B82F6" />
+            <Ionicons name="shield-sharp" size={15} color={M3Colors.primary} />
             <Text style={styles.shortcutText}>Esquadra</Text>
           </TouchableOpacity>
 
@@ -249,7 +250,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             onPress={onQuickRouteToPharmacy}
             activeOpacity={0.8}
           >
-            <Ionicons name="medical" size={14} color="#10B981" />
+            <Ionicons name="medical" size={15} color={M3Colors.success} />
             <Text style={styles.shortcutText}>Farmácia</Text>
           </TouchableOpacity>
         </View>
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 6,
     paddingBottom: 8,
-    backgroundColor: '#0F172A',
+    backgroundColor: M3Colors.surface,
     zIndex: 9999,
     position: 'relative',
   },
@@ -333,62 +334,59 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 7,
-    borderRadius: 10,
-    backgroundColor: '#1E293B',
-    borderWidth: 1.5,
-    borderColor: '#334155',
+    paddingVertical: 8,
+    borderRadius: M3Shapes.full,
+    backgroundColor: M3Colors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
   },
   modeTabActiveWalking: {
-    backgroundColor: '#38BDF8',
-    borderColor: '#38BDF8',
+    backgroundColor: M3Colors.secondaryContainer,
+    borderColor: M3Colors.secondary,
   },
   modeTabActiveDriving: {
-    backgroundColor: '#38BDF8',
-    borderColor: '#38BDF8',
+    backgroundColor: M3Colors.secondaryContainer,
+    borderColor: M3Colors.secondary,
   },
   modeTabText: {
-    color: '#94A3B8',
+    color: M3Colors.onSurfaceVariant,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   modeTabTextActiveWalking: {
-    color: '#0F172A',
-    fontWeight: '800',
+    color: M3Colors.onSecondaryContainer,
+    fontWeight: '700',
   },
   modeTabTextActiveDriving: {
-    color: '#0F172A',
-    fontWeight: '800',
+    color: M3Colors.onSecondaryContainer,
+    fontWeight: '700',
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#334155',
-    paddingHorizontal: 12,
-    height: 46,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 4,
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderRadius: M3Shapes.extraLarge,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+    paddingHorizontal: 16,
+    height: 52,
+    ...M3Elevation.level2,
   },
   searchBoxFocused: {
-    borderColor: '#38BDF8',
+    borderColor: M3Colors.primary,
+    backgroundColor: M3Colors.surfaceContainerHighest,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   input: {
     flex: 1,
-    color: '#F8FAFC',
-    fontSize: 13,
-    fontWeight: '500',
+    color: M3Colors.onSurface,
+    fontSize: 15,
+    fontWeight: '400',
   },
   clearBtn: {
-    padding: 4,
+    padding: 6,
   },
   shortcutsRow: {
     flexDirection: 'row',
@@ -399,34 +397,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: M3Colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: M3Colors.outlineVariant,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
+    paddingVertical: 7,
+    borderRadius: M3Shapes.small,
+  },
+  shortcutChipActiveHome: {
+    backgroundColor: M3Colors.primaryContainer,
+    borderColor: M3Colors.primary,
   },
   shortcutText: {
-    color: '#CBD5E1',
-    fontSize: 11,
+    color: M3Colors.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  shortcutTextActiveHome: {
+    color: M3Colors.onPrimaryContainer,
     fontWeight: '700',
   },
   dropdown: {
     marginTop: 8,
-    backgroundColor: '#1E293B',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#38BDF8',
-    maxHeight: 270,
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderRadius: M3Shapes.extraLarge,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+    maxHeight: 280,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
+    ...M3Elevation.level3,
   },
   dropdownList: {
-    maxHeight: 215,
+    maxHeight: 220,
   },
   dropdownListContent: {
     flexGrow: 1,
@@ -435,36 +437,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    backgroundColor: '#0F172A',
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    backgroundColor: M3Colors.surfaceContainerLowest,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: M3Colors.outlineVariant,
   },
   dropdownHeaderText: {
-    color: '#94A3B8',
-    fontSize: 10,
-    fontWeight: '800',
+    color: M3Colors.onSurfaceVariant,
+    fontSize: 11,
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
   dropdownHeaderSub: {
-    color: '#38BDF8',
-    fontSize: 10,
-    fontWeight: '700',
+    color: M3Colors.primary,
+    fontSize: 11,
+    fontWeight: '600',
   },
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.5)',
-    gap: 10,
+    borderBottomColor: 'rgba(68, 71, 78, 0.4)',
+    gap: 12,
   },
   itemPinWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -472,26 +474,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemTitle: {
-    color: '#F8FAFC',
-    fontSize: 13,
-    fontWeight: '700',
+    color: M3Colors.onSurface,
+    fontSize: 14,
+    fontWeight: '600',
   },
   itemSubtitle: {
-    color: '#94A3B8',
-    fontSize: 11,
-    marginTop: 1,
+    color: M3Colors.onSurfaceVariant,
+    fontSize: 12,
+    marginTop: 2,
   },
   etaPill: {
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 8,
+    backgroundColor: M3Colors.surfaceContainerLow,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: M3Shapes.full,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: M3Colors.outlineVariant,
   },
   etaText: {
-    color: '#38BDF8',
-    fontSize: 10,
-    fontWeight: '700',
+    color: M3Colors.primary,
+    fontSize: 11,
+    fontWeight: '600',
   },
 });
