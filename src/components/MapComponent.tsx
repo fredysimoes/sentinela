@@ -4,9 +4,66 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import MapView, { Marker, Circle, Polyline } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
+
+const GOOGLE_MAPS_DARK_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#17191d' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#111318' }, { weight: 3 }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#c4c7c5' }] },
+  {
+    featureType: 'administrative.locality',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#e2e2e5' }],
+  },
+  {
+    featureType: 'poi',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#a8c7fa' }],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [{ color: '#18281d' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry',
+    stylers: [{ color: '#2b2d33' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#1d2024' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [{ color: '#383b42' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#202227' }],
+  },
+  {
+    featureType: 'transit',
+    elementType: 'geometry',
+    stylers: [{ color: '#24282e' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{ color: '#0e1f2f' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#73839b' }],
+  },
+];
 import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace, HomeAddress } from '../types';
 import { PedestrianRoute } from '../types/navigation';
 import { CATEGORIES } from '../constants/categories';
@@ -316,6 +373,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
         showsMyLocationButton={false}
         showsCompass={false}
         userInterfaceStyle="dark"
+        customMapStyle={GOOGLE_MAPS_DARK_STYLE}
         onPanDrag={() => setIsUserInteracting(true)}
         onRegionChangeComplete={onRegionChangeComplete}
         onPoiClick={(e) => {
