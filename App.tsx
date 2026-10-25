@@ -57,6 +57,7 @@ import {
   dismissIncidentOnline,
   deleteIncidentOnline,
   broadcastOnlineSOS,
+  resolveOnlineSOS,
   subscribeToOnlineIncidents,
   subscribeToOnlineSOS,
 } from './src/services/supabase';
@@ -465,14 +466,19 @@ export default function App() {
           await saveIncidents(cleanFresh);
         });
 
-        subscribeToOnlineSOS((newSOS) => {
-          setActiveSOSAlerts((prev) => [newSOS, ...prev.filter((s) => s.id !== newSOS.id)]);
-          setActiveBanner({
-            title: '🚨 ALERTA SOS EM DIRETO',
-            body: 'Pedestre em perigo reportado nesta área!',
-            type: 'sos_alert',
-          });
-        });
+        subscribeToOnlineSOS(
+          (newSOS) => {
+            setActiveSOSAlerts((prev) => [newSOS, ...prev.filter((s) => s.id !== newSOS.id)]);
+            setActiveBanner({
+              title: '🚨 ALERTA SOS EM DIRETO',
+              body: 'Pedestre em perigo reportado nesta área!',
+              type: 'sos_alert',
+            });
+          },
+          (removedId) => {
+            setActiveSOSAlerts((prev) => prev.filter((s) => s.id !== removedId));
+          }
+        );
       }
     }
 
@@ -651,6 +657,27 @@ export default function App() {
     broadcastOnlineSOS(sos);
   };
 
+  // Handle SOS Resolution / Mark as Safe -> Removes SOS alert from map & Supabase
+  const handleResolveSOS = (id?: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const targetId = id || (activeSOSAlerts.length > 0 ? activeSOSAlerts[0].id : null);
+    if (!targetId) {
+      setActiveSOSAlerts([]);
+      saveActiveSOSAlerts([]);
+      return;
+    }
+
+    const remaining = activeSOSAlerts.filter((item) => item.id !== targetId);
+    setActiveSOSAlerts(remaining);
+    saveActiveSOSAlerts(remaining);
+    resolveOnlineSOS(targetId);
+
+    Alert.alert(
+      '✅ Situação Segura',
+      'O alerta de SOS foi concluído com sucesso e removido do mapa.'
+    );
+  };
+
   // Save emergency contacts
   const handleSaveContacts = (contacts: EmergencyContact[]) => {
     setEmergencyContacts(contacts);
@@ -720,7 +747,15 @@ export default function App() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             Alert.alert(
               '🚨 Alerta SOS Comunitário',
-              `Utilizador a pedir ajuda neste ponto!\nEnviado às: ${new Date(sos.timestamp).toLocaleTimeString()}`
+              `Utilizador a pedir ajuda neste ponto!\nEnviado às: ${new Date(sos.timestamp).toLocaleTimeString()}`,
+              [
+                { text: 'Fechar', style: 'cancel' },
+                {
+                  text: '✅ Marcar Seguro (Remover)',
+                  style: 'default',
+                  onPress: () => handleResolveSOS(sos.id),
+                },
+              ]
             );
           }}
           onMapLongPress={(coord) => {
@@ -898,7 +933,7 @@ export default function App() {
 
       {/* Bottom Action Floating Bar */}
       <View style={styles.bottomBar}>
-        {/* Signal Hazard Button - M3 Extended FAB */}
+        {/* Signal Hazard Button - High Contrast Light Pill FAB */}
         <TouchableOpacity
           style={styles.reportBtn}
           onPress={() => {
@@ -906,10 +941,10 @@ export default function App() {
             setTargetCoordinate(null);
             setShowReportModal(true);
           }}
-          activeOpacity={0.85}
+          activeOpacity={0.88}
         >
           <View style={styles.reportIconCircle}>
-            <Ionicons name="add" size={22} color={M3Colors.onPrimary} />
+            <Ionicons name="add" size={22} color="#FFFFFF" />
           </View>
           <View>
             <Text style={styles.reportBtnTitle}>Sinalizar Perigo</Text>
@@ -1012,6 +1047,7 @@ export default function App() {
         emergencyContacts={emergencyContacts}
         onSOSCreated={handleSOSCreated}
         onUpdateContacts={handleSaveContacts}
+        onSOSResolved={handleResolveSOS}
       />
 
       {/* Emergency Contacts Modal */}
@@ -1120,32 +1156,37 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: M3Colors.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: M3Shapes.large,
-    gap: 10,
+    gap: 12,
     height: 56,
-    ...M3Elevation.level3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
   },
   reportIconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: M3Colors.primary,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#0284C7',
     justifyContent: 'center',
     alignItems: 'center',
   },
   reportBtnTitle: {
-    color: M3Colors.onSurface,
-    fontSize: 14,
-    fontWeight: '700',
+    color: '#0F172A',
+    fontSize: 15,
+    fontWeight: '800',
   },
   reportBtnSub: {
-    color: M3Colors.onSurfaceVariant,
+    color: '#475569',
     fontSize: 11,
+    fontWeight: '600',
   },
   sosBtn: {
     flexDirection: 'row',

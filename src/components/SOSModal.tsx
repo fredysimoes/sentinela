@@ -24,6 +24,7 @@ interface SOSModalProps {
   emergencyContacts: EmergencyContact[];
   onSOSCreated: (alert: SOSAlert) => void;
   onUpdateContacts?: (contacts: EmergencyContact[]) => void;
+  onSOSResolved?: (alertId?: string) => void;
 }
 
 export const SOSModal: React.FC<SOSModalProps> = ({
@@ -33,6 +34,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   emergencyContacts,
   onSOSCreated,
   onUpdateContacts,
+  onSOSResolved,
 }) => {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isDispatched, setIsDispatched] = useState(false);
@@ -173,6 +175,19 @@ export const SOSModal: React.FC<SOSModalProps> = ({
       return;
     }
     shareSOSToSMS(targetPhone, shareText);
+  };
+
+  const handleMarkSafe = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (createdAlert && onSOSResolved) {
+      onSOSResolved(createdAlert.id);
+    } else if (onSOSResolved) {
+      onSOSResolved();
+    }
+    setCreatedAlert(null);
+    setIsDispatched(false);
+    setCountdown(null);
+    onClose();
   };
 
   return (
@@ -349,14 +364,14 @@ export const SOSModal: React.FC<SOSModalProps> = ({
                 )}
               </View>
 
-              {/* Dismiss / Resolved */}
+              {/* Dismiss / Resolved -> Removes SOS from the map */}
               <TouchableOpacity
                 style={styles.safeBtn}
-                onPress={onClose}
+                onPress={handleMarkSafe}
                 activeOpacity={0.8}
               >
                 <Ionicons name="shield-checkmark" size={18} color="#10B981" />
-                <Text style={styles.safeBtnText}>Já Estou em Segurança / Fechar</Text>
+                <Text style={styles.safeBtnText}>Já Estou em Segurança (Remover SOS)</Text>
               </TouchableOpacity>
             </View>
           )}

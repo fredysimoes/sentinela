@@ -239,9 +239,34 @@ export function subscribeToOnlineIncidents(onChange: () => void): RealtimeChanne
 }
 
 /**
+ * Resolves or deletes an active online SOS emergency alert in Supabase
+ */
+export async function resolveOnlineSOS(id: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  try {
+    const { error: updateError } = await supabase
+      .from('sos_alerts')
+      .update({ status: 'resolved' })
+      .eq('id', id);
+
+    // Also attempt deletion so it does not linger in the table
+    await supabase.from('sos_alerts').delete().eq('id', id);
+
+    return !updateError;
+  } catch (err) {
+    console.warn('Erro ao resolver SOS no Supabase:', err);
+    return false;
+  }
+}
+
+/**
  * Subscribes to Realtime SOS Alerts (emergencies happening right now near you)
  */
-export function subscribeToOnlineSOS(onSOS: (sos: SOSAlert) => void): RealtimeChannel | null {
+export function subscribeToOnlineSOS(
+  onSOS: (sos: SOSAlert) => void,
+  onRemoveSOS?: (id: string) => void
+): RealtimeChannel | null {
   if (!isSupabaseConfigured()) return null;
 
   try {
@@ -249,19 +274,31 @@ export function subscribeToOnlineSOS(onSOS: (sos: SOSAlert) => void): RealtimeCh
       .channel('public:sos_alerts')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'sos_alerts' },
-        (payload) => {
-          const row = payload.new;
-          if (row) {
-            onSOS({
-              id: row.id,
-              userId: row.user_id,
-              userName: row.user_name || 'Utilizador Sentinela',
-              latitude: parseFloat(row.latitude),
-              longitude: parseFloat(row.longitude),
-              timestamp: new Date(row.timestamp).getTime(),
-              status: row.status || 'active',
-            });
+        { event: '*', schema: 'public', table: 'sos_alerts' },
+        (payload: any) => {
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new;
+            if (row && (row.status === 'active' || !row.status)) {
+              onSOS({
+                id: row.id,
+                userId: row.user_id,
+                userName: row.user_name || 'Utilizador Sentinela',
+                latitude: parseFloat(row.latitude),
+                longitude: parseFloat(row.longitude),
+                timestamp: new Date(row.timestamp).getTime(),
+                status: row.status || 'active',
+              });
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old;
+            if (oldRow?.id && onRemoveSOS) {
+              onRemoveSOS(oldRow.id);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const row = payload.new;
+            if (row && row.status === 'resolved' && onRemoveSOS) {
+              onRemoveSOS(row.id);
+            }
           }
         }
       )
