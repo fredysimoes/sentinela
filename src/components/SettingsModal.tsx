@@ -20,6 +20,7 @@ interface SettingsModalProps {
   onClose: () => void;
   settings: NotificationSettings;
   onSaveSettings: (settings: NotificationSettings) => void;
+  onOpenFeedback?: () => void;
 }
 
 const RADIUS_OPTIONS = [
@@ -34,6 +35,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   settings,
   onSaveSettings,
+  onOpenFeedback,
 }) => {
   const [localSettings, setLocalSettings] = useState<NotificationSettings>(settings);
 
@@ -228,6 +230,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 })}
               </View>
             </View>
+
+            {/* Support, Bug Report & Map Corrections */}
+            {onOpenFeedback && (
+              <View style={[styles.sectionCard, { marginTop: 14 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="chatbubbles" size={18} color="#A8C7FA" />
+                  <Text style={styles.sectionHeaderTitle}>Suporte & Melhorias</Text>
+                </View>
+                <Text style={styles.settingDesc}>
+                  Encontrou algum problema na app ou quer sugerir correções no mapa?
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.feedbackActionBtn}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    onClose();
+                    onOpenFeedback();
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.feedbackIconBadge}>
+                    <Ionicons name="construct" size={18} color="#38BDF8" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.feedbackActionTitle}>Reportar Erro / Feedback</Text>
+                    <Text style={styles.feedbackActionSub}>
+                      Erros na app, sugestões ou correções no mapa
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#8E9099" />
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View style={{ height: 20 }} />
           </ScrollView>
@@ -435,6 +471,35 @@ const styles = StyleSheet.create({
   catDescription: {
     color: '#64748B',
     fontSize: 12,
+    marginTop: 2,
+  },
+  feedbackActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#16191E',
+    borderWidth: 1,
+    borderColor: '#2D323B',
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 12,
+    gap: 12,
+  },
+  feedbackIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feedbackActionTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  feedbackActionSub: {
+    color: '#94A3B8',
+    fontSize: 11,
     marginTop: 2,
   },
   bottomBar: {

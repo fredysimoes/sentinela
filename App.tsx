@@ -54,6 +54,8 @@ import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedP
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
 import { HomeModal } from './src/components/HomeModal';
 import { SettingsModal } from './src/components/SettingsModal';
+import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
+import { FeedbackModal } from './src/components/FeedbackModal';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
 import { calculateDistanceMeters } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
@@ -125,6 +127,7 @@ export default function App() {
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activeBanner, setActiveBanner] = useState<{
@@ -713,28 +716,11 @@ export default function App() {
         <NavigationBanner navState={navState} onExit={handleExitNavigation} />
       )}
 
-      {/* Floating Emergency / Proximity Notification Toast */}
-      {activeBanner && (
-        <View
-          style={[
-            styles.floatingBanner,
-            activeBanner.type === 'sos_alert' ? styles.bannerSOS : styles.bannerWarn,
-          ]}
-        >
-          <Ionicons
-            name={activeBanner.type === 'sos_alert' ? 'megaphone' : 'warning'}
-            size={22}
-            color="#FFFFFF"
-          />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bannerTitle}>{activeBanner.title}</Text>
-            <Text style={styles.bannerBody}>{activeBanner.body}</Text>
-          </View>
-          <TouchableOpacity onPress={() => setActiveBanner(null)} style={styles.bannerCloseBtn}>
-            <Ionicons name="close" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* Google M3 Floating Emergency / Proximity Alert Pill */}
+      <MaterialAlertBanner
+        alert={activeBanner}
+        onDismiss={() => setActiveBanner(null)}
+      />
 
       {/* 1. Full-Screen Edge-to-Edge Map (Google Maps standard) */}
       <View style={StyleSheet.absoluteFill}>
@@ -1100,6 +1086,14 @@ export default function App() {
         onClose={() => setShowSettingsModal(false)}
         settings={notificationSettings}
         onSaveSettings={handleSaveNotificationSettings}
+        onOpenFeedback={() => setShowFeedbackModal(true)}
+      />
+
+      {/* Feedback & Bug Reporting Modal */}
+      <FeedbackModal
+        visible={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : null}
       />
     </SafeAreaView>
   );
@@ -1242,46 +1236,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
     letterSpacing: 1,
-  },
-  floatingBanner: {
-    position: 'absolute',
-    top: 50,
-    left: 16,
-    right: 16,
-    zIndex: 999,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderRadius: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 12,
-  },
-  bannerSOS: {
-    backgroundColor: '#DC2626',
-    borderWidth: 1.5,
-    borderColor: '#FCA5A5',
-  },
-  bannerWarn: {
-    backgroundColor: '#D97706',
-    borderWidth: 1.5,
-    borderColor: '#FCD34D',
-  },
-  bannerTitle: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  bannerBody: {
-    color: '#F8FAFC',
-    fontSize: 11,
-    marginTop: 2,
-    lineHeight: 15,
-  },
-  bannerCloseBtn: {
-    padding: 4,
   },
 });

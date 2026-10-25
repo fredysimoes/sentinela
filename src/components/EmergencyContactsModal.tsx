@@ -12,9 +12,9 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Contacts from 'expo-contacts';
-import Haptics from '../utils/haptics';
 import { EmergencyContact } from '../types';
+import Haptics from '../utils/haptics';
+import { pickContactFromDevice } from '../services/contactPicker';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 
 interface EmergencyContactsModalProps {
@@ -66,52 +66,20 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
   };
 
   const handleImportDeviceContact = async () => {
-    try {
-      const { status } = await Contacts.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permissão de Contactos',
-          'O Sentinela necessita de aceder aos seus contactos para selecionar os números de emergência para onde enviar SMS e WhatsApp em caso de SOS.'
-        );
-        return;
-      }
+    const picked = await pickContactFromDevice();
+    if (!picked) return;
 
-      const picked = await Contacts.presentContactPickerAsync();
-      if (!picked) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const newContact: EmergencyContact = {
+      id: `contact-${Date.now()}`,
+      name: picked.name,
+      phone: picked.phone,
+      relation: 'Contacto Pessoal',
+    };
 
-      const phoneNumbers = picked.phoneNumbers || [];
-      if (phoneNumbers.length === 0 || !phoneNumbers[0]?.number) {
-        Alert.alert(
-          'Contacto Sem Telefone',
-          'O contacto selecionado não tem nenhum número de telefone associado.'
-        );
-        return;
-      }
-
-      const rawName =
-        picked.name ||
-        [picked.firstName, picked.lastName].filter(Boolean).join(' ') ||
-        'Contacto de Confiança';
-      const rawPhone = phoneNumbers[0].number;
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      const newContact: EmergencyContact = {
-        id: `contact-${Date.now()}`,
-        name: rawName.trim(),
-        phone: rawPhone.trim(),
-        relation: 'Contacto Pessoal',
-      };
-
-      const updated = [newContact, ...list];
-      setList(updated);
-      onSaveContacts(updated);
-    } catch (err) {
-      console.warn('Erro ao aceder aos contactos do telemóvel:', err);
-      Alert.alert(
-        'Contactos',
-        'Não foi possível abrir a lista de contactos nativa. Pode adicionar o número manualmente.'
-      );
-    }
+    const updated = [newContact, ...list];
+    setList(updated);
+    onSaveContacts(updated);
   };
 
   return (

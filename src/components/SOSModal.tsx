@@ -11,10 +11,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Contacts from 'expo-contacts';
 import Haptics from '../utils/haptics';
 import { EmergencyContact, SOSAlert, UserLocation } from '../types';
 import { createAndDispatchSOS, shareSOSToWhatsApp, shareSOSToSMS } from '../services/sos';
+import { pickContactFromDevice } from '../services/contactPicker';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 
 interface SOSModalProps {
@@ -44,49 +44,20 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   const personalContacts = emergencyContacts.filter((c) => c.phone !== '112');
 
   const handleImportDeviceContact = async () => {
-    try {
-      const { status } = await Contacts.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permissão de Contactos',
-          'O Sentinela necessita de aceder aos seus contactos para selecionar os números de emergência para onde enviar SMS e WhatsApp em caso de SOS.'
-        );
-        return;
-      }
+    const picked = await pickContactFromDevice();
+    if (!picked) return;
 
-      const picked = await Contacts.presentContactPickerAsync();
-      if (!picked) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const newContact: EmergencyContact = {
+      id: `contact-${Date.now()}`,
+      name: picked.name,
+      phone: picked.phone,
+      relation: 'Contacto de Emergência',
+    };
 
-      const phoneNumbers = picked.phoneNumbers || [];
-      if (phoneNumbers.length === 0 || !phoneNumbers[0]?.number) {
-        Alert.alert(
-          'Contacto Sem Telefone',
-          'O contacto selecionado não tem nenhum número de telefone associado.'
-        );
-        return;
-      }
-
-      const rawName =
-        picked.name ||
-        [picked.firstName, picked.lastName].filter(Boolean).join(' ') ||
-        'Contacto de Confiança';
-      const rawPhone = phoneNumbers[0].number;
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      const newContact: EmergencyContact = {
-        id: `contact-${Date.now()}`,
-        name: rawName.trim(),
-        phone: rawPhone.trim(),
-        relation: 'Contacto de Emergência',
-      };
-
-      const updated = [newContact, ...emergencyContacts.filter((c) => c.phone !== rawPhone)];
-      if (onUpdateContacts) {
-        onUpdateContacts(updated);
-      }
-    } catch (err) {
-      console.warn('Erro ao aceder aos contactos do telemóvel:', err);
-      Alert.alert('Contactos', 'Não foi possível aceder à lista de contactos do telemóvel.');
+    const updated = [newContact, ...emergencyContacts.filter((c) => c.phone !== picked.phone)];
+    if (onUpdateContacts) {
+      onUpdateContacts(updated);
     }
   };
 
