@@ -114,10 +114,13 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
             onPress={handleDownvote}
             activeOpacity={0.8}
           >
-            <Ionicons name="checkmark-done" size={16} color="#94A3B8" />
-            <Text style={styles.dismissBtnText}>Já Passou ({incident.dismissals})</Text>
+            <Ionicons name="thumbs-down" size={16} color="#EF4444" />
+            <Text style={styles.dismissBtnText}>Já Passou / Falso ({incident.dismissals})</Text>
           </TouchableOpacity>
         </View>
+        <Text style={styles.votingHint}>
+          💡 Se os votos negativos superarem as confirmações, o aviso é removido do mapa.
+        </Text>
       </View>
 
       {/* Safe Path Navigation Button */}
@@ -266,6 +269,12 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontWeight: '600',
     fontSize: 12,
+  },
+  votingHint: {
+    color: '#64748B',
+    fontSize: 11,
+    marginTop: 8,
+    textAlign: 'center',
   },
   mapsBtn: {
     flexDirection: 'row',

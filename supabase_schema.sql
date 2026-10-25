@@ -58,6 +58,7 @@ ALTER TABLE public.sos_alerts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Leitura pública de incidentes" ON public.incidents;
 DROP POLICY IF EXISTS "Inserção pública de incidentes" ON public.incidents;
 DROP POLICY IF EXISTS "Atualização pública de incidentes" ON public.incidents;
+DROP POLICY IF EXISTS "Remoção pública de incidentes" ON public.incidents;
 DROP POLICY IF EXISTS "Leitura pública de SOS" ON public.sos_alerts;
 DROP POLICY IF EXISTS "Inserção pública de SOS" ON public.sos_alerts;
 
@@ -72,6 +73,10 @@ CREATE POLICY "Inserção pública de incidentes"
 
 CREATE POLICY "Atualização pública de incidentes"
   ON public.incidents FOR UPDATE
+  USING (true);
+
+CREATE POLICY "Remoção pública de incidentes"
+  ON public.incidents FOR DELETE
   USING (true);
 
 CREATE POLICY "Leitura pública de SOS"

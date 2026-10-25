@@ -251,25 +251,21 @@ export default function App() {
         console.warn('Erro ao obter localização inicial:', e);
       }
 
-      // 4. Load persisted data seeded around the user
+      // 4. Load persisted real community incidents (clean of all demo seeds)
       const storedIncidents = await loadIncidents(initialLat, initialLon);
-      setIncidents(storedIncidents);
+      const cleanStored = storedIncidents.filter(
+        (i) => !i.id.startsWith('seed-') && i.dismissals <= i.confirmations
+      );
+      setIncidents(cleanStored);
 
       // If Supabase is configured, fetch live community reports
       if (isSupabaseConfigured()) {
         try {
           const online = await fetchOnlineIncidents();
-          if (online.length > 0) {
-            setIncidents((prev) => {
-              const merged = [...online];
-              for (const p of prev) {
-                if (!merged.some((m) => m.id === p.id)) {
-                  merged.push(p);
-                }
-              }
-              return merged;
-            });
-          }
+          const cleanOnline = online.filter(
+            (i) => !i.id.startsWith('seed-') && i.dismissals <= i.confirmations
+          );
+          setIncidents(cleanOnline);
         } catch (e) {
           console.warn('Erro ao carregar dados online do Supabase:', e);
         }
@@ -354,9 +350,10 @@ export default function App() {
       if (isSupabaseConfigured()) {
         subscribeToOnlineIncidents(async () => {
           const fresh = await fetchOnlineIncidents();
-          if (fresh.length > 0) {
-            setIncidents(fresh);
-          }
+          const cleanFresh = fresh.filter(
+            (i) => !i.id.startsWith('seed-') && i.dismissals <= i.confirmations
+          );
+          setIncidents(cleanFresh);
         });
 
         subscribeToOnlineSOS((newSOS) => {
@@ -490,19 +487,40 @@ export default function App() {
     }
   };
 
-  // Handle downvoting an incident
+  // Handle downvoting an incident (removes immediately if dismissals > confirmations)
   const handleDismissIncident = (id: string) => {
-    const updated = incidents.map((item) =>
-      item.id === id ? { ...item, dismissals: item.dismissals + 1 } : item
-    );
-    setIncidents(updated);
-    saveIncidents(updated);
-    dismissIncidentOnline(id);
-    if (selectedIncident && selectedIncident.id === id) {
-      setSelectedIncident({
-        ...selectedIncident,
-        dismissals: selectedIncident.dismissals + 1,
-      });
+    const target = incidents.find((item) => item.id === id);
+    if (!target) return;
+
+    const nextDismissals = target.dismissals + 1;
+    const confirmations = target.confirmations;
+
+    // Rule: if dismissals > confirmations, the incident disappears immediately from the map!
+    if (nextDismissals > confirmations) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      const remaining = incidents.filter((item) => item.id !== id);
+      setIncidents(remaining);
+      saveIncidents(remaining);
+      setSelectedIncident(null);
+      dismissIncidentOnline(id);
+      Alert.alert(
+        'Aviso Removido',
+        'Este aviso foi removido do mapa porque a comunidade indicou que já não é verídico ou já foi resolvido.'
+      );
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const updated = incidents.map((item) =>
+        item.id === id ? { ...item, dismissals: nextDismissals } : item
+      );
+      setIncidents(updated);
+      saveIncidents(updated);
+      dismissIncidentOnline(id);
+      if (selectedIncident && selectedIncident.id === id) {
+        setSelectedIncident({
+          ...selectedIncident,
+          dismissals: nextDismissals,
+        });
+      }
     }
   };
 

@@ -51,19 +51,26 @@ export async function fetchOnlineIncidents(): Promise<Incident[]> {
       return [];
     }
 
-    return data.map((row: any) => ({
-      id: row.id,
-      title: row.title,
-      description: row.description || '',
-      category: row.category,
-      severity: row.severity,
-      latitude: parseFloat(row.latitude),
-      longitude: parseFloat(row.longitude),
-      createdAt: new Date(row.created_at).getTime(),
-      confirmations: row.confirmations || 1,
-      dismissals: row.dismissals || 0,
-      verified: row.verified || false,
-    }));
+    // Filter out demo seeds and any incident where downvotes (dismissals) > confirmations
+    return data
+      .filter(
+        (row: any) =>
+          !row.id.startsWith('seed-') &&
+          (row.dismissals || 0) <= (row.confirmations || 1)
+      )
+      .map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        description: row.description || '',
+        category: row.category,
+        severity: row.severity,
+        latitude: parseFloat(row.latitude),
+        longitude: parseFloat(row.longitude),
+        createdAt: new Date(row.created_at).getTime(),
+        confirmations: row.confirmations || 1,
+        dismissals: row.dismissals || 0,
+        verified: row.verified || false,
+      }));
   } catch (err) {
     console.warn('Falha na ligação ao Supabase:', err);
     return [];
@@ -128,17 +135,50 @@ export async function confirmIncidentOnline(id: string): Promise<boolean> {
 }
 
 /**
- * Dismisses / Downvotes an incident in Supabase
+ * Deletes / Removes an incident from Supabase (e.g. when community downvotes exceed confirmations)
+ */
+export async function deleteIncidentOnline(id: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  try {
+    const { error } = await supabase.from('incidents').delete().eq('id', id);
+    if (error) {
+      console.warn('Erro ao remover incidente do Supabase:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('Falha ao apagar incidente online:', err);
+    return false;
+  }
+}
+
+/**
+ * Dismisses / Downvotes an incident in Supabase.
+ * If dismissals exceed confirmations, automatically removes it from the database!
  */
 export async function dismissIncidentOnline(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
 
   try {
-    const { data } = await supabase.from('incidents').select('dismissals').eq('id', id).single();
+    const { data } = await supabase
+      .from('incidents')
+      .select('confirmations, dismissals')
+      .eq('id', id)
+      .single();
+
     if (data) {
+      const nextDismissals = (data.dismissals || 0) + 1;
+      const confirmations = data.confirmations || 1;
+
+      // Rule: if dismissals > confirmations, remove it from the database
+      if (nextDismissals > confirmations) {
+        return await deleteIncidentOnline(id);
+      }
+
       await supabase
         .from('incidents')
-        .update({ dismissals: (data.dismissals || 0) + 1 })
+        .update({ dismissals: nextDismissals })
         .eq('id', id);
     }
     return true;
