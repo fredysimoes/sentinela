@@ -1,16 +1,29 @@
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Haptics, { NotificationFeedbackType } from '../utils/haptics';
 import { getManeuverArrow, formatArrivalTime, formatNavigationDistance } from '../utils/navigationHelper';
 
 // Configure how notifications appear when the app is in the foreground
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    // If app is currently open/foregrounded and this is a navigation notification, do NOT show it!
+    const isNavigation = notification.request.content.data?.type === 'navigation_active';
+    if (isNavigation) {
+      return {
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: false,
+        shouldShowList: false,
+      };
+    }
+
+    return {
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
 });
 
 type NotificationListener = (notification: {
@@ -189,8 +202,14 @@ export interface NavigationNotificationParams {
  * Updates persistent ongoing turn-by-turn notification shown during active navigation.
  * Guarantees a single notification card with large next step, right-hand direction arrow,
  * arrival ETA and safe route indicator.
+ * ONLY shown when the app is in the background or the screen is locked!
  */
 export async function updateNavigationNotification(params: NavigationNotificationParams): Promise<void> {
+  // If app is currently open and active in the foreground, do NOT display notification!
+  if (AppState.currentState === 'active') {
+    return;
+  }
+
   const distText = formatNavigationDistance(params.distanceRemainingMeters);
   const etaTime = formatArrivalTime(params.timeRemainingMinutes);
   const arrow = getManeuverArrow(params.maneuverType, params.maneuverModifier);

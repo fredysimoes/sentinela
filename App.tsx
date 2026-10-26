@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  AppState,
   StatusBar as RNStatusBar,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -44,7 +45,7 @@ import {
   startNavigationBackgroundTracking,
   stopNavigationBackgroundTracking,
 } from './src/services/navigationBackgroundService';
-import { updateNavigationNotification } from './src/services/notifications';
+import { updateNavigationNotification, dismissNavigationNotification } from './src/services/notifications';
 import { calculateCurrentStepIndex } from './src/utils/navigationHelper';
 import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode } from './src/types/navigation';
 import { calculateSafeNavigationRoutes } from './src/services/routingService';
@@ -384,17 +385,48 @@ export default function App() {
       };
     });
 
-    // Update single persistent notification with large next step, right directional arrow & safe status
-    updateNavigationNotification({
-      instruction: currentStep.instruction,
-      distanceRemainingMeters: distToDest,
-      timeRemainingMinutes: remainingMins,
-      destinationName: navState.destinationName,
-      isSafeRoute: navState.route?.isSafe,
-      maneuverType: currentStep.maneuverType,
-      maneuverModifier: currentStep.maneuverModifier,
-    });
+    // Update persistent notification ONLY when app is minimized or screen locked
+    if (AppState.currentState !== 'active') {
+      updateNavigationNotification({
+        instruction: currentStep.instruction,
+        distanceRemainingMeters: distToDest,
+        timeRemainingMinutes: remainingMins,
+        destinationName: navState.destinationName,
+        isSafeRoute: navState.route?.isSafe,
+        maneuverType: currentStep.maneuverType,
+        maneuverModifier: currentStep.maneuverModifier,
+      });
+    }
   }, [userLocation?.latitude, userLocation?.longitude]);
+
+  // Manage persistent navigation notification: ONLY show when minimized / screen locked, dismiss when app is open
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        // App opened / brought to foreground: hide OS notification immediately
+        dismissNavigationNotification();
+      } else if (navState && (nextAppState === 'background' || nextAppState === 'inactive')) {
+        // App minimized or phone locked: display persistent turn-by-turn notification immediately
+        const steps = navState.route?.steps || [];
+        const currentStep = steps[navState.currentStepIndex || 0] || {
+          instruction: `Siga em direção a ${navState.destinationName}`,
+        };
+        updateNavigationNotification({
+          instruction: currentStep.instruction,
+          distanceRemainingMeters: navState.distanceRemainingMeters,
+          timeRemainingMinutes: navState.timeRemainingMinutes,
+          destinationName: navState.destinationName,
+          isSafeRoute: navState.route?.isSafe,
+          maneuverType: currentStep.maneuverType,
+          maneuverModifier: currentStep.maneuverModifier,
+        });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [navState]);
 
   // Initialize App, Location, Heading/Compass, and Notifications
   useEffect(() => {

@@ -51,8 +51,19 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#38BDF8"
+    },
     "plugins": [
       "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#38BDF8"
+        }
+      ],
       [
         "expo-contacts",
         {
