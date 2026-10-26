@@ -461,7 +461,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
               longitude: userLocation.longitude,
             }}
             anchor={{ x: 0.5, y: 0.5 }}
-            zIndex={999}
+            zIndex={isNavigating ? 2000 : 999}
             flat={false}
           >
             <View style={styles.userMarkerContainer}>
@@ -509,8 +509,8 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
               strokeWidth={4.5}
             />
 
-            {/* Custom Origin Point A Marker */}
-            {routeOrigin && (
+            {/* Custom Origin Point A Marker (Preview only; during active navigation, user directional puck is shown) */}
+            {!isNavigating && routeOrigin && (
               <Marker
                 coordinate={routeOrigin.coord}
                 zIndex={1004}

@@ -1,11 +1,11 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Haptics, { NotificationFeedbackType } from '../utils/haptics';
+import { getManeuverArrow, formatArrivalTime, formatNavigationDistance } from '../utils/navigationHelper';
 
 // Configure how notifications appear when the app is in the foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
@@ -175,32 +175,45 @@ export async function sendDangerProximityPushNotification(params: {
   });
 }
 
-/**
- * Updates persistent ongoing turn-by-turn notification shown during active navigation
- */
-export async function updateNavigationNotification(params: {
+export interface NavigationNotificationParams {
   instruction: string;
   distanceRemainingMeters: number;
   timeRemainingMinutes: number;
   destinationName: string;
-}): Promise<void> {
-  const distText =
-    params.distanceRemainingMeters >= 1000
-      ? `${(params.distanceRemainingMeters / 1000).toFixed(1)} km`
-      : `${Math.round(params.distanceRemainingMeters)} m`;
+  isSafeRoute?: boolean;
+  maneuverType?: string;
+  maneuverModifier?: string;
+}
+
+/**
+ * Updates persistent ongoing turn-by-turn notification shown during active navigation.
+ * Guarantees a single notification card with large next step, right-hand direction arrow,
+ * arrival ETA and safe route indicator.
+ */
+export async function updateNavigationNotification(params: NavigationNotificationParams): Promise<void> {
+  const distText = formatNavigationDistance(params.distanceRemainingMeters);
+  const etaTime = formatArrivalTime(params.timeRemainingMinutes);
+  const arrow = getManeuverArrow(params.maneuverType, params.maneuverModifier);
+  const cleanInstruction = params.instruction.replace(/^[⬆️➡️⬅️↖️↗️↘️↙️🔄🏁\s]+/, '').trim();
+  const title = `${cleanInstruction}   ${arrow}`;
+  const routeStatus = params.isSafeRoute !== false ? '🛡️ Rota Segura Ativa' : '⚠️ Rota Direta';
+  const body = `${params.destinationName} • Chegada às ${etaTime}\n${distText} (${params.timeRemainingMinutes} min) • ${routeStatus}`;
 
   try {
+    // Dismiss prior notification to ensure Android notification tray keeps only 1 clean card
+    await Notifications.dismissNotificationAsync('sentinela_active_nav').catch(() => {});
+
     await Notifications.scheduleNotificationAsync({
       identifier: 'sentinela_active_nav',
       content: {
-        title: `⬆️ ${params.instruction}`,
-        body: `${params.destinationName} • ${params.timeRemainingMinutes} min (${distText}) • Rota Segura Ativa`,
+        title,
+        body,
         sticky: true,
         autoDismiss: false,
         color: '#0284C7',
         data: { type: 'navigation_active' },
       },
-      trigger: null,
+      trigger: { channelId: 'sentinela_navigation' },
     });
   } catch (err) {
     console.warn('[NavigationNotification] Erro ao atualizar notificação:', err);
@@ -212,7 +225,8 @@ export async function updateNavigationNotification(params: {
  */
 export async function dismissNavigationNotification(): Promise<void> {
   try {
-    await Notifications.dismissNotificationAsync('sentinela_active_nav');
+    await Notifications.dismissNotificationAsync('sentinela_active_nav').catch(() => {});
+    await Notifications.cancelScheduledNotificationAsync('sentinela_active_nav').catch(() => {});
   } catch (err) {
     console.warn('[NavigationNotification] Erro ao fechar notificação:', err);
   }

@@ -45,6 +45,7 @@ import {
   stopNavigationBackgroundTracking,
 } from './src/services/navigationBackgroundService';
 import { updateNavigationNotification } from './src/services/notifications';
+import { calculateCurrentStepIndex } from './src/utils/navigationHelper';
 import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode } from './src/types/navigation';
 import { calculateSafeNavigationRoutes } from './src/services/routingService';
 import { NavigationBanner } from './src/components/NavigationBanner';
@@ -300,6 +301,9 @@ export default function App() {
   const handleStartNavigation = async (chosenRoute: PedestrianRoute) => {
     if (!previewDestCoord) return;
 
+    // Suspend idle background proximity alerts to ensure only one navigation notification is shown
+    await stopBackgroundLocationTracking();
+
     const newNavState: NavigationState = {
       isActive: true,
       destinationName: previewDestName,
@@ -316,6 +320,8 @@ export default function App() {
     setSelectedSafePlace(null);
     setSelectedIncident(null);
     setSelectedMapPoint(null);
+    setPreviewOriginCoord(null);
+    setPreviewOriginName('');
 
     // Start background navigation tracking with ongoing foreground notification
     await startNavigationBackgroundTracking(newNavState);
@@ -325,6 +331,11 @@ export default function App() {
     Haptics.selectionAsync();
     setNavState(null);
     await stopNavigationBackgroundTracking();
+
+    // Resume idle background proximity alerts if enabled in settings
+    if (notificationSettings.enabled && notificationSettings.backgroundTracking) {
+      startBackgroundLocationTracking();
+    }
   };
 
   // Update active turn-by-turn navigation state dynamically as user moves
@@ -345,30 +356,42 @@ export default function App() {
       Alert.alert('Chegou ao Destino', `Chegou com sucesso a ${navState.destinationName}!`);
       setNavState(null);
       stopNavigationBackgroundTracking();
+      if (notificationSettings.enabled && notificationSettings.backgroundTracking) {
+        startBackgroundLocationTracking();
+      }
       return;
     }
 
     const speedMetersPerMin = navState.mode === 'driving' ? 500 : 75;
     const remainingMins = Math.max(1, Math.round(distToDest / speedMetersPerMin));
 
+    // Dynamically calculate current step along route
+    const steps = navState.route?.steps || [];
+    const totalDist = navState.route?.distanceMeters || distToDest;
+    const stepIndex = calculateCurrentStepIndex(steps, distToDest, totalDist, navState.currentStepIndex);
+    const currentStep = steps[stepIndex] || {
+      instruction: `Siga em direção a ${navState.destinationName}`,
+    };
+
     setNavState((prev) => {
       if (!prev) return null;
       return {
         ...prev,
+        currentStepIndex: stepIndex,
         distanceRemainingMeters: distToDest,
         timeRemainingMinutes: remainingMins,
       };
     });
 
-    // Update persistent notification with real-time steps & distance
-    const currentStep = navState.route?.steps?.[navState.currentStepIndex] || {
-      instruction: `Siga em direção a ${navState.destinationName}`,
-    };
+    // Update single persistent notification with large next step, right directional arrow & safe status
     updateNavigationNotification({
       instruction: currentStep.instruction,
       distanceRemainingMeters: distToDest,
       timeRemainingMinutes: remainingMins,
       destinationName: navState.destinationName,
+      isSafeRoute: navState.route?.isSafe,
+      maneuverType: currentStep.maneuverType,
+      maneuverModifier: currentStep.maneuverModifier,
     });
   }, [userLocation?.latitude, userLocation?.longitude]);
 
@@ -801,7 +824,7 @@ export default function App() {
           isNavigating={!!navState}
           selectedMapPoint={selectedMapPoint}
           homeAddress={homeAddress}
-          routeOrigin={previewOriginCoord ? { name: previewOriginName, coord: previewOriginCoord } : null}
+          routeOrigin={(!navState && previewOriginCoord) ? { name: previewOriginName, coord: previewOriginCoord } : null}
           routeDestination={previewDestCoord ? { name: previewDestName, coord: previewDestCoord } : null}
           onSelectIncident={(inc) => {
             Haptics.selectionAsync();

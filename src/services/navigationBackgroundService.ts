@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import { Platform } from 'react-native';
 import { NavigationState } from '../types/navigation';
 import { calculateDistanceMeters } from '../utils/geo';
+import { calculateCurrentStepIndex } from '../utils/navigationHelper';
 import { loadActiveNavigation, saveActiveNavigation } from './storage';
 import { updateNavigationNotification, dismissNavigationNotification, sendSystemNotification } from './notifications';
 
@@ -52,23 +53,29 @@ TaskManager.defineTask(SENTINELA_NAVIGATION_TASK, async ({ data, error }) => {
       const speedMetersPerMin = activeNav.mode === 'driving' ? 500 : 75;
       const remainingMins = Math.max(1, Math.round(distRemaining / speedMetersPerMin));
 
-      // Determine current step instruction
+      // Determine current step dynamically based on distance traveled
       const steps = activeNav.route?.steps || [];
-      const currentStep = steps[activeNav.currentStepIndex] || {
+      const totalDist = activeNav.route?.distanceMeters || distRemaining;
+      const stepIndex = calculateCurrentStepIndex(steps, distRemaining, totalDist, activeNav.currentStepIndex);
+      const currentStep = steps[stepIndex] || {
         instruction: `Siga em direção a ${activeNav.destinationName}`,
       };
 
-      // Update the persistent ongoing notification in the status bar
+      // Update the single persistent ongoing notification in the status bar
       await updateNavigationNotification({
         instruction: currentStep.instruction,
         distanceRemainingMeters: distRemaining,
         timeRemainingMinutes: remainingMins,
         destinationName: activeNav.destinationName,
+        isSafeRoute: activeNav.route?.isSafe,
+        maneuverType: currentStep.maneuverType,
+        maneuverModifier: currentStep.maneuverModifier,
       });
 
       // Update stored state
       const updatedNav: NavigationState = {
         ...activeNav,
+        currentStepIndex: stepIndex,
         distanceRemainingMeters: distRemaining,
         timeRemainingMinutes: remainingMins,
       };
@@ -96,7 +103,8 @@ export async function startNavigationBackgroundTracking(navState: NavigationStat
       }
     }
 
-    const firstStep = navState.route?.steps?.[0]?.instruction || `Siga em direção a ${navState.destinationName}`;
+    const firstStepObj = navState.route?.steps?.[0];
+    const firstStep = firstStepObj?.instruction || `Siga em direção a ${navState.destinationName}`;
     const initialDist = navState.distanceRemainingMeters >= 1000
       ? `${(navState.distanceRemainingMeters / 1000).toFixed(1)} km`
       : `${Math.round(navState.distanceRemainingMeters)} m`;
@@ -109,19 +117,22 @@ export async function startNavigationBackgroundTracking(navState: NavigationStat
         distanceInterval: 5,  // Or every 5 meters moved
         showsBackgroundLocationIndicator: true,
         foregroundService: {
-          notificationTitle: `⬆️ ${firstStep}`,
-          notificationBody: `${navState.destinationName} • ${navState.timeRemainingMinutes} min (${initialDist})`,
+          notificationTitle: 'Sentinela Navegação',
+          notificationBody: `A guiar em direção a ${navState.destinationName}`,
           notificationColor: '#0284C7',
         },
       });
     }
 
-    // Also dispatch ongoing system notification via expo-notifications
+    // Dispatch ongoing system notification via expo-notifications
     await updateNavigationNotification({
       instruction: firstStep,
       distanceRemainingMeters: navState.distanceRemainingMeters,
       timeRemainingMinutes: navState.timeRemainingMinutes,
       destinationName: navState.destinationName,
+      isSafeRoute: navState.route?.isSafe,
+      maneuverType: firstStepObj?.maneuverType,
+      maneuverModifier: firstStepObj?.maneuverModifier,
     });
 
     console.log('[NavBackground] Serviço de navegação em primeiro plano iniciado com sucesso');
