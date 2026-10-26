@@ -17,6 +17,52 @@ export interface UserFeedback {
 }
 
 const STORAGE_KEY = '@sentinela_feedback_log_v1';
+const PENDING_STORAGE_KEY = '@sentinela_pending_feedback_v1';
+
+/**
+ * Tries to sync any pending feedback items stored locally to Supabase.
+ */
+export async function syncPendingFeedback(): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+
+  try {
+    const raw = await AsyncStorage.getItem(PENDING_STORAGE_KEY);
+    if (!raw) return 0;
+    const pendingList: UserFeedback[] = JSON.parse(raw);
+    if (pendingList.length === 0) return 0;
+
+    const remaining: UserFeedback[] = [];
+    let syncedCount = 0;
+
+    for (const item of pendingList) {
+      const { error } = await supabase.from('feedback').insert([
+        {
+          id: item.id,
+          type: item.type,
+          title: item.title,
+          description: item.description,
+          contact_info: item.contactInfo || null,
+          latitude: item.latitude || null,
+          longitude: item.longitude || null,
+          device_info: item.deviceInfo || null,
+          created_at: new Date(item.createdAt).toISOString(),
+        },
+      ]);
+
+      if (!error) {
+        syncedCount++;
+      } else {
+        remaining.push(item);
+      }
+    }
+
+    await AsyncStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(remaining));
+    return syncedCount;
+  } catch (err) {
+    console.warn('Erro ao sincronizar feedbacks pendentes:', err);
+    return 0;
+  }
+}
 
 export async function submitUserFeedback(feedback: {
   type: FeedbackType;
@@ -26,9 +72,9 @@ export async function submitUserFeedback(feedback: {
   latitude?: number | null;
   longitude?: number | null;
   includeDevice?: boolean;
-}): Promise<{ success: boolean; message: string }> {
+}): Promise<{ success: boolean; message: string; tableMissing?: boolean }> {
   const deviceInfo = feedback.includeDevice
-    ? `${Platform.OS.toUpperCase()} ${Platform.Version} (Sentinela Mobile v1.1.0)`
+    ? `${Platform.OS.toUpperCase()} ${Platform.Version} (Sentinela Mobile v1.2.0)`
     : undefined;
 
   const item: UserFeedback = {
@@ -49,6 +95,12 @@ export async function submitUserFeedback(feedback: {
     const list: UserFeedback[] = raw ? JSON.parse(raw) : [];
     list.unshift(item);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list.slice(0, 50)));
+
+    // Add to pending queue
+    const pendingRaw = await AsyncStorage.getItem(PENDING_STORAGE_KEY);
+    const pendingList: UserFeedback[] = pendingRaw ? JSON.parse(pendingRaw) : [];
+    pendingList.unshift(item);
+    await AsyncStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(pendingList.slice(0, 50)));
   } catch (err) {
     console.warn('Erro ao salvar feedback localmente:', err);
   }
@@ -72,22 +124,45 @@ export async function submitUserFeedback(feedback: {
 
       if (error) {
         console.warn('Aviso ao enviar feedback para o Supabase:', error.message);
-        // Stored locally, will inform user positively
+        const isTableMissing = error.message.includes('Could not find the table') || error.code === '42P01';
+
+        if (isTableMissing) {
+          return {
+            success: false,
+            tableMissing: true,
+            message:
+              'Aviso: A tabela "feedback" ainda não existe no seu projeto Supabase.\n\nO feedback ficou guardado no telemóvel e será enviado automaticamente assim que criar a tabela no painel do Supabase.',
+          };
+        }
+
         return {
-          success: true,
-          message: 'Feedback registado com sucesso no seu dispositivo e em fila para sincronização!',
+          success: false,
+          message: `Falha ao registar no Supabase: ${error.message}. O feedback ficou guardado localmente e será reenviado.`,
         };
       }
 
+      // Success in Supabase: remove from pending queue
+      try {
+        const pendingRaw = await AsyncStorage.getItem(PENDING_STORAGE_KEY);
+        if (pendingRaw) {
+          const pendingList: UserFeedback[] = JSON.parse(pendingRaw);
+          const filtered = pendingList.filter((p) => p.id !== item.id);
+          await AsyncStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(filtered));
+        }
+      } catch (_) {}
+
+      // Also try to sync any other older pending items
+      syncPendingFeedback().catch(() => {});
+
       return {
         success: true,
-        message: 'Obrigado! O seu relatório foi enviado diretamente à equipa do Sentinela.',
+        message: 'Obrigado! O seu feedback foi gravado com sucesso no Supabase e encaminhado à equipa.',
       };
     } catch (netErr: any) {
       console.warn('Falha de rede ao submeter feedback:', netErr);
       return {
         success: true,
-        message: 'Feedback guardado localmente e será sincronizado quando houver ligação.',
+        message: 'Sem ligação ao servidor. O feedback foi guardado no telemóvel e será sincronizado quando houver rede.',
       };
     }
   }

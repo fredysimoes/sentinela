@@ -81,15 +81,27 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         includeDevice,
       });
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Obrigado!', result.message, [
-        {
-          text: 'Concluir',
-          onPress: () => {
-            handleClose();
+      if (result.success) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert('Obrigado!', result.message, [
+          {
+            text: 'Concluir',
+            onPress: () => {
+              handleClose();
+            },
           },
-        },
-      ]);
+        ]);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        Alert.alert(result.tableMissing ? 'Tabela Supabase Pendente' : 'Aviso', result.message, [
+          {
+            text: 'Entendido',
+            onPress: () => {
+              handleClose();
+            },
+          },
+        ]);
+      }
     } catch (err) {
       console.error('Erro ao submeter feedback:', err);
       Alert.alert('Erro', 'Ocorreu um erro ao submeter o feedback. Tente novamente mais tarde.');

@@ -1,6 +1,8 @@
 import { SafePlace } from '../types';
 import { PSP_DISTRITO_PORTO } from './pspDistritoPorto';
 import { FARMACIAS_DISTRITO_PORTO } from './farmaciasDistritoPorto';
+import { PSP_DISTRITO_LISBOA } from './pspDistritoLisboa';
+import { FARMACIAS_DISTRITO_LISBOA } from './farmaciasDistritoLisboa';
 
 export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
   // ==========================================
@@ -376,6 +378,11 @@ export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
   // DISTRITO DO PORTO (TODAS AS DIVISÕES E ESQUADRAS PSP)
   // ==========================================
   ...PSP_DISTRITO_PORTO,
+
+  // ==========================================
+  // DISTRITO DE LISBOA (COMETLIS E TODAS AS ESQUADRAS PSP)
+  // ==========================================
+  ...PSP_DISTRITO_LISBOA,
   {
     id: 'psp-braga',
     type: 'psp',
@@ -883,6 +890,11 @@ export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
   // DISTRITO DO PORTO (TODAS AS 437 FARMÁCIAS OFICIAIS INFARMED)
   // ==========================================
   ...FARMACIAS_DISTRITO_PORTO,
+
+  // ==========================================
+  // CONCELHO DE LISBOA (TODAS AS 242 FARMÁCIAS OFICIAIS INFARMED)
+  // ==========================================
+  ...FARMACIAS_DISTRITO_LISBOA,
 
   // Coimbra
   {

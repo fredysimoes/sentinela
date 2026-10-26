@@ -56,6 +56,7 @@ import { HomeModal } from './src/components/HomeModal';
 import { SettingsModal } from './src/components/SettingsModal';
 import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
 import { FeedbackModal } from './src/components/FeedbackModal';
+import { syncPendingFeedback } from './src/services/feedbackService';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
 import { calculateDistanceMeters } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
@@ -325,6 +326,9 @@ export default function App() {
     async function initApp() {
       // 1. Request Push Notification permissions
       await requestNotificationPermissions();
+
+      // Sync any stored offline feedbacks
+      syncPendingFeedback().catch(() => {});
 
       // 2. Request Location permissions
       const { status } = await Location.requestForegroundPermissionsAsync();
