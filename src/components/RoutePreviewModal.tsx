@@ -60,8 +60,9 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   if (!safeRoute) return null;
 
   const [selectedRouteId, setSelectedRouteId] = useState<string>(safeRoute.id);
-  const [editingTarget, setEditingTarget] = useState<'origin' | 'destination' | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeInput, setActiveInput] = useState<'origin' | 'destination' | null>(null);
+  const [originText, setOriginText] = useState(originName);
+  const [destText, setDestText] = useState(destinationName);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,14 +72,26 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   const swapRotateAnim = useRef(new Animated.Value(0)).current;
   const swapCount = useRef(0);
 
+  // Synchronize internal text inputs with external props
   useEffect(() => {
     setSelectedRouteId(safeRoute.id);
   }, [safeRoute.id]);
 
-  // Real-time suggestions when searching an endpoint
   useEffect(() => {
-    if (!editingTarget) {
+    setOriginText(originName);
+  }, [originName]);
+
+  useEffect(() => {
+    setDestText(destinationName);
+  }, [destinationName]);
+
+  // Real-time suggestions when typing in either Search Bar A or Search Bar B
+  const activeQuery = activeInput === 'origin' ? originText : destText;
+
+  useEffect(() => {
+    if (!activeInput) {
       setSuggestions([]);
+      setIsSearching(false);
       return;
     }
 
@@ -86,8 +99,8 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
       clearTimeout(searchTimeoutRef.current);
     }
 
-    const trimmed = searchQuery.trim();
-    if (trimmed.length < 2) {
+    const trimmed = (activeQuery || '').trim();
+    if (trimmed.length < 2 || trimmed === 'A minha localização') {
       setSuggestions([]);
       setIsSearching(false);
       return;
@@ -105,7 +118,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, editingTarget]);
+  }, [activeQuery, activeInput]);
 
   const selectedRoute =
     directRoute && selectedRouteId === directRoute.id ? directRoute : safeRoute;
@@ -140,60 +153,52 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
 
     if (!currentOriginCoord) return;
 
+    const newOriginName = destText || destinationName;
+    const newDestName = originText || originName;
+
+    setOriginText(newOriginName);
+    setDestText(newDestName);
+
     const newOrigin: RouteEndpoint = {
-      name: destinationName,
+      name: newOriginName,
       coord: destinationCoord,
     };
 
     const newDest: RouteEndpoint = {
-      name: originName,
+      name: newDestName,
       coord: currentOriginCoord,
     };
 
     onUpdateEndpoints(newOrigin, newDest);
   };
 
-  const handleStartEditOrigin = () => {
-    Haptics.selectionAsync();
-    setEditingTarget('origin');
-    setSearchQuery(originName === 'A minha localização' ? '' : originName);
-    setTimeout(() => {
-      originInputRef.current?.focus();
-    }, 50);
-  };
-
-  const handleStartEditDest = () => {
-    Haptics.selectionAsync();
-    setEditingTarget('destination');
-    setSearchQuery(destinationName);
-    setTimeout(() => {
-      destInputRef.current?.focus();
-    }, 50);
-  };
-
-  // Select a preset or search suggestion for the selected endpoint
+  // Select a preset or search suggestion for the active search bar (A or B)
   const handleSelectEndpoint = (name: string, coord: RouteCoordinate) => {
     Haptics.selectionAsync();
     Keyboard.dismiss();
 
-    const currentOrigin: RouteEndpoint = {
-      name: originName,
-      coord: originCoord || (userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : { latitude: 38.7223, longitude: -9.1393 }),
-    };
+    const currentOriginCoord = originCoord || (userLocation ? {
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+    } : { latitude: 38.7223, longitude: -9.1393 });
 
-    const currentDest: RouteEndpoint = {
-      name: destinationName,
-      coord: destinationCoord || { latitude: 38.7223, longitude: -9.1393 },
-    };
+    const currentDestCoord = destinationCoord || { latitude: 38.7223, longitude: -9.1393 };
 
-    if (editingTarget === 'origin') {
-      onUpdateEndpoints?.({ name, coord }, currentDest);
-    } else if (editingTarget === 'destination') {
-      onUpdateEndpoints?.(currentOrigin, { name, coord });
+    if (activeInput === 'origin') {
+      setOriginText(name);
+      onUpdateEndpoints?.(
+        { name, coord },
+        { name: destText || destinationName, coord: currentDestCoord }
+      );
+    } else if (activeInput === 'destination') {
+      setDestText(name);
+      onUpdateEndpoints?.(
+        { name: originText || originName, coord: currentOriginCoord },
+        { name, coord }
+      );
     }
 
-    setEditingTarget(null);
-    setSearchQuery('');
+    setActiveInput(null);
     setSuggestions([]);
   };
 
@@ -205,7 +210,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
       onClose={onClose}
       style={[
         styles.sheetContainer,
-        editingTarget !== null && styles.sheetContainerExpanded,
+        activeInput !== null && styles.sheetContainerExpanded,
       ]}
     >
       {/* Header */}
@@ -223,7 +228,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
             {isDriving ? 'Planeador de Rota Automóvel' : 'Planeador de Rota Pedestre'}
           </Text>
           <Text style={styles.headerSub} numberOfLines={1}>
-            {originName} ➔ {destinationName}
+            {originText || originName} ➔ {destText || destinationName}
           </Text>
         </View>
 
@@ -232,120 +237,111 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
         </M3Pressable>
       </View>
 
-      {/* TWO-POINT ITINERARY CONTROLLER (Point A ➔ Point B) */}
-      <View style={styles.itineraryCard}>
-        <View style={styles.itineraryInputsCol}>
-          {/* Point A: Origin */}
-          <TouchableOpacity
-            style={[
-              styles.endpointRow,
-              editingTarget === 'origin' && styles.endpointRowActive,
-            ]}
-            onPress={handleStartEditOrigin}
-            activeOpacity={0.9}
-          >
+      {/* TWO SEPARATE SEARCH BARS: ONE FOR POINT A AND ONE FOR POINT B */}
+      <View style={styles.searchBarsCard}>
+        <View style={styles.searchBarsColumn}>
+          {/* SEARCH BAR A (Ponto de Partida) */}
+          <View style={styles.searchBarRow}>
             <View style={styles.pointAIconBadge}>
               <Text style={styles.pointLetterText}>A</Text>
             </View>
-            <View style={styles.endpointInputContent}>
-              <Text style={styles.endpointLabel}>PONTO DE PARTIDA</Text>
+            <View
+              style={[
+                styles.searchBarBox,
+                activeInput === 'origin' && styles.searchBarBoxFocused,
+              ]}
+            >
+              <Ionicons
+                name="search"
+                size={16}
+                color={activeInput === 'origin' ? '#38BDF8' : '#64748B'}
+                style={{ marginRight: 6 }}
+              />
               <TextInput
                 ref={originInputRef}
-                style={styles.endpointTextInput}
-                value={editingTarget === 'origin' ? searchQuery : originName}
+                style={styles.searchBarInput}
+                value={originText}
                 onChangeText={(text) => {
-                  if (editingTarget !== 'origin') setEditingTarget('origin');
-                  setSearchQuery(text);
+                  if (activeInput !== 'origin') setActiveInput('origin');
+                  setOriginText(text);
                 }}
-                onFocus={handleStartEditOrigin}
-                placeholder="Pesquisar ponto de partida..."
+                onFocus={() => {
+                  setActiveInput('origin');
+                  if (originText === 'A minha localização') {
+                    setOriginText('');
+                  }
+                }}
+                placeholder="Pesquisar ponto de partida A..."
                 placeholderTextColor="#64748B"
                 returnKeyType="search"
                 selectTextOnFocus
+                autoCorrect={false}
               />
+              {originText.length > 0 && (
+                <TouchableOpacity
+                  style={styles.searchBarClearBtn}
+                  onPress={() => {
+                    setOriginText('');
+                    setActiveInput('origin');
+                    originInputRef.current?.focus();
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close-circle" size={17} color="#94A3B8" />
+                </TouchableOpacity>
+              )}
             </View>
-            {editingTarget === 'origin' && searchQuery.length > 0 ? (
-              <TouchableOpacity
-                onPress={() => {
-                  setSearchQuery('');
-                  originInputRef.current?.focus();
-                }}
-                style={styles.endpointIconActionBtn}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="close-circle" size={18} color="#94A3B8" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={handleStartEditOrigin}
-                style={styles.endpointIconActionBtn}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons
-                  name="pencil"
-                  size={14}
-                  color={editingTarget === 'origin' ? '#10B981' : '#94A3B8'}
-                />
-              </TouchableOpacity>
-            )}
-          </TouchableOpacity>
+          </View>
 
-          <View style={styles.itineraryDivider} />
-
-          {/* Point B: Destination */}
-          <TouchableOpacity
-            style={[
-              styles.endpointRow,
-              editingTarget === 'destination' && styles.endpointRowActive,
-            ]}
-            onPress={handleStartEditDest}
-            activeOpacity={0.9}
-          >
+          {/* SEARCH BAR B (Ponto de Chegada) */}
+          <View style={styles.searchBarRow}>
             <View style={styles.pointBIconBadge}>
               <Text style={styles.pointLetterText}>B</Text>
             </View>
-            <View style={styles.endpointInputContent}>
-              <Text style={styles.endpointLabel}>PONTO DE CHEGADA</Text>
+            <View
+              style={[
+                styles.searchBarBox,
+                activeInput === 'destination' && styles.searchBarBoxFocused,
+              ]}
+            >
+              <Ionicons
+                name="search"
+                size={16}
+                color={activeInput === 'destination' ? '#38BDF8' : '#64748B'}
+                style={{ marginRight: 6 }}
+              />
               <TextInput
                 ref={destInputRef}
-                style={styles.endpointTextInput}
-                value={editingTarget === 'destination' ? searchQuery : destinationName}
+                style={styles.searchBarInput}
+                value={destText}
                 onChangeText={(text) => {
-                  if (editingTarget !== 'destination') setEditingTarget('destination');
-                  setSearchQuery(text);
+                  if (activeInput !== 'destination') setActiveInput('destination');
+                  setDestText(text);
                 }}
-                onFocus={handleStartEditDest}
-                placeholder="Pesquisar ponto de chegada..."
+                onFocus={() => {
+                  setActiveInput('destination');
+                }}
+                placeholder="Pesquisar destino de chegada B..."
                 placeholderTextColor="#64748B"
                 returnKeyType="search"
                 selectTextOnFocus
+                autoCorrect={false}
               />
+              {destText.length > 0 && (
+                <TouchableOpacity
+                  style={styles.searchBarClearBtn}
+                  onPress={() => {
+                    setDestText('');
+                    setActiveInput('destination');
+                    destInputRef.current?.focus();
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close-circle" size={17} color="#94A3B8" />
+                </TouchableOpacity>
+              )}
             </View>
-            {editingTarget === 'destination' && searchQuery.length > 0 ? (
-              <TouchableOpacity
-                onPress={() => {
-                  setSearchQuery('');
-                  destInputRef.current?.focus();
-                }}
-                style={styles.endpointIconActionBtn}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="close-circle" size={18} color="#94A3B8" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={handleStartEditDest}
-                style={styles.endpointIconActionBtn}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons
-                  name="pencil"
-                  size={14}
-                  color={editingTarget === 'destination' ? '#EF4444' : '#94A3B8'}
-                />
-              </TouchableOpacity>
-            )}
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Invert Route Button (⇄) */}
@@ -372,72 +368,58 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
         )}
       </View>
 
-      {/* INLINE SUGGESTIONS & PRESETS WHEN EDITING POINT A OR POINT B */}
-      {editingTarget ? (
-        <View style={styles.searchSection}>
-          <View style={styles.searchTopBar}>
-            <View style={styles.searchTargetIndicator}>
-              <Ionicons
-                name={editingTarget === 'origin' ? 'location' : 'flag'}
-                size={14}
-                color={editingTarget === 'origin' ? '#10B981' : '#EF4444'}
-              />
-              <Text style={styles.searchTargetText}>
-                {editingTarget === 'origin'
-                  ? 'A selecionar Ponto A (Partida)'
-                  : 'A selecionar Ponto B (Chegada)'}
-              </Text>
+      {/* SUGGESTIONS OVERLAY (ONLY SHOWN WHEN AN INPUT IS FOCUSED/TYPING) */}
+      {activeInput !== null ? (
+        <View style={styles.suggestionsContainer}>
+          <View style={styles.suggestionsHeaderBar}>
+            <View style={styles.quickPresetsRow}>
+              {userLocation && (
+                <M3Pressable
+                  style={styles.presetPill}
+                  onPress={() =>
+                    handleSelectEndpoint('A minha localização', {
+                      latitude: userLocation.latitude,
+                      longitude: userLocation.longitude,
+                    })
+                  }
+                >
+                  <Ionicons name="locate" size={13} color="#38BDF8" />
+                  <Text style={styles.presetPillText}>A Minha Localização</Text>
+                </M3Pressable>
+              )}
+
+              {homeAddress && (
+                <M3Pressable
+                  style={styles.presetPill}
+                  onPress={() =>
+                    handleSelectEndpoint(homeAddress.label || 'Casa', {
+                      latitude: homeAddress.latitude,
+                      longitude: homeAddress.longitude,
+                    })
+                  }
+                >
+                  <Ionicons name="home" size={13} color="#10B981" />
+                  <Text style={styles.presetPillText}>Casa</Text>
+                </M3Pressable>
+              )}
             </View>
 
             <TouchableOpacity
-              style={styles.doneEditingBtn}
+              style={styles.closeSuggestionsBtn}
               onPress={() => {
                 Keyboard.dismiss();
-                setEditingTarget(null);
+                setActiveInput(null);
               }}
             >
-              <Text style={styles.doneEditingBtnText}>Concluído</Text>
+              <Text style={styles.closeSuggestionsBtnText}>Concluir</Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Quick Preset Pills */}
-          <View style={styles.quickPresetsRow}>
-            {userLocation && (
-              <M3Pressable
-                style={styles.presetPill}
-                onPress={() =>
-                  handleSelectEndpoint('A minha localização', {
-                    latitude: userLocation.latitude,
-                    longitude: userLocation.longitude,
-                  })
-                }
-              >
-                <Ionicons name="locate" size={14} color="#38BDF8" />
-                <Text style={styles.presetPillText}>A Minha Localização</Text>
-              </M3Pressable>
-            )}
-
-            {homeAddress && (
-              <M3Pressable
-                style={styles.presetPill}
-                onPress={() =>
-                  handleSelectEndpoint(homeAddress.label || 'Casa', {
-                    latitude: homeAddress.latitude,
-                    longitude: homeAddress.longitude,
-                  })
-                }
-              >
-                <Ionicons name="home" size={14} color="#10B981" />
-                <Text style={styles.presetPillText}>Casa</Text>
-              </M3Pressable>
-            )}
           </View>
 
           {/* Loading Indicator */}
           {isSearching && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#38BDF8" />
-              <Text style={styles.loadingText}>A procurar localizações em Portugal...</Text>
+              <Text style={styles.loadingText}>A pesquisar em Portugal...</Text>
             </View>
           )}
 
@@ -484,11 +466,11 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
               </TouchableOpacity>
             ))}
 
-            {suggestions.length === 0 && !isSearching && searchQuery.trim().length >= 2 && (
+            {suggestions.length === 0 && !isSearching && (activeQuery || '').trim().length >= 2 && (
               <View style={styles.emptyResultsBox}>
                 <Ionicons name="alert-circle-outline" size={22} color="#64748B" />
                 <Text style={styles.emptyResultsText}>
-                  Nenhum resultado encontrado para "{searchQuery.trim()}".
+                  Nenhum resultado encontrado para "{(activeQuery || '').trim()}".
                 </Text>
               </View>
             )}
@@ -726,97 +708,82 @@ const styles = StyleSheet.create({
     padding: 6,
   },
 
-  // Itinerary Card (Point A ➔ Point B)
-  itineraryCard: {
+  // Two Search Bars Card (Point A & Point B)
+  searchBarsCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1E222A',
     marginHorizontal: 16,
     marginTop: 12,
-    marginBottom: 6,
-    borderRadius: 16,
+    marginBottom: 8,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: '#2D323F',
     padding: 10,
     gap: 8,
   },
-  itineraryInputsCol: {
+  searchBarsColumn: {
     flex: 1,
-    gap: 6,
+    gap: 8,
   },
-  endpointRow: {
+  searchBarRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'transparent',
   },
-  endpointRowActive: {
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-    borderColor: 'rgba(56, 189, 248, 0.5)',
-  },
-  endpointInputContent: {
+  searchBarBox: {
     flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#13161C',
+    borderWidth: 1.5,
+    borderColor: '#2A303C',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    height: 44,
   },
-  endpointTextInput: {
+  searchBarBoxFocused: {
+    backgroundColor: '#171B24',
+    borderColor: '#38BDF8',
+  },
+  searchBarInput: {
+    flex: 1,
     color: '#F8FAFC',
     fontSize: 13,
     fontWeight: '600',
-    paddingVertical: 2,
-    paddingHorizontal: 0,
-    marginTop: 1,
+    paddingVertical: 0,
+    height: '100%',
   },
-  endpointIconActionBtn: {
+  searchBarClearBtn: {
     padding: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
   pointAIconBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
   },
   pointBIconBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
   },
   pointLetterText: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '900',
   },
-  endpointLabel: {
-    fontSize: 9,
-    color: '#94A3B8',
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  endpointName: {
-    fontSize: 13,
-    color: '#F1F5F9',
-    fontWeight: '600',
-    marginTop: 1,
-  },
-  itineraryDivider: {
-    height: 1,
-    backgroundColor: '#2D323F',
-    marginLeft: 32,
-  },
   swapBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#262B36',
     alignItems: 'center',
     justifyContent: 'center',
@@ -824,36 +791,26 @@ const styles = StyleSheet.create({
     borderColor: '#373E4F',
   },
 
-  // Search section
-  searchSection: {
+  // Suggestions container (Dropdown shown when active)
+  suggestionsContainer: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 16,
     flex: 1,
   },
-  searchTopBar: {
+  suggestionsHeaderBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: 6,
   },
-  searchTargetIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  searchTargetText: {
-    fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '700',
-  },
-  doneEditingBtn: {
+  closeSuggestionsBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     backgroundColor: 'rgba(56, 189, 248, 0.15)',
   },
-  doneEditingBtnText: {
+  closeSuggestionsBtnText: {
     color: '#38BDF8',
     fontWeight: '700',
     fontSize: 12,
@@ -872,8 +829,6 @@ const styles = StyleSheet.create({
   quickPresetsRow: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 4,
-    marginBottom: 8,
   },
   presetPill: {
     flexDirection: 'row',
