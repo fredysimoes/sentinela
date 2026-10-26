@@ -183,6 +183,8 @@ interface MapComponentProps {
   routeOrigin?: { name: string; coord: RouteCoordinate } | null;
   routeDestination?: { name: string; coord: RouteCoordinate } | null;
   stalkingSession?: StalkingTrackingSession | null;
+  isSimulating?: boolean;
+  simulatedLocation?: RouteCoordinate | null;
 }
 
 export const MapComponent: React.FC<MapComponentProps> = memo(({
@@ -211,6 +213,8 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   routeOrigin = null,
   routeDestination = null,
   stalkingSession = null,
+  isSimulating = false,
+  simulatedLocation = null,
 }) => {
   const mapRef = useRef<MapView | null>(null);
   const [is3DMode, setIs3DMode] = React.useState(false);
@@ -312,15 +316,33 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
     }
   }, [userLocation?.latitude, userLocation?.longitude, !!activeRoute, isNavigating]);
 
-  // Fit route coordinates when previewing
+  // Fit route coordinates when previewing (only when not simulating or navigating)
   useEffect(() => {
-    if (activeRoute && activeRoute.coordinates.length > 1 && mapRef.current && !isNavigating) {
+    if (activeRoute && activeRoute.coordinates.length > 1 && mapRef.current && !isNavigating && !isSimulating) {
       mapRef.current.fitToCoordinates(activeRoute.coordinates, {
         edgePadding: { top: 140, right: 60, bottom: 220, left: 60 },
         animated: true,
       });
     }
-  }, [activeRoute?.id, isNavigating]);
+  }, [activeRoute?.id, isNavigating, isSimulating]);
+
+  // Dynamic Camera centering on the active simulation step
+  useEffect(() => {
+    if (isSimulating && simulatedLocation && mapRef.current) {
+      mapRef.current.animateCamera(
+        {
+          center: {
+            latitude: simulatedLocation.latitude,
+            longitude: simulatedLocation.longitude,
+          },
+          pitch: 35,
+          heading: 0,
+          zoom: navZoom,
+        },
+        { duration: 600 }
+      );
+    }
+  }, [isSimulating, simulatedLocation?.latitude, simulatedLocation?.longitude, navZoom]);
 
   const handleRecenter = () => {
     setIsUserInteracting(false);
@@ -513,8 +535,8 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
               strokeWidth={4.5}
             />
 
-            {/* Custom Origin Point A Marker (Preview only; during active navigation, user directional puck is shown) */}
-            {!isNavigating && routeOrigin && (
+            {/* Custom Origin Point A Marker (Preview or Simulation) */}
+            {(!isNavigating || isSimulating) && routeOrigin && (
               <Marker
                 coordinate={routeOrigin.coord}
                 zIndex={1004}
@@ -535,6 +557,22 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
               >
                 <View style={styles.endpointMarkerB}>
                   <Text style={styles.endpointMarkerLetter}>B</Text>
+                </View>
+              </Marker>
+            )}
+
+            {/* Simulation Walker Avatar Marker */}
+            {isSimulating && simulatedLocation && (
+              <Marker
+                coordinate={simulatedLocation}
+                zIndex={2010}
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <View style={styles.simAvatarContainer}>
+                  <View style={styles.simAvatarPulse} />
+                  <View style={styles.simAvatarCore}>
+                    <Ionicons name="walk" size={18} color="#FFFFFF" />
+                  </View>
                 </View>
               </Marker>
             )}
@@ -1276,5 +1314,37 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '800',
+  },
+
+  // Simulation Walker Marker
+  simAvatarContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 44,
+    height: 44,
+  },
+  simAvatarPulse: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(56, 189, 248, 0.25)',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+  },
+  simAvatarCore: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#0284C7',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0284C7',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.7,
+    shadowRadius: 5,
+    elevation: 8,
   },
 });

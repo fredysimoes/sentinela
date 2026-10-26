@@ -14,6 +14,7 @@ export interface RouteStep {
   maneuverType: string;
   maneuverModifier?: string;
   streetName?: string;
+  location?: RouteCoordinate;
 }
 
 export interface PedestrianRoute {
@@ -44,4 +45,14 @@ export interface NavigationState {
   currentStepIndex: number;
   distanceRemainingMeters: number;
   timeRemainingMinutes: number;
+  isSimulation?: boolean;
+}
+
+export interface RouteSimulationState {
+  isActive: boolean;
+  route: PedestrianRoute;
+  currentStepIndex: number;
+  isPlaying: boolean;
+  originName: string;
+  destinationName: string;
 }

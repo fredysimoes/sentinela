@@ -132,9 +132,9 @@ async function fetchValhallaRoute(
     const steps: RouteStep[] = [];
 
     for (const leg of trip.legs) {
-      if (leg.shape) {
-        const legCoords = decodeValhallaPolyline(leg.shape, 6);
-        if (geoCoordinates.length > 0 && legCoords.length > 0) {
+      const legCoords: RouteCoordinate[] = leg.shape ? decodeValhallaPolyline(leg.shape, 6) : [];
+      if (legCoords.length > 0) {
+        if (geoCoordinates.length > 0) {
           geoCoordinates.push(...legCoords.slice(1));
         } else {
           geoCoordinates.push(...legCoords);
@@ -143,12 +143,16 @@ async function fetchValhallaRoute(
 
       if (Array.isArray(leg.maneuvers)) {
         for (const m of leg.maneuvers) {
+          const shapeIdx = typeof m.begin_shape_index === 'number' ? m.begin_shape_index : 0;
+          const stepLocation = legCoords[shapeIdx] || (geoCoordinates.length > 0 ? geoCoordinates[0] : undefined);
+
           steps.push({
             instruction: m.instruction || 'Siga o percurso',
             distanceMeters: Math.round((m.length || 0) * 1000),
             durationSeconds: Math.round(m.time || 0),
             maneuverType: m.type?.toString() || 'turn',
             streetName: Array.isArray(m.street_names) ? m.street_names.join(', ') : undefined,
+            location: stepLocation,
           });
         }
       }
@@ -224,6 +228,10 @@ async function fetchOsrmRoute(
     const steps: RouteStep[] = [];
     for (const leg of route.legs || []) {
       for (const s of leg.steps || []) {
+        const stepLocation = s.maneuver?.location
+          ? { latitude: s.maneuver.location[1], longitude: s.maneuver.location[0] }
+          : undefined;
+
         steps.push({
           instruction: s.maneuver?.instruction || s.name || 'Continue no percurso',
           distanceMeters: Math.round(s.distance || 0),
@@ -231,6 +239,7 @@ async function fetchOsrmRoute(
           maneuverType: s.maneuver?.type || 'turn',
           maneuverModifier: s.maneuver?.modifier,
           streetName: s.name,
+          location: stepLocation,
         });
       }
     }
@@ -352,7 +361,7 @@ export async function calculateSafeNavigationRoutes(params: {
       hazardsOnRoute: [],
       summary: mode === 'driving' ? 'Percurso automóvel estimado' : 'Percurso pedestre estimado',
     };
-    return { safeRoute: fallbackRoute };
+    return { safeRoute: ensureStepCoordinates(fallbackRoute) };
   }
 
   const hazardThreshold = mode === 'driving' ? 50 : 65;
@@ -386,11 +395,11 @@ export async function calculateSafeNavigationRoutes(params: {
   // If clean of hazards, direct route is the safe route
   if (hazardsOnDirect.length === 0) {
     return {
-      safeRoute: {
+      safeRoute: ensureStepCoordinates({
         ...directRoute,
         name: 'Rota Segura (Valhalla)',
         isSafe: true,
-      },
+      }),
     };
   }
 
@@ -435,8 +444,8 @@ export async function calculateSafeNavigationRoutes(params: {
       };
 
       return {
-        safeRoute: safeDetourRoute,
-        directRoute,
+        safeRoute: ensureStepCoordinates(safeDetourRoute),
+        directRoute: ensureStepCoordinates(directRoute),
       };
     }
   }
@@ -494,13 +503,37 @@ export async function calculateSafeNavigationRoutes(params: {
         };
 
         return {
-          safeRoute: safeDetourRoute,
-          directRoute,
+          safeRoute: ensureStepCoordinates(safeDetourRoute),
+          directRoute: ensureStepCoordinates(directRoute),
         };
       }
     }
   }
 
   // If no detour is possible or all detours are blocked, return direct route with warning
-  return { safeRoute: directRoute };
+  return { safeRoute: ensureStepCoordinates(directRoute) };
+}
+
+/**
+ * Ensures that every step along the route has an exact geographical location coordinate.
+ * If routing engine didn't provide a step-specific coordinate, it interpolates along the route coordinates.
+ */
+export function ensureStepCoordinates(route: PedestrianRoute): PedestrianRoute {
+  if (!route.coordinates || route.coordinates.length === 0) return route;
+  const totalCoords = route.coordinates.length;
+  const numSteps = route.steps?.length || 0;
+
+  const steps = (route.steps || []).map((step, idx) => {
+    if (step.location) return step;
+    const coordIdx = Math.min(
+      totalCoords - 1,
+      Math.floor((idx / Math.max(1, numSteps)) * totalCoords)
+    );
+    return {
+      ...step,
+      location: route.coordinates[coordIdx],
+    };
+  });
+
+  return { ...route, steps };
 }

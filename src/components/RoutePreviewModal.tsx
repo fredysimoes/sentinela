@@ -38,6 +38,7 @@ interface RoutePreviewModalProps {
   onToggleMode?: (mode: TransportMode) => void;
   onClose: () => void;
   onStartNavigation: (chosenRoute: PedestrianRoute) => void;
+  onSimulateRoute?: (chosenRoute: PedestrianRoute) => void;
   onUpdateEndpoints?: (origin: RouteEndpoint, destination: RouteEndpoint) => void;
 }
 
@@ -55,11 +56,13 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   onToggleMode,
   onClose,
   onStartNavigation,
+  onSimulateRoute,
   onUpdateEndpoints,
 }) => {
   if (!safeRoute) return null;
 
   const [selectedRouteId, setSelectedRouteId] = useState<string>(safeRoute.id);
+  const [showDetailedSteps, setShowDetailedSteps] = useState<boolean>(false);
   const [activeInput, setActiveInput] = useState<'origin' | 'destination' | null>(null);
   const [originText, setOriginText] = useState(originName);
   const [destText, setDestText] = useState(destinationName);
@@ -131,6 +134,13 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   const handleStart = () => {
     Haptics.impactAsync(ImpactFeedbackStyle.Heavy);
     onStartNavigation(selectedRoute);
+  };
+
+  const handleSimulate = () => {
+    Haptics.impactAsync(ImpactFeedbackStyle.Medium);
+    if (onSimulateRoute) {
+      onSimulateRoute(selectedRoute);
+    }
   };
 
   // Swap Point A and Point B with 180deg animated rotation
@@ -755,28 +765,89 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     )}
                   </TouchableOpacity>
                 )}
+
+                {/* Collapsible Step-by-Step Route Details */}
+                {selectedRoute.steps && selectedRoute.steps.length > 0 && (
+                  <View style={styles.stepsAccordionContainer}>
+                    <TouchableOpacity
+                      style={styles.stepsAccordionHeader}
+                      onPress={() => {
+                        Haptics.impactAsync(ImpactFeedbackStyle.Light);
+                        setShowDetailedSteps(!showDetailedSteps);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.stepsAccordionTitleRow}>
+                        <Ionicons name="map-outline" size={16} color="#38BDF8" />
+                        <Text style={styles.stepsAccordionTitle}>
+                          Ver Itinerário Passo a Passo ({selectedRoute.steps.length} indicações)
+                        </Text>
+                      </View>
+                      <Ionicons
+                        name={showDetailedSteps ? 'chevron-up' : 'chevron-down'}
+                        size={18}
+                        color="#94A3B8"
+                      />
+                    </TouchableOpacity>
+
+                    {showDetailedSteps && (
+                      <View style={styles.stepsAccordionContent}>
+                        {selectedRoute.steps.map((st, i) => (
+                          <View key={`preview-step-${i}`} style={styles.previewStepRow}>
+                            <View style={styles.previewStepBullet}>
+                              <Text style={styles.previewStepBulletText}>{i + 1}</Text>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.previewStepText}>{st.instruction}</Text>
+                              {st.distanceMeters > 0 && (
+                                <Text style={styles.previewStepSubText}>
+                                  {formatDistance(st.distanceMeters)}
+                                  {st.streetName ? ` • ${st.streetName}` : ''}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
               </ScrollView>
 
-              {/* Action Button */}
+              {/* Action Buttons */}
               <View style={styles.footer}>
-                <M3Pressable
-                  style={[
-                    styles.startBtn,
-                    selectedRoute.isSafe ? styles.startBtnSafe : styles.startBtnWarn,
-                  ]}
-                  onPress={handleStart}
-                >
-                  <Ionicons
-                    name={selectedRoute.isSafe ? 'navigate' : 'navigate-outline'}
-                    size={20}
-                    color="#FFFFFF"
-                  />
-                  <Text style={styles.startBtnText}>
-                    {selectedRoute.isSafe
-                      ? `Iniciar Navegação (${selectedRoute.formattedDuration || `${selectedRoute.durationMinutes} min`})`
-                      : 'Iniciar Percurso'}
-                  </Text>
-                </M3Pressable>
+                <View style={styles.footerButtonsRow}>
+                  <M3Pressable
+                    style={[
+                      styles.startBtn,
+                      selectedRoute.isSafe ? styles.startBtnSafe : styles.startBtnWarn,
+                      onSimulateRoute ? { flex: 1.6 } : { flex: 1 },
+                    ]}
+                    onPress={handleStart}
+                  >
+                    <Ionicons
+                      name={selectedRoute.isSafe ? 'navigate' : 'navigate-outline'}
+                      size={18}
+                      color="#FFFFFF"
+                    />
+                    <Text style={styles.startBtnText} numberOfLines={1}>
+                      {selectedRoute.isSafe
+                        ? `Iniciar (${selectedRoute.formattedDuration || `${selectedRoute.durationMinutes} min`})`
+                        : 'Iniciar Percurso'}
+                    </Text>
+                  </M3Pressable>
+
+                  {onSimulateRoute && (
+                    <TouchableOpacity
+                      style={styles.simulateBtn}
+                      onPress={handleSimulate}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="game-controller" size={18} color="#38BDF8" />
+                      <Text style={styles.simulateBtnText}>Simular</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </>
           )}
@@ -1237,6 +1308,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
   },
+  footerButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   startBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1254,7 +1330,93 @@ const styles = StyleSheet.create({
   },
   startBtnText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
+  },
+  simulateBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: M3Shapes.full,
+    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    gap: 6,
+  },
+  simulateBtnText: {
+    color: '#38BDF8',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // Steps Accordion
+  stepsAccordionContainer: {
+    marginTop: 8,
+    marginBottom: 16,
+    backgroundColor: '#1E222A',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2D323F',
+    overflow: 'hidden',
+  },
+  stepsAccordionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  stepsAccordionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  stepsAccordionTitle: {
+    color: '#F1F5F9',
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  stepsAccordionContent: {
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#2D323F',
+  },
+  previewStepRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#262B36',
+    gap: 10,
+  },
+  previewStepBullet: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#282E3C',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  previewStepBulletText: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  previewStepText: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+  },
+  previewStepSubText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
   },
 });

@@ -47,9 +47,10 @@ import {
 } from './src/services/navigationBackgroundService';
 import { updateNavigationNotification, dismissNavigationNotification } from './src/services/notifications';
 import { calculateCurrentStepIndex } from './src/utils/navigationHelper';
-import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode } from './src/types/navigation';
+import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode, RouteSimulationState } from './src/types/navigation';
 import { calculateSafeNavigationRoutes } from './src/services/routingService';
 import { NavigationBanner } from './src/components/NavigationBanner';
+import { SimulationController } from './src/components/SimulationController';
 import { RoutePreviewModal } from './src/components/RoutePreviewModal';
 import { SearchBar } from './src/components/SearchBar';
 import { MapComponent } from './src/components/MapComponent';
@@ -82,7 +83,7 @@ import {
 } from './src/services/stalkingService';
 import { syncPendingFeedback } from './src/services/feedbackService';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
-import { calculateDistanceMeters } from './src/utils/geo';
+import { calculateDistanceMeters, formatDistance } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
 import { reverseGeocodeCoordinate } from './src/services/geocodingService';
 import {
@@ -252,8 +253,9 @@ export default function App() {
     });
   };
 
-  // Navigation States
+  // Navigation & Simulation States
   const [navState, setNavState] = useState<NavigationState | null>(null);
+  const [simulationState, setSimulationState] = useState<RouteSimulationState | null>(null);
   const [transportMode, setTransportMode] = useState<TransportMode>('walking');
   const [showRoutePreview, setShowRoutePreview] = useState(false);
   const [previewSafeRoute, setPreviewSafeRoute] = useState<PedestrianRoute | null>(null);
@@ -322,7 +324,7 @@ export default function App() {
     setPreviewDirectRoute(routes.directRoute);
   };
 
-  const handleStartNavigation = async (chosenRoute: PedestrianRoute) => {
+  const startRealNavigation = async (chosenRoute: PedestrianRoute) => {
     if (!previewDestCoord) return;
 
     // Suspend idle background proximity alerts to ensure only one navigation notification is shown
@@ -340,6 +342,7 @@ export default function App() {
     };
 
     setNavState(newNavState);
+    setSimulationState(null);
     setShowRoutePreview(false);
     setSelectedSafePlace(null);
     setSelectedIncident(null);
@@ -349,6 +352,99 @@ export default function App() {
 
     // Start background navigation tracking with ongoing foreground notification
     await startNavigationBackgroundTracking(newNavState);
+  };
+
+  const handleStartSimulation = (chosenRoute: PedestrianRoute) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const origName = previewOriginName || 'A minha localização';
+    const destName = previewDestName;
+
+    setShowRoutePreview(false);
+    setSelectedSafePlace(null);
+    setSelectedIncident(null);
+    setSelectedMapPoint(null);
+
+    setSimulationState({
+      isActive: true,
+      route: chosenRoute,
+      currentStepIndex: 0,
+      isPlaying: false,
+      originName: origName,
+      destinationName: destName,
+    });
+  };
+
+  const handleStepSimulation = (nextIndex: number) => {
+    setSimulationState((prev) => {
+      if (!prev) return null;
+      const steps = prev.route.steps || [];
+      const clampedIndex = Math.max(0, Math.min(steps.length - 1, nextIndex));
+      return { ...prev, currentStepIndex: clampedIndex };
+    });
+  };
+
+  const handleToggleSimulationPlay = () => {
+    setSimulationState((prev) => (prev ? { ...prev, isPlaying: !prev.isPlaying } : null));
+  };
+
+  const handleExitSimulation = () => {
+    Haptics.selectionAsync();
+    setSimulationState(null);
+  };
+
+  // Auto-play interval for simulation
+  useEffect(() => {
+    if (!simulationState || !simulationState.isPlaying) return;
+
+    const timer = setInterval(() => {
+      setSimulationState((prev) => {
+        if (!prev || !prev.isPlaying) return prev;
+        const steps = prev.route.steps || [];
+        const nextIdx = prev.currentStepIndex + 1;
+        if (nextIdx >= steps.length) {
+          return { ...prev, isPlaying: false, currentStepIndex: steps.length - 1 };
+        }
+        return { ...prev, currentStepIndex: nextIdx };
+      });
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [simulationState?.isPlaying, simulationState?.route?.steps?.length]);
+
+  const handleStartNavigation = async (chosenRoute: PedestrianRoute) => {
+    if (!previewDestCoord) return;
+
+    // Check if user is planning from a distant origin (> 250m from their physical GPS location)
+    if (previewOriginCoord && userLocation) {
+      const distToOrigin = calculateDistanceMeters(
+        userLocation.latitude,
+        userLocation.longitude,
+        previewOriginCoord.latitude,
+        previewOriginCoord.longitude
+      );
+
+      if (distToOrigin > 250) {
+        Alert.alert(
+          'Ponto de Partida Distante',
+          `Encontra-se a ${formatDistance(distToOrigin)} do ponto de partida (${previewOriginName || 'Partida'}).\n\nDeseja simular o percurso para planear com antecedência ou iniciar a navegação ativa no local?`,
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            {
+              text: '🎮 Simular Percurso',
+              onPress: () => handleStartSimulation(chosenRoute),
+            },
+            {
+              text: 'Iniciar Navegação',
+              style: 'default',
+              onPress: () => startRealNavigation(chosenRoute),
+            },
+          ]
+        );
+        return;
+      }
+    }
+
+    await startRealNavigation(chosenRoute);
   };
 
   const handleExitNavigation = async () => {
@@ -959,6 +1055,18 @@ export default function App() {
         <NavigationBanner navState={navState} onExit={handleExitNavigation} />
       )}
 
+      {/* Simulation Controller HUD & Controls */}
+      {simulationState && (
+        <SimulationController
+          simulationState={simulationState}
+          onNextStep={() => handleStepSimulation(simulationState.currentStepIndex + 1)}
+          onPrevStep={() => handleStepSimulation(simulationState.currentStepIndex - 1)}
+          onTogglePlay={handleToggleSimulationPlay}
+          onSelectStep={handleStepSimulation}
+          onExit={handleExitSimulation}
+        />
+      )}
+
       {/* Google M3 Floating Emergency / Proximity Alert Pill */}
       <MaterialAlertBanner
         alert={activeBanner}
@@ -980,12 +1088,47 @@ export default function App() {
           activeSOSAlerts={activeSOSAlerts}
           safePlaces={safePlaces}
           selectedCategoryFilter={selectedFilter}
-          activeRoute={navState ? navState.route : (showRoutePreview ? previewSafeRoute : null)}
+          activeRoute={
+            navState
+              ? navState.route
+              : simulationState
+              ? simulationState.route
+              : (showRoutePreview ? previewSafeRoute : null)
+          }
           isNavigating={!!navState}
+          isSimulating={!!simulationState}
+          simulatedLocation={
+            simulationState
+              ? simulationState.route.steps[simulationState.currentStepIndex]?.location ||
+                simulationState.route.coordinates[0] ||
+                null
+              : null
+          }
           selectedMapPoint={selectedMapPoint}
           homeAddress={homeAddress}
-          routeOrigin={(!navState && previewOriginCoord) ? { name: previewOriginName, coord: previewOriginCoord } : null}
-          routeDestination={previewDestCoord ? { name: previewDestName, coord: previewDestCoord } : null}
+          routeOrigin={
+            simulationState
+              ? {
+                  name: simulationState.originName,
+                  coord: simulationState.route.coordinates[0] || previewOriginCoord || { latitude: 38.7223, longitude: -9.1393 },
+                }
+              : (!navState && previewOriginCoord)
+              ? { name: previewOriginName, coord: previewOriginCoord }
+              : null
+          }
+          routeDestination={
+            simulationState
+              ? {
+                  name: simulationState.destinationName,
+                  coord:
+                    simulationState.route.coordinates[simulationState.route.coordinates.length - 1] ||
+                    previewDestCoord ||
+                    { latitude: 38.7223, longitude: -9.1393 },
+                }
+              : previewDestCoord
+              ? { name: previewDestName, coord: previewDestCoord }
+              : null
+          }
           onSelectIncident={(inc) => {
             Haptics.selectionAsync();
             setSelectedSafePlace(null);
@@ -1030,7 +1173,7 @@ export default function App() {
       </View>
 
       {/* 2. Google M3 Floating Search Capsule & Floating Chips Overlay */}
-      {!navState && (
+      {!navState && !simulationState && (
         <View style={styles.topFloatingOverlay} pointerEvents="box-none">
           <SearchBar
             userLocation={userLocation}
@@ -1203,39 +1346,41 @@ export default function App() {
       )}
 
       {/* Bottom Action Floating Bar */}
-      <View style={styles.bottomBar}>
-        {/* Signal Hazard Button - High Contrast Light Pill FAB with Material Motion */}
-        <M3Pressable
-          scaleOnPress={0.94}
-          style={styles.reportBtn}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setTargetCoordinate(null);
-            setShowReportModal(true);
-          }}
-        >
-          <View style={styles.reportIconCircle}>
-            <Ionicons name="add" size={22} color="#FFFFFF" />
-          </View>
-          <View>
-            <Text style={styles.reportBtnTitle}>Sinalizar Perigo</Text>
-            <Text style={styles.reportBtnSub}>Partilhar no mapa</Text>
-          </View>
-        </M3Pressable>
+      {!navState && !simulationState && (
+        <View style={styles.bottomBar}>
+          {/* Signal Hazard Button - High Contrast Light Pill FAB with Material Motion */}
+          <M3Pressable
+            scaleOnPress={0.94}
+            style={styles.reportBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setTargetCoordinate(null);
+              setShowReportModal(true);
+            }}
+          >
+            <View style={styles.reportIconCircle}>
+              <Ionicons name="add" size={22} color="#FFFFFF" />
+            </View>
+            <View>
+              <Text style={styles.reportBtnTitle}>Sinalizar Perigo</Text>
+              <Text style={styles.reportBtnSub}>Partilhar no mapa</Text>
+            </View>
+          </M3Pressable>
 
-        {/* SOS Emergency Button - M3 Squircle FAB with Material Motion */}
-        <M3Pressable
-          scaleOnPress={0.91}
-          style={styles.sosBtn}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            setShowSOSModal(true);
-          }}
-        >
-          <Ionicons name="megaphone" size={24} color="#FFFFFF" />
-          <Text style={styles.sosBtnText}>SOS</Text>
-        </M3Pressable>
-      </View>
+          {/* SOS Emergency Button - M3 Squircle FAB with Material Motion */}
+          <M3Pressable
+            scaleOnPress={0.91}
+            style={styles.sosBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              setShowSOSModal(true);
+            }}
+          >
+            <Ionicons name="megaphone" size={24} color="#FFFFFF" />
+            <Text style={styles.sosBtnText}>SOS</Text>
+          </M3Pressable>
+        </View>
+      )}
 
       {/* Incident Details Sheet */}
       {selectedIncident && (
@@ -1317,6 +1462,7 @@ export default function App() {
           setPreviewOriginName('A minha localização');
         }}
         onStartNavigation={handleStartNavigation}
+        onSimulateRoute={handleStartSimulation}
         onUpdateEndpoints={handleUpdateRouteEndpoints}
       />
 
