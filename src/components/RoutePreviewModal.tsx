@@ -9,6 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   Keyboard,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Haptics, { ImpactFeedbackStyle } from '../utils/haptics';
@@ -16,7 +17,7 @@ import { PedestrianRoute, RouteCoordinate, TransportMode } from '../types/naviga
 import { formatDistance } from '../utils/geo';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { searchAddressSuggestions, AddressSuggestion } from '../services/geocodingService';
-import { M3BottomSheetWrapper } from './M3MotionWrapper';
+import { M3BottomSheetWrapper, M3Pressable } from './M3MotionWrapper';
 
 export interface RouteEndpoint {
   name: string;
@@ -65,6 +66,11 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const originInputRef = useRef<any>(null);
+  const destInputRef = useRef<any>(null);
+  const swapRotateAnim = useRef(new Animated.Value(0)).current;
+  const swapCount = useRef(0);
+
   useEffect(() => {
     setSelectedRouteId(safeRoute.id);
   }, [safeRoute.id]);
@@ -73,7 +79,6 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   useEffect(() => {
     if (!editingTarget) {
       setSuggestions([]);
-      setSearchQuery('');
       return;
     }
 
@@ -115,10 +120,18 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
     onStartNavigation(selectedRoute);
   };
 
-  // Swap Point A and Point B
+  // Swap Point A and Point B with 180deg animated rotation
   const handleSwap = () => {
     if (!onUpdateEndpoints || !destinationCoord) return;
     Haptics.impactAsync(ImpactFeedbackStyle.Medium);
+
+    swapCount.current += 1;
+    Animated.spring(swapRotateAnim, {
+      toValue: swapCount.current * 180,
+      tension: 240,
+      friction: 12,
+      useNativeDriver: true,
+    }).start();
 
     const currentOriginCoord = originCoord || (userLocation ? {
       latitude: userLocation.latitude,
@@ -138,6 +151,24 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
     };
 
     onUpdateEndpoints(newOrigin, newDest);
+  };
+
+  const handleStartEditOrigin = () => {
+    Haptics.selectionAsync();
+    setEditingTarget('origin');
+    setSearchQuery(originName === 'A minha localização' ? '' : originName);
+    setTimeout(() => {
+      originInputRef.current?.focus();
+    }, 50);
+  };
+
+  const handleStartEditDest = () => {
+    Haptics.selectionAsync();
+    setEditingTarget('destination');
+    setSearchQuery(destinationName);
+    setTimeout(() => {
+      destInputRef.current?.focus();
+    }, 50);
   };
 
   // Select a preset or search suggestion for the selected endpoint
@@ -169,218 +200,301 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   const isDriving = (safeRoute.mode || currentMode) === 'driving';
 
   return (
-    <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
+    <M3BottomSheetWrapper
+      visible={visible}
+      onClose={onClose}
+      style={[
+        styles.sheetContainer,
+        editingTarget !== null && styles.sheetContainerExpanded,
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
-            <View style={styles.modeIconCircle}>
-              <Ionicons
-                name={isDriving ? 'car-sport' : 'walk'}
-                size={22}
-                color="#38BDF8"
+        <View style={styles.modeIconCircle}>
+          <Ionicons
+            name={isDriving ? 'car-sport' : 'walk'}
+            size={22}
+            color="#38BDF8"
+          />
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>
+            {isDriving ? 'Planeador de Rota Automóvel' : 'Planeador de Rota Pedestre'}
+          </Text>
+          <Text style={styles.headerSub} numberOfLines={1}>
+            {originName} ➔ {destinationName}
+          </Text>
+        </View>
+
+        <M3Pressable onPress={onClose} style={styles.closeBtn}>
+          <Ionicons name="close" size={20} color="#94A3B8" />
+        </M3Pressable>
+      </View>
+
+      {/* TWO-POINT ITINERARY CONTROLLER (Point A ➔ Point B) */}
+      <View style={styles.itineraryCard}>
+        <View style={styles.itineraryInputsCol}>
+          {/* Point A: Origin */}
+          <TouchableOpacity
+            style={[
+              styles.endpointRow,
+              editingTarget === 'origin' && styles.endpointRowActive,
+            ]}
+            onPress={handleStartEditOrigin}
+            activeOpacity={0.9}
+          >
+            <View style={styles.pointAIconBadge}>
+              <Text style={styles.pointLetterText}>A</Text>
+            </View>
+            <View style={styles.endpointInputContent}>
+              <Text style={styles.endpointLabel}>PONTO DE PARTIDA</Text>
+              <TextInput
+                ref={originInputRef}
+                style={styles.endpointTextInput}
+                value={editingTarget === 'origin' ? searchQuery : originName}
+                onChangeText={(text) => {
+                  if (editingTarget !== 'origin') setEditingTarget('origin');
+                  setSearchQuery(text);
+                }}
+                onFocus={handleStartEditOrigin}
+                placeholder="Pesquisar ponto de partida..."
+                placeholderTextColor="#64748B"
+                returnKeyType="search"
+                selectTextOnFocus
               />
             </View>
+            {editingTarget === 'origin' && searchQuery.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery('');
+                  originInputRef.current?.focus();
+                }}
+                style={styles.endpointIconActionBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close-circle" size={18} color="#94A3B8" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={handleStartEditOrigin}
+                style={styles.endpointIconActionBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name="pencil"
+                  size={14}
+                  color={editingTarget === 'origin' ? '#10B981' : '#94A3B8'}
+                />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
 
-            <View style={{ flex: 1 }}>
-              <Text style={styles.headerTitle}>
-                {isDriving ? 'Planeador de Rota Automóvel' : 'Planeador de Rota Pedestre'}
-              </Text>
-              <Text style={styles.headerSub} numberOfLines={1}>
-                {originName} ➔ {destinationName}
+          <View style={styles.itineraryDivider} />
+
+          {/* Point B: Destination */}
+          <TouchableOpacity
+            style={[
+              styles.endpointRow,
+              editingTarget === 'destination' && styles.endpointRowActive,
+            ]}
+            onPress={handleStartEditDest}
+            activeOpacity={0.9}
+          >
+            <View style={styles.pointBIconBadge}>
+              <Text style={styles.pointLetterText}>B</Text>
+            </View>
+            <View style={styles.endpointInputContent}>
+              <Text style={styles.endpointLabel}>PONTO DE CHEGADA</Text>
+              <TextInput
+                ref={destInputRef}
+                style={styles.endpointTextInput}
+                value={editingTarget === 'destination' ? searchQuery : destinationName}
+                onChangeText={(text) => {
+                  if (editingTarget !== 'destination') setEditingTarget('destination');
+                  setSearchQuery(text);
+                }}
+                onFocus={handleStartEditDest}
+                placeholder="Pesquisar ponto de chegada..."
+                placeholderTextColor="#64748B"
+                returnKeyType="search"
+                selectTextOnFocus
+              />
+            </View>
+            {editingTarget === 'destination' && searchQuery.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery('');
+                  destInputRef.current?.focus();
+                }}
+                style={styles.endpointIconActionBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close-circle" size={18} color="#94A3B8" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={handleStartEditDest}
+                style={styles.endpointIconActionBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name="pencil"
+                  size={14}
+                  color={editingTarget === 'destination' ? '#EF4444' : '#94A3B8'}
+                />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Invert Route Button (⇄) */}
+        {onUpdateEndpoints && (
+          <M3Pressable
+            style={styles.swapBtn}
+            onPress={handleSwap}
+          >
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    rotate: swapRotateAnim.interpolate({
+                      inputRange: [0, 360],
+                      outputRange: ['0deg', '360deg'],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <Ionicons name="swap-vertical" size={20} color="#38BDF8" />
+            </Animated.View>
+          </M3Pressable>
+        )}
+      </View>
+
+      {/* INLINE SUGGESTIONS & PRESETS WHEN EDITING POINT A OR POINT B */}
+      {editingTarget ? (
+        <View style={styles.searchSection}>
+          <View style={styles.searchTopBar}>
+            <View style={styles.searchTargetIndicator}>
+              <Ionicons
+                name={editingTarget === 'origin' ? 'location' : 'flag'}
+                size={14}
+                color={editingTarget === 'origin' ? '#10B981' : '#EF4444'}
+              />
+              <Text style={styles.searchTargetText}>
+                {editingTarget === 'origin'
+                  ? 'A selecionar Ponto A (Partida)'
+                  : 'A selecionar Ponto B (Chegada)'}
               </Text>
             </View>
 
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color="#94A3B8" />
+            <TouchableOpacity
+              style={styles.doneEditingBtn}
+              onPress={() => {
+                Keyboard.dismiss();
+                setEditingTarget(null);
+              }}
+            >
+              <Text style={styles.doneEditingBtnText}>Concluído</Text>
             </TouchableOpacity>
           </View>
 
-          {/* TWO-POINT ITINERARY CONTROLLER (Point A ➔ Point B) */}
-          <View style={styles.itineraryCard}>
-            <View style={styles.itineraryInputsCol}>
-              {/* Point A: Origin */}
-              <TouchableOpacity
-                style={[
-                  styles.endpointRow,
-                  editingTarget === 'origin' && styles.endpointRowActive,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setEditingTarget(editingTarget === 'origin' ? null : 'origin');
-                  setSearchQuery('');
-                }}
-                activeOpacity={0.75}
+          {/* Quick Preset Pills */}
+          <View style={styles.quickPresetsRow}>
+            {userLocation && (
+              <M3Pressable
+                style={styles.presetPill}
+                onPress={() =>
+                  handleSelectEndpoint('A minha localização', {
+                    latitude: userLocation.latitude,
+                    longitude: userLocation.longitude,
+                  })
+                }
               >
-                <View style={styles.pointAIconBadge}>
-                  <Text style={styles.pointLetterText}>A</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.endpointLabel}>PONTO DE PARTIDA</Text>
-                  <Text style={styles.endpointName} numberOfLines={1}>
-                    {originName}
-                  </Text>
-                </View>
-                <Ionicons name="pencil" size={14} color="#94A3B8" />
-              </TouchableOpacity>
+                <Ionicons name="locate" size={14} color="#38BDF8" />
+                <Text style={styles.presetPillText}>A Minha Localização</Text>
+              </M3Pressable>
+            )}
 
-              <View style={styles.itineraryDivider} />
-
-              {/* Point B: Destination */}
-              <TouchableOpacity
-                style={[
-                  styles.endpointRow,
-                  editingTarget === 'destination' && styles.endpointRowActive,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setEditingTarget(editingTarget === 'destination' ? null : 'destination');
-                  setSearchQuery('');
-                }}
-                activeOpacity={0.75}
+            {homeAddress && (
+              <M3Pressable
+                style={styles.presetPill}
+                onPress={() =>
+                  handleSelectEndpoint(homeAddress.label || 'Casa', {
+                    latitude: homeAddress.latitude,
+                    longitude: homeAddress.longitude,
+                  })
+                }
               >
-                <View style={styles.pointBIconBadge}>
-                  <Text style={styles.pointLetterText}>B</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.endpointLabel}>PONTO DE CHEGADA</Text>
-                  <Text style={styles.endpointName} numberOfLines={1}>
-                    {destinationName}
-                  </Text>
-                </View>
-                <Ionicons name="pencil" size={14} color="#94A3B8" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Invert Route Button (⇄) */}
-            {onUpdateEndpoints && (
-              <TouchableOpacity
-                style={styles.swapBtn}
-                onPress={handleSwap}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="swap-vertical" size={20} color="#38BDF8" />
-              </TouchableOpacity>
+                <Ionicons name="home" size={14} color="#10B981" />
+                <Text style={styles.presetPillText}>Casa</Text>
+              </M3Pressable>
             )}
           </View>
 
-          {/* INLINE ENDPOINT SEARCH & PRESETS (When editing origin or destination) */}
-          {editingTarget ? (
-            <View style={styles.searchSection}>
-              <View style={styles.searchInputRow}>
-                <Ionicons name="search" size={18} color="#94A3B8" />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder={
-                    editingTarget === 'origin'
-                      ? 'Pesquisar rua, local ou cidade de partida...'
-                      : 'Pesquisar rua, local ou cidade de chegada...'
-                  }
-                  placeholderTextColor="#64748B"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  autoFocus
-                  returnKeyType="search"
-                />
-                {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
-                    <Ionicons name="close-circle" size={16} color="#94A3B8" />
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  style={styles.cancelSearchBtn}
-                  onPress={() => setEditingTarget(null)}
-                >
-                  <Text style={styles.cancelSearchBtnText}>Voltar</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Quick Preset Pills */}
-              <View style={styles.quickPresetsRow}>
-                {userLocation && (
-                  <TouchableOpacity
-                    style={styles.presetPill}
-                    onPress={() =>
-                      handleSelectEndpoint('A minha localização', {
-                        latitude: userLocation.latitude,
-                        longitude: userLocation.longitude,
-                      })
-                    }
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="locate" size={14} color="#38BDF8" />
-                    <Text style={styles.presetPillText}>A Minha Localização</Text>
-                  </TouchableOpacity>
-                )}
-
-                {homeAddress && (
-                  <TouchableOpacity
-                    style={styles.presetPill}
-                    onPress={() =>
-                      handleSelectEndpoint(homeAddress.label || 'Casa', {
-                        latitude: homeAddress.latitude,
-                        longitude: homeAddress.longitude,
-                      })
-                    }
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="home" size={14} color="#10B981" />
-                    <Text style={styles.presetPillText}>Casa</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {/* Loading Indicator */}
-              {isSearching && (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#38BDF8" />
-                  <Text style={styles.loadingText}>A procurar localizações em Portugal...</Text>
-                </View>
-              )}
-
-              {/* Suggestions List */}
-              <ScrollView
-                style={styles.suggestionsList}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-              >
-                {suggestions.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.suggestionItem}
-                    onPress={() =>
-                      handleSelectEndpoint(item.title, {
-                        latitude: item.latitude,
-                        longitude: item.longitude,
-                      })
-                    }
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.suggestionIconWrap}>
-                      <Ionicons
-                        name={
-                          item.type === 'pharmacy'
-                            ? 'medical'
-                            : item.type === 'police'
-                            ? 'shield-sharp'
-                            : 'location-outline'
-                        }
-                        size={16}
-                        color="#38BDF8"
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.suggestionTitle} numberOfLines={1}>
-                        {item.title}
-                      </Text>
-                      <Text style={styles.suggestionSubtitle} numberOfLines={1}>
-                        {item.subtitle}
-                      </Text>
-                    </View>
-                    <Ionicons name="arrow-forward" size={14} color="#64748B" />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+          {/* Loading Indicator */}
+          {isSearching && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#38BDF8" />
+              <Text style={styles.loadingText}>A procurar localizações em Portugal...</Text>
             </View>
-          ) : (
+          )}
+
+          {/* Suggestions List */}
+          <ScrollView
+            style={styles.suggestionsList}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {suggestions.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.suggestionItem}
+                onPress={() =>
+                  handleSelectEndpoint(item.title, {
+                    latitude: item.latitude,
+                    longitude: item.longitude,
+                  })
+                }
+                activeOpacity={0.7}
+              >
+                <View style={styles.suggestionIconWrap}>
+                  <Ionicons
+                    name={
+                      item.type === 'pharmacy'
+                        ? 'medical'
+                        : item.type === 'police'
+                        ? 'shield-sharp'
+                        : 'location-outline'
+                    }
+                    size={16}
+                    color="#38BDF8"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.suggestionTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.suggestionSubtitle} numberOfLines={1}>
+                    {item.subtitle}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={14} color="#64748B" />
+              </TouchableOpacity>
+            ))}
+
+            {suggestions.length === 0 && !isSearching && searchQuery.trim().length >= 2 && (
+              <View style={styles.emptyResultsBox}>
+                <Ionicons name="alert-circle-outline" size={22} color="#64748B" />
+                <Text style={styles.emptyResultsText}>
+                  Nenhum resultado encontrado para "{searchQuery.trim()}".
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      ) : (
             /* NORMAL ROUTE CARDS & OPTIONS */
             <>
               {/* Transport Mode Switcher */}
@@ -536,13 +650,12 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
 
               {/* Action Button */}
               <View style={styles.footer}>
-                <TouchableOpacity
+                <M3Pressable
                   style={[
                     styles.startBtn,
                     selectedRoute.isSafe ? styles.startBtnSafe : styles.startBtnWarn,
                   ]}
                   onPress={handleStart}
-                  activeOpacity={0.85}
                 >
                   <Ionicons
                     name={selectedRoute.isSafe ? 'navigate' : 'navigate-outline'}
@@ -554,7 +667,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                       ? `Iniciar Navegação (${selectedRoute.formattedDuration || `${selectedRoute.durationMinutes} min`})`
                       : 'Iniciar Percurso'}
                   </Text>
-                </TouchableOpacity>
+                </M3Pressable>
               </View>
             </>
           )}
@@ -576,6 +689,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
     ...M3Elevation.level4,
+  },
+  sheetContainerExpanded: {
+    maxHeight: '94%',
+    height: '90%',
   },
   header: {
     flexDirection: 'row',
@@ -631,12 +748,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   endpointRowActive: {
     backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderColor: 'rgba(56, 189, 248, 0.5)',
+  },
+  endpointInputContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  endpointTextInput: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '600',
+    paddingVertical: 2,
+    paddingHorizontal: 0,
+    marginTop: 1,
+  },
+  endpointIconActionBtn: {
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   pointAIconBadge: {
     width: 24,
@@ -689,38 +826,53 @@ const styles = StyleSheet.create({
 
   // Search section
   searchSection: {
-    padding: 16,
-    minHeight: 280,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
+    flex: 1,
   },
-  searchInputRow: {
+  searchTopBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#16191E',
-    borderWidth: 1,
-    borderColor: '#38BDF8',
-    borderRadius: 14,
+    justifyContent: 'space-between',
+    paddingBottom: 6,
+  },
+  searchTargetIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  searchTargetText: {
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '700',
+  },
+  doneEditingBtn: {
     paddingHorizontal: 12,
-    height: 48,
-    gap: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
   },
-  searchInput: {
-    flex: 1,
-    color: '#F8FAFC',
-    fontSize: 14,
-  },
-  cancelSearchBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  cancelSearchBtnText: {
+  doneEditingBtnText: {
     color: '#38BDF8',
     fontWeight: '700',
+    fontSize: 12,
+  },
+  emptyResultsBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    gap: 8,
+  },
+  emptyResultsText: {
+    color: '#94A3B8',
     fontSize: 13,
+    textAlign: 'center',
   },
   quickPresetsRow: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 10,
+    marginTop: 4,
     marginBottom: 8,
   },
   presetPill: {

@@ -10,8 +10,11 @@ import {
   ViewStyle,
   StyleProp,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { M3Motion, M3Colors } from '../theme/m3';
+import Haptics from '../utils/haptics';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -95,6 +98,7 @@ export const M3Dialog: React.FC<M3DialogProps> = ({
       visible={shouldRender}
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <View style={styles.dialogContainer}>
         {/* Animated Scrim / Backdrop */}
@@ -198,6 +202,7 @@ export const M3BottomSheetWrapper: React.FC<M3BottomSheetWrapperProps> = ({
       visible={shouldRender}
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <View style={styles.sheetOverlay}>
         <TouchableWithoutFeedback onPress={backdropClose ? onClose : undefined}>
@@ -214,72 +219,102 @@ export const M3BottomSheetWrapper: React.FC<M3BottomSheetWrapperProps> = ({
           />
         </TouchableWithoutFeedback>
 
-        <Animated.View
-          style={[
-            styles.sheetCard,
-            style,
-            {
-              transform: [{ translateY }],
-            },
-          ]}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.sheetCardWrapper}
         >
-          {children}
-        </Animated.View>
+          <Animated.View
+            style={[
+              styles.sheetCard,
+              style,
+              {
+                transform: [{ translateY }],
+              },
+            ]}
+          >
+            {children}
+          </Animated.View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
 };
 
-interface M3PressableProps extends PressableProps {
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export interface M3PressableProps extends PressableProps {
   scaleOnPress?: number;
   style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
+  rippleColor?: string;
+  borderless?: boolean;
+  haptic?: boolean;
 }
 
 /**
- * Material Design 3 Tactile Pressable with Spring/Interpolated Scale Motion
- * Conforms to MDC Short2 (100ms) motion duration on state changes
+ * Material Design 3 Tactile Pressable with Spring Motion, Ripple, and Haptic Feedback
+ * Delivers immediate visual compression, haptic pulse, and native Android ripple on taps.
  */
 export const M3Pressable: React.FC<M3PressableProps> = ({
-  scaleOnPress = 0.96,
+  scaleOnPress = 0.88,
   style,
   children,
   onPressIn,
   onPressOut,
+  rippleColor = 'rgba(255, 255, 255, 0.20)',
+  borderless = false,
+  haptic = true,
   ...rest
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = (e: any) => {
-    Animated.timing(scale, {
+    if (haptic) {
+      try {
+        Haptics.selectionAsync();
+      } catch (_) {}
+    }
+    Animated.spring(scale, {
       toValue: scaleOnPress,
-      duration: M3Motion.durations.short2,
-      easing: M3Motion.easings.standard,
+      tension: 340,
+      friction: 12,
       useNativeDriver: true,
     }).start();
     onPressIn?.(e);
   };
 
   const handlePressOut = (e: any) => {
-    Animated.timing(scale, {
+    Animated.spring(scale, {
       toValue: 1,
-      duration: M3Motion.durations.short2,
-      easing: M3Motion.easings.emphasizedDecelerate,
+      tension: 240,
+      friction: 8,
       useNativeDriver: true,
     }).start();
     onPressOut?.(e);
   };
 
+  const opacity = scale.interpolate({
+    inputRange: [scaleOnPress, 1],
+    outputRange: [0.82, 1],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <Pressable
+    <AnimatedPressable
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      android_ripple={{ color: rippleColor, borderless }}
+      style={[
+        style as any,
+        {
+          transform: [{ scale }],
+          opacity,
+        },
+      ]}
       {...rest}
     >
-      <Animated.View style={[style, { transform: [{ scale }] }]}>
-        {children}
-      </Animated.View>
-    </Pressable>
+      {children}
+    </AnimatedPressable>
   );
 };
 
@@ -300,6 +335,10 @@ const styles = StyleSheet.create({
   },
   sheetOverlay: {
     flex: 1,
+    justifyContent: 'flex-end',
+  },
+  sheetCardWrapper: {
+    width: '100%',
     justifyContent: 'flex-end',
   },
   sheetCard: {

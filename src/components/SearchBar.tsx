@@ -17,6 +17,7 @@ import { RouteCoordinate, TransportMode } from '../types/navigation';
 import { calculateDistanceMeters } from '../utils/geo';
 import { formatDuration, formatDistance } from '../services/routingService';
 import { M3Colors, M3Shapes, M3Elevation, M3Motion } from '../theme/m3';
+import { M3Pressable } from './M3MotionWrapper';
 
 interface SearchBarProps {
   userLocation?: { latitude: number; longitude: number } | null;
@@ -178,9 +179,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
         {/* Clear Button */}
         {query.length > 0 && (
-          <TouchableOpacity onPress={handleClear} style={styles.iconBtn}>
+          <M3Pressable onPress={handleClear} style={styles.iconBtn}>
             <Ionicons name="close-circle" size={19} color={M3Colors.onSurfaceVariant} />
-          </TouchableOpacity>
+          </M3Pressable>
         )}
 
         {/* Loading Spinner */}
@@ -189,27 +190,25 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         )}
 
         {/* Transport Mode Toggle Button (Walk vs Drive) */}
-        <TouchableOpacity
+        <M3Pressable
           style={[styles.modeToggleBtn, transportMode === 'driving' && styles.modeToggleBtnDriving]}
           onPress={() => {
             Haptics.selectionAsync();
             onTransportModeChange(transportMode === 'walking' ? 'driving' : 'walking');
           }}
-          activeOpacity={0.8}
         >
           <Ionicons
             name={transportMode === 'driving' ? 'car-sport' : 'walk'}
             size={16}
             color={transportMode === 'driving' ? M3Colors.onPrimaryContainer : M3Colors.primary}
           />
-        </TouchableOpacity>
+        </M3Pressable>
 
         {/* SOS Emergency Contacts Access Button */}
         {onOpenSOSContacts && (
-          <TouchableOpacity
+          <M3Pressable
             style={styles.contactsActionBtn}
             onPress={onOpenSOSContacts}
-            activeOpacity={0.8}
           >
             <Ionicons name="people" size={17} color={M3Colors.primary} />
             {emergencyContactsCount > 0 && (
@@ -217,18 +216,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <Text style={styles.contactsCountText}>{emergencyContactsCount}</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </M3Pressable>
         )}
 
         {/* Proximity & Settings Button */}
         {onOpenSettings && (
-          <TouchableOpacity
+          <M3Pressable
             style={[styles.contactsActionBtn, { marginLeft: 6 }]}
             onPress={onOpenSettings}
-            activeOpacity={0.8}
           >
             <Ionicons name="options-outline" size={17} color={M3Colors.primary} />
-          </TouchableOpacity>
+          </M3Pressable>
         )}
       </View>
 

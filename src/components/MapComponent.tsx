@@ -720,14 +720,13 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
 
       {/* Re-center Navigation Pill (shown if user panned away during active navigation) */}
       {isNavigating && isUserInteracting && (
-        <TouchableOpacity
+        <M3Pressable
           style={styles.recenterNavPill}
           onPress={handleRecenter}
-          activeOpacity={0.85}
         >
           <Ionicons name="navigate" size={16} color={M3Colors.onPrimary} />
           <Text style={styles.recenterNavPillText}>Recentrar Navegação 3D</Text>
-        </TouchableOpacity>
+        </M3Pressable>
       )}
 
       {/* Picking Location Indicator */}
