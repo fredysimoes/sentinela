@@ -71,6 +71,15 @@ export async function requestNotificationPermissions(): Promise<boolean> {
         enableVibrate: false,
         showBadge: false,
       });
+
+      // Keep location foreground service channel silent and non-intrusive
+      await Notifications.setNotificationChannelAsync('expo_location_task_service_channel', {
+        name: 'Serviço de Segundo Plano',
+        importance: Notifications.AndroidImportance.MIN,
+        sound: undefined,
+        enableVibrate: false,
+        showBadge: false,
+      });
     }
 
     return finalStatus === 'granted';

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sentinela",
     "slug": "sentinela",
-    "version": "1.0.0",
+    "version": "1.6.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -25,6 +25,7 @@
     },
     "android": {
       "package": "com.sentinela.app",
+      "versionCode": 164,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAauiNB51SJ4QdfHGGoTB87sJZ-DVsozjk"

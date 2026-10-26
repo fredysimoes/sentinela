@@ -202,6 +202,37 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
     setSuggestions([]);
   };
 
+  // Explicitly reset Point A or Point B to device GPS "A minha localização"
+  const handleResetToMyLocation = (target: 'origin' | 'destination' = 'origin') => {
+    Haptics.selectionAsync();
+    Keyboard.dismiss();
+    setActiveInput(null);
+    setSuggestions([]);
+
+    const myCoord = userLocation
+      ? { latitude: userLocation.latitude, longitude: userLocation.longitude }
+      : { latitude: 38.7223, longitude: -9.1393 };
+
+    if (target === 'origin') {
+      setOriginText('A minha localização');
+      const currentDestCoord = destinationCoord || { latitude: 38.7223, longitude: -9.1393 };
+      onUpdateEndpoints?.(
+        { name: 'A minha localização', coord: myCoord },
+        { name: destText || destinationName, coord: currentDestCoord }
+      );
+    } else {
+      setDestText('A minha localização');
+      const currentOriginCoord = originCoord || (userLocation ? {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      } : { latitude: 38.7223, longitude: -9.1393 });
+      onUpdateEndpoints?.(
+        { name: originText || originName, coord: currentOriginCoord },
+        { name: 'A minha localização', coord: myCoord }
+      );
+    }
+  };
+
   const isDriving = (safeRoute.mode || currentMode) === 'driving';
 
   return (
@@ -267,8 +298,10 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                 }}
                 onFocus={() => {
                   setActiveInput('origin');
-                  if (originText === 'A minha localização') {
-                    setOriginText('');
+                }}
+                onBlur={() => {
+                  if (!originText.trim()) {
+                    handleResetToMyLocation('origin');
                   }
                 }}
                 placeholder="Pesquisar ponto de partida A..."
@@ -321,6 +354,11 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                 onFocus={() => {
                   setActiveInput('destination');
                 }}
+                onBlur={() => {
+                  if (!destText.trim()) {
+                    setDestText(destinationName);
+                  }
+                }}
                 placeholder="Pesquisar destino de chegada B..."
                 placeholderTextColor="#64748B"
                 returnKeyType="search"
@@ -368,6 +406,23 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
         )}
       </View>
 
+      {/* Quick shortcut to restore user GPS location as Point A if modified */}
+      {originText !== 'A minha localização' && activeInput === null && (
+        <TouchableOpacity
+          style={styles.resetToMyLocationBar}
+          onPress={() => handleResetToMyLocation('origin')}
+          activeOpacity={0.75}
+        >
+          <View style={styles.resetToMyLocationIcon}>
+            <Ionicons name="locate" size={14} color="#38BDF8" />
+          </View>
+          <Text style={styles.resetToMyLocationText} numberOfLines={1}>
+            Ponto A modificado. Toque para usar "A minha localização"
+          </Text>
+          <Ionicons name="refresh" size={14} color="#38BDF8" />
+        </TouchableOpacity>
+      )}
+
       {/* SUGGESTIONS OVERLAY (ONLY SHOWN WHEN AN INPUT IS FOCUSED/TYPING) */}
       {activeInput !== null ? (
         <View style={styles.suggestionsContainer}>
@@ -376,12 +431,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
               {userLocation && (
                 <M3Pressable
                   style={styles.presetPill}
-                  onPress={() =>
-                    handleSelectEndpoint('A minha localização', {
-                      latitude: userLocation.latitude,
-                      longitude: userLocation.longitude,
-                    })
-                  }
+                  onPress={() => handleResetToMyLocation(activeInput || 'origin')}
                 >
                   <Ionicons name="locate" size={13} color="#38BDF8" />
                   <Text style={styles.presetPillText}>A Minha Localização</Text>
@@ -409,9 +459,15 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
               onPress={() => {
                 Keyboard.dismiss();
                 setActiveInput(null);
+                setSuggestions([]);
+                if (activeInput === 'origin' && !originText.trim()) {
+                  handleResetToMyLocation('origin');
+                } else if (activeInput === 'destination' && !destText.trim()) {
+                  setDestText(destinationName);
+                }
               }}
             >
-              <Text style={styles.closeSuggestionsBtnText}>Concluir</Text>
+              <Text style={styles.closeSuggestionsBtnText}>Desistir</Text>
             </TouchableOpacity>
           </View>
 
@@ -429,6 +485,77 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            {/* Quick action cards when no query is typed or query is too short */}
+            {(activeQuery || '').trim().length < 2 && (
+              <View style={styles.quickOptionsCard}>
+                <Text style={styles.quickOptionsHeader}>Opções Rápidas de Localização</Text>
+
+                {userLocation && (
+                  <TouchableOpacity
+                    style={styles.quickOptionRow}
+                    onPress={() => handleResetToMyLocation(activeInput || 'origin')}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.quickOptionIcon, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
+                      <Ionicons name="locate" size={18} color="#38BDF8" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.quickOptionTitle}>Usar a Minha Localização Atual</Text>
+                      <Text style={styles.quickOptionSubtitle}>
+                        GPS: {userLocation.latitude.toFixed(4)}, {userLocation.longitude.toFixed(4)}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#64748B" />
+                  </TouchableOpacity>
+                )}
+
+                {homeAddress && (
+                  <TouchableOpacity
+                    style={styles.quickOptionRow}
+                    onPress={() =>
+                      handleSelectEndpoint(homeAddress.label || 'Casa', {
+                        latitude: homeAddress.latitude,
+                        longitude: homeAddress.longitude,
+                      })
+                    }
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.quickOptionIcon, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                      <Ionicons name="home" size={18} color="#10B981" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.quickOptionTitle}>Casa</Text>
+                      <Text style={styles.quickOptionSubtitle}>{homeAddress.label || 'Morada guardada'}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#64748B" />
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={styles.quickOptionRow}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setActiveInput(null);
+                    setSuggestions([]);
+                    if (activeInput === 'origin' && !originText.trim()) {
+                      handleResetToMyLocation('origin');
+                    } else if (activeInput === 'destination' && !destText.trim()) {
+                      setDestText(destinationName);
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.quickOptionIcon, { backgroundColor: 'rgba(148, 163, 184, 0.15)' }]}>
+                    <Ionicons name="arrow-back" size={18} color="#94A3B8" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.quickOptionTitle}>Desistir da Pesquisa</Text>
+                    <Text style={styles.quickOptionSubtitle}>Fechar e manter rota atual</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {suggestions.map((item) => (
               <TouchableOpacity
                 key={item.id}
@@ -791,6 +918,35 @@ const styles = StyleSheet.create({
     borderColor: '#373E4F',
   },
 
+  // Shortcut bar to restore user location as Point A
+  resetToMyLocationBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.22)',
+    gap: 8,
+  },
+  resetToMyLocationIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetToMyLocationText: {
+    flex: 1,
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
   // Suggestions container (Dropdown shown when active)
   suggestionsContainer: {
     paddingHorizontal: 16,
@@ -825,6 +981,49 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 13,
     textAlign: 'center',
+  },
+  quickOptionsCard: {
+    backgroundColor: '#1E222A',
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 4,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#2D323F',
+    gap: 8,
+  },
+  quickOptionsHeader: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  quickOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#252A34',
+  },
+  quickOptionIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickOptionTitle: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  quickOptionSubtitle: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 1,
   },
   quickPresetsRow: {
     flexDirection: 'row',

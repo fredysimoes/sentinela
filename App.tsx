@@ -323,7 +323,7 @@ export default function App() {
     setSelectedIncident(null);
     setSelectedMapPoint(null);
     setPreviewOriginCoord(null);
-    setPreviewOriginName('');
+    setPreviewOriginName('A minha localização');
 
     // Start background navigation tracking with ongoing foreground notification
     await startNavigationBackgroundTracking(newNavState);
