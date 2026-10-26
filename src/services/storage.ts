@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Incident, EmergencyContact, SOSAlert, HomeAddress, NotificationSettings } from '../types';
+import { NavigationState } from '../types/navigation';
 
 const STORAGE_KEYS = {
   INCIDENTS: '@sentinela_incidents_v1',
@@ -8,6 +9,7 @@ const STORAGE_KEYS = {
   USER_SETTINGS: '@sentinela_user_settings_v1',
   HOME_ADDRESS: '@sentinela_home_address_v1',
   NOTIFICATION_SETTINGS: '@sentinela_notification_settings_v1',
+  ACTIVE_NAVIGATION: '@sentinela_active_navigation_v1',
 };
 
 /**
@@ -173,5 +175,27 @@ export async function saveNotificationSettings(settings: NotificationSettings): 
     await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_SETTINGS, JSON.stringify(settings));
   } catch (error) {
     console.error('Erro ao guardar definições de notificação:', error);
+  }
+}
+
+export async function loadActiveNavigation(): Promise<NavigationState | null> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.ACTIVE_NAVIGATION);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.error('Erro ao ler estado de navegação:', error);
+    return null;
+  }
+}
+
+export async function saveActiveNavigation(navState: NavigationState | null): Promise<void> {
+  try {
+    if (navState) {
+      await AsyncStorage.setItem(STORAGE_KEYS.ACTIVE_NAVIGATION, JSON.stringify(navState));
+    } else {
+      await AsyncStorage.removeItem(STORAGE_KEYS.ACTIVE_NAVIGATION);
+    }
+  } catch (error) {
+    console.error('Erro ao guardar estado de navegação:', error);
   }
 }

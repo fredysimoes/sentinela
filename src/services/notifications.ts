@@ -50,6 +50,14 @@ export async function requestNotificationPermissions(): Promise<boolean> {
         enableVibrate: true,
         showBadge: true,
       });
+
+      await Notifications.setNotificationChannelAsync('sentinela_navigation', {
+        name: 'Navegação em Direto',
+        importance: Notifications.AndroidImportance.HIGH,
+        sound: undefined,
+        enableVibrate: false,
+        showBadge: false,
+      });
     }
 
     return finalStatus === 'granted';
@@ -165,4 +173,47 @@ export async function sendDangerProximityPushNotification(params: {
       category: params.category,
     },
   });
+}
+
+/**
+ * Updates persistent ongoing turn-by-turn notification shown during active navigation
+ */
+export async function updateNavigationNotification(params: {
+  instruction: string;
+  distanceRemainingMeters: number;
+  timeRemainingMinutes: number;
+  destinationName: string;
+}): Promise<void> {
+  const distText =
+    params.distanceRemainingMeters >= 1000
+      ? `${(params.distanceRemainingMeters / 1000).toFixed(1)} km`
+      : `${Math.round(params.distanceRemainingMeters)} m`;
+
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'sentinela_active_nav',
+      content: {
+        title: `⬆️ ${params.instruction}`,
+        body: `${params.destinationName} • ${params.timeRemainingMinutes} min (${distText}) • Rota Segura Ativa`,
+        sticky: true,
+        autoDismiss: false,
+        color: '#0284C7',
+        data: { type: 'navigation_active' },
+      },
+      trigger: null,
+    });
+  } catch (err) {
+    console.warn('[NavigationNotification] Erro ao atualizar notificação:', err);
+  }
+}
+
+/**
+ * Dismisses the persistent ongoing navigation notification
+ */
+export async function dismissNavigationNotification(): Promise<void> {
+  try {
+    await Notifications.dismissNotificationAsync('sentinela_active_nav');
+  } catch (err) {
+    console.warn('[NavigationNotification] Erro ao fechar notificação:', err);
+  }
 }

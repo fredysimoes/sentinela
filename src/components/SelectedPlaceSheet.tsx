@@ -29,6 +29,7 @@ interface SelectedPlaceSheetProps {
   onClose: () => void;
   onNavigate: (name: string, coord: RouteCoordinate, mode: TransportMode) => void;
   onReportHere: (coord: RouteCoordinate) => void;
+  onSetAsOrigin?: (name: string, coord: RouteCoordinate) => void;
 }
 
 export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
@@ -38,6 +39,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
   onClose,
   onNavigate,
   onReportHere,
+  onSetAsOrigin,
 }) => {
   if (!place) return null;
 
@@ -159,13 +161,29 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
 
       {/* Secondary Actions */}
       <View style={styles.secondaryRow}>
+        {onSetAsOrigin && (
+          <TouchableOpacity
+            style={[styles.secondaryBtn, { borderColor: 'rgba(16, 185, 129, 0.4)', backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              onSetAsOrigin(place.name, { latitude: place.latitude, longitude: place.longitude });
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="play-circle-outline" size={16} color="#10B981" />
+            <Text style={[styles.secondaryBtnText, { color: '#10B981', fontWeight: '700' }]}>
+              Partir Daqui (A)
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={styles.secondaryBtn}
           onPress={handleReportHere}
           activeOpacity={0.8}
         >
           <Ionicons name="alert-circle-outline" size={16} color="#F59E0B" />
-          <Text style={styles.secondaryBtnText}>Sinalizar Perigo Aqui</Text>
+          <Text style={styles.secondaryBtnText}>Sinalizar Perigo</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

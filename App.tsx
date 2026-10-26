@@ -40,6 +40,11 @@ import {
   stopBackgroundLocationTracking,
   checkProximityAndNotify,
 } from './src/services/backgroundLocation';
+import {
+  startNavigationBackgroundTracking,
+  stopNavigationBackgroundTracking,
+} from './src/services/navigationBackgroundService';
+import { updateNavigationNotification } from './src/services/notifications';
 import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode } from './src/types/navigation';
 import { calculateSafeNavigationRoutes } from './src/services/routingService';
 import { NavigationBanner } from './src/components/NavigationBanner';
@@ -228,26 +233,35 @@ export default function App() {
   const [showRoutePreview, setShowRoutePreview] = useState(false);
   const [previewSafeRoute, setPreviewSafeRoute] = useState<PedestrianRoute | null>(null);
   const [previewDirectRoute, setPreviewDirectRoute] = useState<PedestrianRoute | undefined>(undefined);
+  const [previewOriginName, setPreviewOriginName] = useState('A minha localização');
+  const [previewOriginCoord, setPreviewOriginCoord] = useState<RouteCoordinate | null>(null);
   const [previewDestName, setPreviewDestName] = useState('');
   const [previewDestCoord, setPreviewDestCoord] = useState<RouteCoordinate | null>(null);
 
   const handleRequestNavigation = async (
     destName: string,
     destCoord: RouteCoordinate,
-    mode: TransportMode = transportMode
+    mode: TransportMode = transportMode,
+    customOrigin?: { name: string; coord: RouteCoordinate }
   ) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const origin: RouteCoordinate = {
-      latitude: userLocation?.latitude ?? 41.1501,
-      longitude: userLocation?.longitude ?? -8.6112,
-    };
+    const originCoord: RouteCoordinate =
+      customOrigin?.coord ||
+      previewOriginCoord || {
+        latitude: userLocation?.latitude ?? 41.1501,
+        longitude: userLocation?.longitude ?? -8.6112,
+      };
 
+    const originName = customOrigin?.name || (previewOriginCoord ? previewOriginName : 'A minha localização');
+
+    setPreviewOriginName(originName);
+    setPreviewOriginCoord(originCoord);
     setPreviewDestName(destName);
     setPreviewDestCoord(destCoord);
     setTransportMode(mode);
 
     const routes = await calculateSafeNavigationRoutes({
-      origin,
+      origin: originCoord,
       destination: destCoord,
       incidents,
       mode,
@@ -258,11 +272,18 @@ export default function App() {
     setShowRoutePreview(true);
   };
 
+  const handleUpdateRouteEndpoints = async (
+    newOrigin: { name: string; coord: RouteCoordinate },
+    newDest: { name: string; coord: RouteCoordinate }
+  ) => {
+    await handleRequestNavigation(newDest.name, newDest.coord, transportMode, newOrigin);
+  };
+
   const handleTogglePreviewMode = async (newMode: TransportMode) => {
     if (!previewDestCoord) return;
     Haptics.selectionAsync();
     setTransportMode(newMode);
-    const origin: RouteCoordinate = {
+    const origin: RouteCoordinate = previewOriginCoord || {
       latitude: userLocation?.latitude ?? 41.1501,
       longitude: userLocation?.longitude ?? -8.6112,
     };
@@ -276,10 +297,10 @@ export default function App() {
     setPreviewDirectRoute(routes.directRoute);
   };
 
-  const handleStartNavigation = (chosenRoute: PedestrianRoute) => {
+  const handleStartNavigation = async (chosenRoute: PedestrianRoute) => {
     if (!previewDestCoord) return;
 
-    setNavState({
+    const newNavState: NavigationState = {
       isActive: true,
       destinationName: previewDestName,
       destinationCoord: previewDestCoord,
@@ -288,16 +309,22 @@ export default function App() {
       currentStepIndex: 0,
       distanceRemainingMeters: chosenRoute.distanceMeters,
       timeRemainingMinutes: chosenRoute.durationMinutes,
-    });
+    };
 
+    setNavState(newNavState);
     setShowRoutePreview(false);
     setSelectedSafePlace(null);
     setSelectedIncident(null);
+    setSelectedMapPoint(null);
+
+    // Start background navigation tracking with ongoing foreground notification
+    await startNavigationBackgroundTracking(newNavState);
   };
 
-  const handleExitNavigation = () => {
+  const handleExitNavigation = async () => {
     Haptics.selectionAsync();
     setNavState(null);
+    await stopNavigationBackgroundTracking();
   };
 
   // Update active turn-by-turn navigation state dynamically as user moves
@@ -317,6 +344,7 @@ export default function App() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Chegou ao Destino', `Chegou com sucesso a ${navState.destinationName}!`);
       setNavState(null);
+      stopNavigationBackgroundTracking();
       return;
     }
 
@@ -330,6 +358,17 @@ export default function App() {
         distanceRemainingMeters: distToDest,
         timeRemainingMinutes: remainingMins,
       };
+    });
+
+    // Update persistent notification with real-time steps & distance
+    const currentStep = navState.route?.steps?.[navState.currentStepIndex] || {
+      instruction: `Siga em direção a ${navState.destinationName}`,
+    };
+    updateNavigationNotification({
+      instruction: currentStep.instruction,
+      distanceRemainingMeters: distToDest,
+      timeRemainingMinutes: remainingMins,
+      destinationName: navState.destinationName,
     });
   }, [userLocation?.latitude, userLocation?.longitude]);
 
@@ -762,6 +801,8 @@ export default function App() {
           isNavigating={!!navState}
           selectedMapPoint={selectedMapPoint}
           homeAddress={homeAddress}
+          routeOrigin={previewOriginCoord ? { name: previewOriginName, coord: previewOriginCoord } : null}
+          routeDestination={previewDestCoord ? { name: previewDestName, coord: previewDestCoord } : null}
           onSelectIncident={(inc) => {
             Haptics.selectionAsync();
             setSelectedSafePlace(null);
@@ -1053,19 +1094,38 @@ export default function App() {
             setTargetCoordinate(coord);
             setShowReportModal(true);
           }}
+          onSetAsOrigin={(name, coord) => {
+            setSelectedMapPoint(null);
+            setPreviewOriginName(name);
+            setPreviewOriginCoord(coord);
+            Alert.alert(
+              'Ponto de Partida Definido (A)',
+              `"${name}" foi definido como origem. Escolha agora o destino de chegada (B) no mapa ou pela barra de pesquisa.`
+            );
+          }}
         />
       )}
 
-      {/* Route Preview Modal */}
+      {/* Route Preview Modal with Two-Point Itinerary Controller (Point A ➔ Point B) */}
       <RoutePreviewModal
         visible={showRoutePreview}
         destinationName={previewDestName}
+        destinationCoord={previewDestCoord}
+        originName={previewOriginName}
+        originCoord={previewOriginCoord}
         safeRoute={previewSafeRoute}
         directRoute={previewDirectRoute}
         currentMode={transportMode}
+        userLocation={userLocation}
+        homeAddress={homeAddress ? { latitude: homeAddress.latitude, longitude: homeAddress.longitude, label: 'Casa' } : null}
         onToggleMode={handleTogglePreviewMode}
-        onClose={() => setShowRoutePreview(false)}
+        onClose={() => {
+          setShowRoutePreview(false);
+          setPreviewOriginCoord(null);
+          setPreviewOriginName('A minha localização');
+        }}
         onStartNavigation={handleStartNavigation}
+        onUpdateEndpoints={handleUpdateRouteEndpoints}
       />
 
       {/* Report Modal */}

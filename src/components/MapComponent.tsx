@@ -65,7 +65,7 @@ const GOOGLE_MAPS_DARK_STYLE = [
   },
 ];
 import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace, HomeAddress } from '../types';
-import { PedestrianRoute } from '../types/navigation';
+import { PedestrianRoute, RouteCoordinate } from '../types/navigation';
 import { CATEGORIES } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
@@ -178,6 +178,8 @@ interface MapComponentProps {
   isTorchActive?: boolean;
   onToggleTorch?: () => void;
   onOpenStrobe?: () => void;
+  routeOrigin?: { name: string; coord: RouteCoordinate } | null;
+  routeDestination?: { name: string; coord: RouteCoordinate } | null;
 }
 
 export const MapComponent: React.FC<MapComponentProps> = memo(({
@@ -203,6 +205,8 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   isTorchActive = false,
   onToggleTorch,
   onOpenStrobe,
+  routeOrigin = null,
+  routeDestination = null,
 }) => {
   const mapRef = useRef<MapView | null>(null);
   const [is3DMode, setIs3DMode] = React.useState(false);
@@ -504,6 +508,32 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
               strokeColor={activeRoute.isSafe ? '#10B981' : '#F59E0B'}
               strokeWidth={4.5}
             />
+
+            {/* Custom Origin Point A Marker */}
+            {routeOrigin && (
+              <Marker
+                coordinate={routeOrigin.coord}
+                zIndex={1004}
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <View style={styles.endpointMarkerA}>
+                  <Text style={styles.endpointMarkerLetter}>A</Text>
+                </View>
+              </Marker>
+            )}
+
+            {/* Destination Point B Marker */}
+            {routeDestination && (
+              <Marker
+                coordinate={routeDestination.coord}
+                zIndex={1004}
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <View style={styles.endpointMarkerB}>
+                  <Text style={styles.endpointMarkerLetter}>B</Text>
+                </View>
+              </Marker>
+            )}
           </>
         )}
 
@@ -1125,5 +1155,40 @@ const styles = StyleSheet.create({
     color: '#38BDF8',
     fontSize: 9,
     fontWeight: '800',
+  },
+  endpointMarkerA: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#10B981',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  endpointMarkerB: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#EF4444',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  endpointMarkerLetter: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
   },
 });
