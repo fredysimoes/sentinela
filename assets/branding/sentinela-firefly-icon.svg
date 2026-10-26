@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Deep Indigo Night Sky Background -->
+    <linearGradient id="ffBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1B1736"/>
+      <stop offset="50%" stop-color="#110E26"/>
+      <stop offset="100%" stop-color="#090717"/>
+    </linearGradient>
+
+    <!-- Bioluminescent Firefly Tail Glow (O abdómen brilhante do pirilampo) -->
+    <radialGradient id="tailBiolumGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="25%" stop-color="#FDE047"/>
+      <stop offset="65%" stop-color="#84CC16"/>
+      <stop offset="100%" stop-color="#15803D"/>
+    </radialGradient>
+
+    <radialGradient id="ffAmbientLight" cx="50%" cy="66%" r="55%">
+      <stop offset="0%" stop-color="#FDE047" stop-opacity="0.4"/>
+      <stop offset="40%" stop-color="#84CC16" stop-opacity="0.15"/>
+      <stop offset="75%" stop-color="#0284C7" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#090717" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Light Path Projected downwards to city streets -->
+    <linearGradient id="ffStreetLightBeam" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" stop-opacity="0.9"/>
+      <stop offset="30%" stop-color="#84CC16" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#38BDF8" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.0"/>
+    </linearGradient>
+
+    <!-- Firefly Body Gradient -->
+    <linearGradient id="ffBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="60%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+
+    <!-- Friendly Glass Wings -->
+    <linearGradient id="wingGradLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#7DD3FC" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.1"/>
+    </linearGradient>
+
+    <linearGradient id="wingGradRight" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#7DD3FC" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.1"/>
+    </linearGradient>
+
+    <!-- Glow Filters -->
+    <filter id="tailGlowFilter" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="30" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <filter id="gentleGlowSmall" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur2"/>
+      <feComposite in="SourceGraphic" in2="blur2" operator="over"/>
+    </filter>
+
+    <filter id="softDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- iOS / App Store Canvas -->
+  <rect width="1024" height="1024" rx="230" fill="url(#ffBg)"/>
+
+  <!-- Big Ambient Bioluminescence from the Firefly -->
+  <circle cx="512" cy="650" r="420" fill="url(#ffAmbientLight)"/>
+
+  <!-- Street Night Sparkles (Pirilampos da comunidade no fundo) -->
+  <circle cx="210" cy="220" r="5" fill="#FDE047" opacity="0.6"/>
+  <circle cx="820" cy="260" r="7" fill="#84CC16" opacity="0.5"/>
+  <circle cx="160" cy="540" r="4" fill="#FDE047" opacity="0.4"/>
+  <circle cx="860" cy="620" r="6" fill="#38BDF8" opacity="0.4"/>
+
+  <!-- ================= LIGHT BEAM EMANATING FROM FIREFLY TAIL ================= -->
+  <!-- A luz que o pirilampo projeta sobre o asfalto/rua segura -->
+  <path d="M 450 670
+           L 220 860
+           Q 512 920 804 860
+           L 574 670 Z"
+        fill="url(#ffStreetLightBeam)"/>
+
+  <!-- Chegada a Casa no final do feixe de luz -->
+  <g transform="translate(512, 870)">
+    <ellipse cx="0" cy="0" rx="90" ry="22" fill="#06121E" opacity="0.6"/>
+    <path d="M 0 -34 L 28 -8 L 19 -8 L 19 20 L -19 20 L -19 -8 L -28 -8 Z" fill="#34D399" filter="url(#gentleGlowSmall)"/>
+    <circle cx="0" cy="6" r="5" fill="#FFFFFF"/>
+  </g>
+
+  <!-- ================= THE FRIENDLY FIREFLY CHARACTER ================= -->
+  <g filter="url(#softDropShadow)">
+
+    <!-- WINGS (Asas de Vidro / Glassmorphism) -->
+    <!-- Asa Esquerda -->
+    <path d="M 500 410
+             C 410 320 220 260 210 380
+             C 200 480 340 540 480 470 Z"
+          fill="url(#wingGradLeft)"
+          stroke="#BAE6FD"
+          stroke-width="3"
+          stroke-opacity="0.7"/>
+
+    <!-- Detalhe da Asa Esquerda (Nervura orgânica suave) -->
+    <path d="M 480 430 C 370 380 280 370 240 400"
+          fill="none"
+          stroke="#FFFFFF"
+          stroke-width="2"
+          stroke-opacity="0.4"
+          stroke-linecap="round"/>
+
+    <!-- Asa Direita -->
+    <path d="M 524 410
+             C 614 320 804 260 814 380
+             C 824 480 684 540 544 470 Z"
+          fill="url(#wingGradRight)"
+          stroke="#BAE6FD"
+          stroke-width="3"
+          stroke-opacity="0.7"/>
+
+    <!-- Detalhe da Asa Direita -->
+    <path d="M 544 430 C 654 380 744 370 784 400"
+          fill="none"
+          stroke="#FFFFFF"
+          stroke-width="2"
+          stroke-opacity="0.4"
+          stroke-linecap="round"/>
+
+    <!-- ABDÓMEN BRILHANTE / LANTERNA DO PIRILAMPO (A grande atração visual!) -->
+    <!-- O abdómen em forma de gota / pêra bioluminescente -->
+    <g filter="url(#tailGlowFilter)">
+      <path d="M 432 490
+               C 380 540 370 650 430 710
+               C 475 755 549 755 594 710
+               C 654 650 644 540 592 490
+               Z"
+            fill="url(#tailBiolumGlow)"/>
+    </g>
+
+    <!-- Anéis segmentados do abdómen do pirilampo (Traços suaves e elegantes) -->
+    <path d="M 434 560 Q 512 590 590 560" fill="none" stroke="#65A30D" stroke-width="4" stroke-opacity="0.6"/>
+    <path d="M 432 630 Q 512 665 592 630" fill="none" stroke="#65A30D" stroke-width="4" stroke-opacity="0.6"/>
+
+    <!-- CORPO & CABEÇA DO PIRILAMPO (Arredondado e Amigável) -->
+    <!-- Tórax / Corpo Central -->
+    <ellipse cx="512" cy="460" rx="90" ry="75" fill="url(#ffBodyGrad)"/>
+
+    <!-- Cabeça Fofa -->
+    <circle cx="512" cy="335" r="92" fill="url(#ffBodyGrad)"/>
+
+    <!-- Realce 3D suave no topo da cabeça -->
+    <path d="M 460 270 C 480 255 544 255 564 270"
+          fill="none"
+          stroke="#FFFFFF"
+          stroke-width="6"
+          stroke-linecap="round"
+          opacity="0.5"/>
+
+    <!-- ROSTO DO PIRILAMPO (Expressão doce e protetora) -->
+    <!-- Olho Esquerdo -->
+    <g>
+      <ellipse cx="468" cy="330" rx="20" ry="27" fill="#0F172A"/>
+      <circle cx="475" cy="320" r="8" fill="#FFFFFF"/>
+      <circle cx="460" cy="340" r="3.5" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Olho Direito -->
+    <g>
+      <ellipse cx="556" cy="330" rx="20" ry="27" fill="#0F172A"/>
+      <circle cx="563" cy="320" r="8" fill="#FFFFFF"/>
+      <circle cx="548" cy="340" r="3.5" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Bochechas Coradas (Blush) -->
+    <ellipse cx="434" cy="358" rx="14" ry="8" fill="#F43F5E" opacity="0.45"/>
+    <ellipse cx="590" cy="358" rx="14" ry="8" fill="#F43F5E" opacity="0.45"/>
+
+    <!-- Sorriso Amigável -->
+    <path d="M 494 362 Q 512 378 530 362"
+          fill="none"
+          stroke="#0F172A"
+          stroke-width="6.5"
+          stroke-linecap="round"/>
+
+    <!-- ANTENAS DE SINAL & RADAR (Conexão urbana em tempo real) -->
+    <!-- Antena Esquerda -->
+    <path d="M 470 255
+             C 435 200 395 170 380 175
+             C 365 180 375 210 390 220"
+          fill="none"
+          stroke="#38BDF8"
+          stroke-width="7"
+          stroke-linecap="round"/>
+    <!-- Ponta Luminosa da Antena Esquerda -->
+    <circle cx="380" cy="175" r="16" fill="#FDE047" filter="url(#gentleGlowSmall)"/>
+    <circle cx="380" cy="175" r="8" fill="#FFFFFF"/>
+
+    <!-- Antena Direita -->
+    <path d="M 554 255
+             C 589 200 629 170 644 175
+             C 659 180 649 210 634 220"
+          fill="none"
+          stroke="#38BDF8"
+          stroke-width="7"
+          stroke-linecap="round"/>
+    <!-- Ponta Luminosa da Antena Direita -->
+    <circle cx="644" cy="175" r="16" fill="#FDE047" filter="url(#gentleGlowSmall)"/>
+    <circle cx="644" cy="175" r="8" fill="#FFFFFF"/>
+
+  </g>
+</svg>

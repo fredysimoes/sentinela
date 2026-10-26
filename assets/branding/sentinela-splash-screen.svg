@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1242 2688" width="1242" height="2688">
+  <defs>
+    <linearGradient id="spFriendlyBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E1E38"/>
+      <stop offset="40%" stop-color="#14142B"/>
+      <stop offset="100%" stop-color="#0E0E1F"/>
+    </linearGradient>
+
+    <radialGradient id="spWarmAura" cx="50%" cy="42%" r="50%">
+      <stop offset="0%" stop-color="#FDE047" stop-opacity="0.25"/>
+      <stop offset="50%" stop-color="#0284C7" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0E0E1F" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="spLightBeam" x1="50%" y1="20%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#F59E0B" stop-opacity="0.5"/>
+      <stop offset="75%" stop-color="#38BDF8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.0"/>
+    </linearGradient>
+
+    <linearGradient id="spPinBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+
+    <radialGradient id="spLanternGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="40%" stop-color="#FEF08A"/>
+      <stop offset="80%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </radialGradient>
+
+    <filter id="spGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <rect width="1242" height="2688" fill="url(#spFriendlyBg)"/>
+  <circle cx="621" cy="1140" r="560" fill="url(#spWarmAura)"/>
+
+  <!-- Little ambient stars / urban street lights -->
+  <circle cx="280" cy="620" r="8" fill="#FDE047" opacity="0.6"/>
+  <circle cx="960" cy="740" r="9" fill="#38BDF8" opacity="0.5"/>
+  <circle cx="1020" cy="1480" r="7" fill="#FDE047" opacity="0.5"/>
+  <circle cx="200" cy="1540" r="8" fill="#38BDF8" opacity="0.4"/>
+
+  <!-- ================= MASCOT PIN CENTERED (cx=621, cy=1120) ================= -->
+  <g transform="translate(621, 1120)">
+    <!-- Light Beam to arrival home -->
+    <path d="M -70 80 L -220 370 Q 0 430 220 370 L 70 80 Z" fill="url(#spLightBeam)"/>
+
+    <!-- Safe Arrival Home Pin -->
+    <g transform="translate(0, 390)">
+      <path d="M 0 -45 L 36 -12 L 25 -12 L 25 24 L -25 24 L -25 -12 L -36 -12 Z" fill="#34D399" filter="url(#spGlow)"/>
+      <circle cx="0" cy="6" r="6" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Pin Mascot Body -->
+    <path d="M 0 -220
+             C 145 -220 228 -135 228 0
+             C 228 120 62 270 0 320
+             C -62 270 -228 120 -228 0
+             C -228 -135 -145 -220 0 -220 Z"
+          fill="url(#spPinBody)"/>
+
+    <!-- Head highlight -->
+    <path d="M -160 0 C -150 -90 -70 -140 0 -140 C 10 -140 10 -155 0 -155 C -90 -155 -175 -100 -185 0 C -188 15 -165 15 -160 0 Z"
+          fill="#FFFFFF"
+          opacity="0.45"/>
+
+    <!-- Lantern Head / Smiling Friendly Face -->
+    <circle cx="0" cy="-10" r="145" fill="url(#spLanternGlow)" filter="url(#spGlow)"/>
+
+    <!-- Eyes & Smile -->
+    <g fill="#1E1B4B">
+      <ellipse cx="-58" cy="-22" rx="18" ry="25"/>
+      <circle cx="-52" cy="-32" r="8" fill="#FFFFFF"/>
+      <circle cx="-65" cy="-12" r="3.5" fill="#FFFFFF"/>
+
+      <ellipse cx="58" cy="-22" rx="18" ry="25"/>
+      <circle cx="64" cy="-32" r="8" fill="#FFFFFF"/>
+      <circle cx="51" cy="-12" r="3.5" fill="#FFFFFF"/>
+
+      <!-- Blush -->
+      <ellipse cx="-88" cy="10" rx="16" ry="9" fill="#F43F5E" opacity="0.45"/>
+      <ellipse cx="88" cy="10" rx="16" ry="9" fill="#F43F5E" opacity="0.45"/>
+
+      <!-- Smile -->
+      <path d="M -26 14 Q 0 34 26 14"
+            fill="none"
+            stroke="#1E1B4B"
+            stroke-width="7.5"
+            stroke-linecap="round"/>
+    </g>
+
+    <!-- Beacon Headlight Top Halo -->
+    <circle cx="0" cy="-235" r="24" fill="#FDE047" filter="url(#spGlow)"/>
+    <circle cx="0" cy="-235" r="12" fill="#FFFFFF"/>
+  </g>
+
+  <!-- ================= TYPOGRAPHY ================= -->
+  <text x="621" y="1590"
+        text-anchor="middle"
+        font-family="system-ui, -apple-system, 'Plus Jakarta Sans', 'Nunito', 'Comfortaa', sans-serif"
+        font-size="80"
+        font-weight="800"
+        letter-spacing="5"
+        fill="#FFFFFF">
+    sentinela
+  </text>
+
+  <text x="621" y="1655"
+        text-anchor="middle"
+        font-family="system-ui, -apple-system, 'Inter', sans-serif"
+        font-size="22"
+        font-weight="700"
+        letter-spacing="4"
+        fill="#38BDF8">
+    A CAMINHO DE CASA, SEMPRE CONTIGO
+  </text>
+
+  <!-- Footer Tagline -->
+  <text x="621" y="2460"
+        text-anchor="middle"
+        font-family="system-ui, -apple-system, 'Inter', sans-serif"
+        font-size="16"
+        font-weight="500"
+        letter-spacing="1.5"
+        fill="#64748B">
+    NAVEGAÇÃO SEGURA EM TEMPO REAL • ENTREAJUDA URBANA
+  </text>
+</svg>

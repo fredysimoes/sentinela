@@ -1,6 +1,11 @@
-# 🛡️ Sentinela
+<p align="center">
+  <img src="assets/branding/logo-horizontal.png" alt="Sentinela - A caminho de casa, sempre contigo" width="620"/>
+</p>
 
-Sentinela é uma aplicação móvel para segurança urbana e navegação colaborativa em tempo real desenvolvida em **React Native** e **Expo SDK 58**.
+<p align="center">
+  <b>A caminho de casa, sempre contigo.</b><br/>
+  Aplicação móvel para segurança urbana colaborativa e navegação em tempo real desenvolvida em <b>React Native</b> e <b>Expo SDK 58</b>.
+</p>
 
 ---
 

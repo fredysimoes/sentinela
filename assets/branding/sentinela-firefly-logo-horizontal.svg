@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260" width="960" height="260">
+  <defs>
+    <linearGradient id="fflBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B1736"/>
+      <stop offset="100%" stop-color="#0E0C1E"/>
+    </linearGradient>
+
+    <radialGradient id="fflTailGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="30%" stop-color="#FDE047"/>
+      <stop offset="70%" stop-color="#84CC16"/>
+      <stop offset="100%" stop-color="#15803D"/>
+    </radialGradient>
+
+    <linearGradient id="fflBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="60%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+
+    <filter id="fflGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <rect width="960" height="260" rx="32" fill="url(#fflBg)"/>
+
+  <!-- ================= FIREFLY MASCOT (cx=140, cy=130) ================= -->
+  <g transform="translate(140, 130)">
+    <!-- Wings behind -->
+    <path d="M -5 -10 C -45 -40 -95 -20 -95 15 C -95 45 -45 55 -5 15 Z" fill="#BAE6FD" opacity="0.35"/>
+    <path d="M 5 -10 C 45 -40 95 -20 95 15 C 95 45 45 55 5 15 Z" fill="#BAE6FD" opacity="0.35"/>
+
+    <!-- Glowing Abdomen (Tail) -->
+    <ellipse cx="0" cy="55" rx="35" ry="42" fill="url(#fflTailGlow)" filter="url(#fflGlow)"/>
+    <path d="M -26 48 Q 0 58 26 48" fill="none" stroke="#65A30D" stroke-width="2.5" opacity="0.7"/>
+
+    <!-- Thorax & Head -->
+    <ellipse cx="0" cy="8" rx="28" ry="24" fill="url(#fflBody)"/>
+    <circle cx="0" cy="-35" r="30" fill="url(#fflBody)"/>
+
+    <!-- Eyes & Smile -->
+    <ellipse cx="-12" cy="-36" rx="6.5" ry="9" fill="#0F172A"/>
+    <circle cx="-10" cy="-39" r="2.5" fill="#FFFFFF"/>
+
+    <ellipse cx="12" cy="-36" rx="6.5" ry="9" fill="#0F172A"/>
+    <circle cx="14" cy="-39" r="2.5" fill="#FFFFFF"/>
+
+    <!-- Blush -->
+    <ellipse cx="-22" cy="-26" rx="5" ry="2.8" fill="#F43F5E" opacity="0.45"/>
+    <ellipse cx="22" cy="-26" rx="5" ry="2.8" fill="#F43F5E" opacity="0.45"/>
+
+    <!-- Smile -->
+    <path d="M -6 -26 Q 0 -20 6 -26" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Antennae with Glowing Nodes -->
+    <path d="M -12 -62 C -24 -80 -40 -90 -45 -85" fill="none" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="-45" cy="-85" r="7" fill="#FDE047" filter="url(#fflGlow)"/>
+    <circle cx="-45" cy="-85" r="3.5" fill="#FFFFFF"/>
+
+    <path d="M 12 -62 C 24 -80 40 -90 45 -85" fill="none" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="45" cy="-85" r="7" fill="#FDE047" filter="url(#fflGlow)"/>
+    <circle cx="45" cy="-85" r="3.5" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Divider Line -->
+  <line x1="250" y1="50" x2="250" y2="210" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-opacity="0.5"/>
+
+  <!-- ================= TYPOGRAPHY ================= -->
+  <g transform="translate(290, 0)">
+    <!-- Brand Wordmark -->
+    <text x="0" y="130"
+          font-family="system-ui, -apple-system, 'Plus Jakarta Sans', 'Comfortaa', 'Nunito', sans-serif"
+          font-size="64"
+          font-weight="800"
+          letter-spacing="3"
+          fill="#FFFFFF">
+      sentinela
+    </text>
+
+    <!-- Glowing Bioluminescent Tail Dot on the 'i' of sentinela -->
+    <circle cx="340" cy="85" r="9" fill="#84CC16" filter="url(#fflGlow)"/>
+    <circle cx="340" cy="85" r="5" fill="#FDE047"/>
+    <circle cx="340" cy="85" r="2.5" fill="#FFFFFF"/>
+
+    <!-- Tagline -->
+    <text x="3" y="170"
+          font-family="system-ui, -apple-system, 'Inter', sans-serif"
+          font-size="14.5"
+          font-weight="700"
+          letter-spacing="2.5"
+          fill="#84CC16">
+      ILUMINAMOS O CAMINHO JUNTOS
+    </text>
+
+    <text x="3" y="198"
+          font-family="system-ui, -apple-system, 'Inter', sans-serif"
+          font-size="12.5"
+          font-weight="500"
+          letter-spacing="0.5"
+          fill="#94A3B8">
+      Segurança urbana colaborativa &amp; Alertas em tempo real
+    </text>
+  </g>
+</svg>

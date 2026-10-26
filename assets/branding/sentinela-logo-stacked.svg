@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 640" width="600" height="640">
+  <defs>
+    <linearGradient id="lsFriendlyBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E1E38"/>
+      <stop offset="100%" stop-color="#101024"/>
+    </linearGradient>
+
+    <linearGradient id="lsPinBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+
+    <radialGradient id="lsLanternGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="40%" stop-color="#FEF08A"/>
+      <stop offset="80%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </radialGradient>
+
+    <linearGradient id="lsWarmLight" x1="50%" y1="20%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" stop-opacity="0.85"/>
+      <stop offset="50%" stop-color="#F59E0B" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.0"/>
+    </linearGradient>
+
+    <radialGradient id="lsAmbientAura" cx="50%" cy="32%" r="55%">
+      <stop offset="0%" stop-color="#FDE047" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#101024" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="lsGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="640" rx="36" fill="url(#lsFriendlyBg)"/>
+  <circle cx="300" cy="210" r="240" fill="url(#lsAmbientAura)"/>
+
+  <!-- ================= MASCOT PIN CENTERED ================= -->
+  <g transform="translate(300, 200)">
+    <!-- Light Beam -->
+    <path d="M -30 30 L -90 145 Q 0 170 90 145 L 30 30 Z" fill="url(#lsWarmLight)"/>
+    <!-- Small green safe arrival home -->
+    <path d="M 0 140 L 14 152 L 10 152 L 10 165 L -10 165 L -10 152 L -14 152 Z" fill="#34D399"/>
+
+    <!-- Mascot Pin Body -->
+    <path d="M 0 -115
+             C 70 -115 110 -70 110 0
+             C 110 60 30 140 0 165
+             C -30 140 -110 60 -110 0
+             C -110 -70 -70 -115 0 -115 Z"
+          fill="url(#lsPinBody)"/>
+
+    <!-- Lantern Head / Friendly Face -->
+    <circle cx="0" cy="-5" r="72" fill="url(#lsLanternGlow)" filter="url(#lsGlow)"/>
+
+    <!-- Eyes & Smile -->
+    <g fill="#1E1B4B">
+      <ellipse cx="-28" cy="-11" rx="9" ry="13"/>
+      <circle cx="-25" cy="-16" r="4" fill="#FFFFFF"/>
+
+      <ellipse cx="28" cy="-11" rx="9" ry="13"/>
+      <circle cx="31" cy="-16" r="4" fill="#FFFFFF"/>
+
+      <!-- Blush -->
+      <ellipse cx="-44" cy="5" rx="8" ry="4.5" fill="#F43F5E" opacity="0.45"/>
+      <ellipse cx="44" cy="5" rx="8" ry="4.5" fill="#F43F5E" opacity="0.45"/>
+
+      <!-- Smile -->
+      <path d="M -13 7 Q 0 17 13 7"
+            fill="none"
+            stroke="#1E1B4B"
+            stroke-width="3.8"
+            stroke-linecap="round"/>
+    </g>
+
+    <!-- Beacon Headlight Top Halo -->
+    <circle cx="0" cy="-120" r="12" fill="#FDE047" filter="url(#lsGlow)"/>
+    <circle cx="0" cy="-120" r="6" fill="#FFFFFF"/>
+  </g>
+
+  <!-- ================= TYPOGRAPHY ================= -->
+  <text x="300" y="475"
+        text-anchor="middle"
+        font-family="system-ui, -apple-system, 'Plus Jakarta Sans', 'Comfortaa', 'Nunito', sans-serif"
+        font-size="52"
+        font-weight="800"
+        letter-spacing="4"
+        fill="#FFFFFF">
+    sentinela
+  </text>
+
+  <text x="300" y="520"
+        text-anchor="middle"
+        font-family="system-ui, -apple-system, 'Inter', sans-serif"
+        font-size="14"
+        font-weight="700"
+        letter-spacing="2"
+        fill="#38BDF8">
+    A CAMINHO DE CASA, SEMPRE CONTIGO
+  </text>
+
+  <text x="300" y="550"
+        text-anchor="middle"
+        font-family="system-ui, -apple-system, 'Inter', sans-serif"
+        font-size="12"
+        font-weight="500"
+        letter-spacing="0.5"
+        fill="#94A3B8">
+    Rotas seguras em tempo real &amp; Comunidade
+  </text>
+</svg>

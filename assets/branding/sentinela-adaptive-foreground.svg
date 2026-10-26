@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 432 432" width="432" height="432">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="afLightBeam" x1="50%" y1="20%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#F59E0B" stop-opacity="0.6"/>
+      <stop offset="80%" stop-color="#38BDF8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.0"/>
+    </linearGradient>
+
+    <linearGradient id="afPinBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+
+    <radialGradient id="afLanternGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="40%" stop-color="#FEF08A"/>
+      <stop offset="80%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </radialGradient>
+
+    <filter id="afGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Safe Zone Center: cx=216, cy=216 -->
+  <!-- Warm Light Beam expanding downward to arrival home -->
+  <path d="M 190 230 L 110 350 Q 216 376 322 350 L 242 230 Z" fill="url(#afLightBeam)"/>
+
+  <!-- Arrival Home icon -->
+  <g transform="translate(216, 350)">
+    <path d="M 0 -15 L 14 -3 L 9 -3 L 9 10 L -9 10 L -9 -3 L -14 -3 Z" fill="#34D399"/>
+    <circle cx="0" cy="2" r="2.5" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Friendly Pin Mascot -->
+  <g>
+    <!-- Pin Body -->
+    <path d="M 216 112
+             C 274 112 308 148 308 206
+             C 308 256 240 320 216 340
+             C 192 320 124 256 124 206
+             C 124 148 158 112 216 112 Z"
+          fill="url(#afPinBody)"/>
+
+    <!-- Light reflection -->
+    <path d="M 142 180 C 146 140 180 122 216 122 C 220 122 220 116 216 116 C 172 116 138 138 132 180 C 130 186 140 186 142 180 Z"
+          fill="#FFFFFF"
+          opacity="0.45"/>
+
+    <!-- Lantern Head / Friendly Face -->
+    <circle cx="216" cy="202" r="60" fill="url(#afLanternGlow)" filter="url(#afGlow)"/>
+
+    <!-- Eyes & Smile -->
+    <g fill="#1E1B4B">
+      <!-- Left Eye -->
+      <ellipse cx="192" cy="198" rx="7.5" ry="10.5"/>
+      <circle cx="195" cy="194" r="3" fill="#FFFFFF"/>
+
+      <!-- Right Eye -->
+      <ellipse cx="240" cy="198" rx="7.5" ry="10.5"/>
+      <circle cx="243" cy="194" r="3" fill="#FFFFFF"/>
+
+      <!-- Blush -->
+      <ellipse cx="179" cy="211" rx="6.5" ry="3.5" fill="#F43F5E" opacity="0.4"/>
+      <ellipse cx="253" cy="211" rx="6.5" ry="3.5" fill="#F43F5E" opacity="0.4"/>
+
+      <!-- Smile -->
+      <path d="M 206 213 Q 216 221 226 213"
+            fill="none"
+            stroke="#1E1B4B"
+            stroke-width="3"
+            stroke-linecap="round"/>
+    </g>
+
+    <!-- Beacon Headlight Top Halo -->
+    <circle cx="216" cy="107" r="10" fill="#FDE047" filter="url(#afGlow)"/>
+    <circle cx="216" cy="107" r="5" fill="#FFFFFF"/>
+  </g>
+</svg>

@@ -6,14 +6,19 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#14142B"
+    },
     "androidStatusBar": {
       "barStyle": "light-content",
-      "backgroundColor": "#0F172A",
+      "backgroundColor": "#14142B",
       "translucent": false
     },
     "androidNavigationBar": {
       "barStyle": "light-content",
-      "backgroundColor": "#0F172A"
+      "backgroundColor": "#14142B"
     },
     "ios": {
       "supportsTablet": true
@@ -26,7 +31,7 @@
         }
       },
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#14142B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Deep Warm Indigo Night Sky -->
+    <linearGradient id="embBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E1938"/>
+      <stop offset="50%" stop-color="#131026"/>
+      <stop offset="100%" stop-color="#0B0917"/>
+    </linearGradient>
+
+    <!-- Top Embrace Arm Gradient (Azul Céu &amp; Proteção Serena) -->
+    <linearGradient id="armTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+
+    <!-- Bottom Embrace Arm Gradient (Coral Acolhedor &amp; Calor Humano) -->
+    <linearGradient id="armBottomGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="50%" stop-color="#EC4899"/>
+      <stop offset="100%" stop-color="#F43F5E"/>
+    </linearGradient>
+
+    <!-- Golden Home Heart Light (A chama acolhedora da casa protegida no centro do abraço) -->
+    <radialGradient id="homeLightGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#FDE047"/>
+      <stop offset="70%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#EA580C" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="ambientEmbraceAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#EC4899" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#0B0917" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Soft Depth Shadows -->
+    <filter id="ribbonShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+
+    <filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- iOS / App Store Canvas -->
+  <rect width="1024" height="1024" rx="230" fill="url(#embBg)"/>
+
+  <!-- Ambient Light from the Protected Core -->
+  <circle cx="512" cy="512" r="380" fill="url(#ambientEmbraceAura)"/>
+
+  <!-- ================= THE "S" EMBRACE / PATH HOME ================= -->
+  <!-- Duas formas orgânicas e fluidas que se abraçam formando o "S" de Sentinela -->
+  <g filter="url(#ribbonShadow)">
+
+    <!-- CAMINHO INFERIOR (O Braço Acolhedor / O Caminho até Casa) -->
+    <!-- Curva que sai do centro e abraça a base até ao destino -->
+    <path d="M 512 430
+             C 640 430 730 490 730 620
+             C 730 760 620 830 500 830
+             C 360 830 270 750 270 650
+             C 270 595 305 565 350 565
+             C 390 565 415 595 415 640
+             C 415 690 455 725 505 725
+             C 560 725 615 685 615 615
+             C 615 540 550 515 480 500
+             Z"
+          fill="url(#armBottomGrad)"/>
+
+    <!-- CAMINHO SUPERIOR (O Braço Protetor / O Guardião que Acolhe) -->
+    <!-- Curva que envolve a parte superior formando a cabeça do "S" -->
+    <path d="M 512 590
+             C 384 590 294 530 294 400
+             C 294 260 404 190 524 190
+             C 664 190 754 270 754 370
+             C 754 425 719 455 674 455
+             C 634 455 609 425 609 380
+             C 609 330 569 295 519 295
+             C 464 295 409 335 409 405
+             C 409 480 474 505 544 520
+             Z"
+          fill="url(#armTopGrad)"/>
+
+    <!-- A LUZ PROTEGIDA NO CORAÇÃO DO ABRAÇO (A Casa / A Alma Guardada) -->
+    <!-- Um núcleo caloroso protegido no centro da curva -->
+    <g transform="translate(512, 512)">
+      <circle cx="0" cy="0" r="64" fill="url(#homeLightGlow)" filter="url(#goldGlow)"/>
+
+      <!-- Casinha Minimalista / Símbolo de Chegada Segura em Dourado e Branco -->
+      <path d="M 0 -22 L 22 0 L 14 0 L 14 18 L -14 18 L -14 0 L -22 0 Z"
+            fill="#FFFFFF"
+            opacity="0.95"/>
+      <circle cx="0" cy="8" r="4.5" fill="#F59E0B"/>
+    </g>
+
+    <!-- Ponto de Partida e Ponto de Chegada (Nós de Conexão com a Comunidade) -->
+    <!-- Nó superior direito -->
+    <circle cx="674" cy="455" r="14" fill="#38BDF8" filter="url(#goldGlow)"/>
+    <circle cx="674" cy="455" r="6" fill="#FFFFFF"/>
+
+    <!-- Nó inferior esquerdo -->
+    <circle cx="350" cy="565" r="14" fill="#F43F5E" filter="url(#goldGlow)"/>
+    <circle cx="350" cy="565" r="6" fill="#FFFFFF"/>
+
+  </g>
+</svg>
