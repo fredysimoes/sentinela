@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import MapView, { Marker, Circle, Polyline } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
+import { StalkingTrackingSession } from '../services/stalkingService';
 
 const GOOGLE_MAPS_DARK_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#17191d' }] },
@@ -181,6 +182,7 @@ interface MapComponentProps {
   onOpenStrobe?: () => void;
   routeOrigin?: { name: string; coord: RouteCoordinate } | null;
   routeDestination?: { name: string; coord: RouteCoordinate } | null;
+  stalkingSession?: StalkingTrackingSession | null;
 }
 
 export const MapComponent: React.FC<MapComponentProps> = memo(({
@@ -208,6 +210,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   onOpenStrobe,
   routeOrigin = null,
   routeDestination = null,
+  stalkingSession = null,
 }) => {
   const mapRef = useRef<MapView | null>(null);
   const [is3DMode, setIs3DMode] = React.useState(false);
@@ -569,6 +572,56 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             </Marker>
           </React.Fragment>
         ))}
+
+        {/* Active Stalking Live Breadcrumb Trail */}
+        {stalkingSession && stalkingSession.breadcrumbs && stalkingSession.breadcrumbs.length > 1 && (
+          <>
+            <Polyline
+              coordinates={stalkingSession.breadcrumbs.map((b) => ({
+                latitude: b.latitude,
+                longitude: b.longitude,
+              }))}
+              strokeColor="#0F172A"
+              strokeWidth={7}
+            />
+            <Polyline
+              coordinates={stalkingSession.breadcrumbs.map((b) => ({
+                latitude: b.latitude,
+                longitude: b.longitude,
+              }))}
+              strokeColor="#EF4444"
+              strokeWidth={4}
+              lineDashPattern={[4, 6]}
+            />
+          </>
+        )}
+
+        {/* Live Stalking Marker of Protected Person */}
+        {stalkingSession && (
+          <>
+            <Circle
+              center={{ latitude: stalkingSession.latestLat, longitude: stalkingSession.latestLng }}
+              radius={30}
+              fillColor="rgba(239, 68, 68, 0.22)"
+              strokeColor="rgba(239, 68, 68, 0.65)"
+              strokeWidth={1.5}
+            />
+            <Marker
+              coordinate={{ latitude: stalkingSession.latestLat, longitude: stalkingSession.latestLng }}
+              zIndex={1008}
+              anchor={{ x: 0.5, y: 0.5 }}
+            >
+              <View style={styles.stalkingMarkerWrap}>
+                <View style={styles.stalkingPulseCircle}>
+                  <Ionicons name="eye" size={16} color="#FFFFFF" />
+                </View>
+                <View style={styles.stalkingNamePill}>
+                  <Text style={styles.stalkingNameText}>{stalkingSession.userName.split(' ')[0]}</Text>
+                </View>
+              </View>
+            </Marker>
+          </>
+        )}
 
         {/* Safe Places (Police Stations & Pharmacies) */}
         {filteredSafePlaces.map((place) => {
@@ -1190,5 +1243,38 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
+  },
+  stalkingMarkerWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stalkingPulseCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#EF4444',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  stalkingNamePill: {
+    backgroundColor: '#1E2430',
+    borderColor: '#EF4444',
+    borderWidth: 1.5,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: 3,
+  },
+  stalkingNameText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
   },
 });

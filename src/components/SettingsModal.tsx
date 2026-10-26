@@ -15,6 +15,7 @@ import { CATEGORIES } from '../constants/categories';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 import Haptics, { ImpactFeedbackStyle } from '../utils/haptics';
 import { M3BottomSheetWrapper } from './M3MotionWrapper';
+import { UserProfile } from '../services/authService';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -23,6 +24,10 @@ interface SettingsModalProps {
   onSaveSettings: (settings: NotificationSettings) => void;
   onOpenFeedback?: () => void;
   onOpenProtestRights?: () => void;
+  currentUser?: UserProfile | null;
+  onOpenAuth?: () => void;
+  onOpenSentinels?: () => void;
+  onSignOut?: () => void;
 }
 
 const RADIUS_OPTIONS = [
@@ -39,6 +44,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSaveSettings,
   onOpenFeedback,
   onOpenProtestRights,
+  currentUser,
+  onOpenAuth,
+  onOpenSentinels,
+  onSignOut,
 }) => {
   const [localSettings, setLocalSettings] = useState<NotificationSettings>(settings);
 
@@ -138,6 +147,78 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             contentContainerStyle={styles.scrollContentContainer}
             showsVerticalScrollIndicator={false}
           >
+            {/* Account & Sentinels Circle Card */}
+            <View style={[styles.sectionCard, { backgroundColor: '#1A202C', borderColor: '#2D3748' }]}>
+              {currentUser ? (
+                <View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                    <View style={styles.userAvatarWrap}>
+                      <Text style={styles.userAvatarText}>
+                        {currentUser.name.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.userNameText}>{currentUser.name}</Text>
+                      <Text style={styles.userEmailText}>{currentUser.email || 'Conta Sentinela'}</Text>
+                    </View>
+                    <View style={styles.userCodeBadge}>
+                      <Text style={styles.userCodeText}>{currentUser.sentinelCode}</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {onOpenSentinels && (
+                      <TouchableOpacity
+                        style={styles.openSentinelsBtn}
+                        onPress={() => {
+                          handleDismiss();
+                          onOpenSentinels();
+                        }}
+                      >
+                        <Ionicons name="shield-checkmark" size={15} color="#0F172A" style={{ marginRight: 6 }} />
+                        <Text style={styles.openSentinelsBtnText}>Os Meus Sentinelas</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {onSignOut && (
+                      <TouchableOpacity
+                        style={styles.signOutBtn}
+                        onPress={() => {
+                          handleDismiss();
+                          onSignOut();
+                        }}
+                      >
+                        <Ionicons name="log-out-outline" size={15} color="#94A3B8" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                    <Ionicons name="person-circle" size={28} color="#38BDF8" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.userNameText}>Aceder à Sua Conta</Text>
+                      <Text style={styles.userEmailText}>Inicie sessão para gerir os seus Sentinelas</Text>
+                    </View>
+                  </View>
+
+                  {onOpenAuth && (
+                    <TouchableOpacity
+                      style={styles.openSentinelsBtn}
+                      onPress={() => {
+                        handleDismiss();
+                        onOpenAuth();
+                      }}
+                    >
+                      <Ionicons name="log-in-outline" size={16} color="#0F172A" style={{ marginRight: 6 }} />
+                      <Text style={styles.openSentinelsBtnText}>Entrar com Google / Email</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+            </View>
+
             {/* Master Switch Section */}
             <View style={styles.sectionCard}>
               <View style={styles.switchRow}>
@@ -465,6 +546,64 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     borderWidth: 1,
     borderColor: '#282A2F',
+  },
+  userAvatarWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(56, 189, 248, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userAvatarText: {
+    color: '#38BDF8',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  userNameText: {
+    color: '#F8FAFC',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  userEmailText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 1,
+  },
+  userCodeBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.25)',
+  },
+  userCodeText: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  openSentinelsBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#38BDF8',
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  openSentinelsBtnText: {
+    color: '#0F172A',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  signOutBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#272F3C',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   switchRow: {
     flexDirection: 'row',

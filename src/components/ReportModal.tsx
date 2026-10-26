@@ -24,6 +24,7 @@ interface ReportModalProps {
   currentLocation: UserLocation | null;
   targetCoordinate: { latitude: number; longitude: number } | null;
   initialCategory?: IncidentCategory;
+  onStartStalking?: () => void;
 }
 
 export const ReportModal: React.FC<ReportModalProps> = ({
@@ -33,6 +34,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   currentLocation,
   targetCoordinate,
   initialCategory = 'dark_area',
+  onStartStalking,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<IncidentCategory>(initialCategory);
   const [title, setTitle] = useState('');
@@ -95,6 +97,36 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            {/* Dedicated Private Stalking Alert Action */}
+            {onStartStalking && (
+              <TouchableOpacity
+                style={styles.stalkingAlertCard}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                  onClose();
+                  onStartStalking();
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.stalkingIconCircle}>
+                  <Ionicons name="eye" size={22} color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.stalkingTitleRow}>
+                    <Text style={styles.stalkingTitle}>Estou a ser seguido(a)</Text>
+                    <View style={styles.privateBadge}>
+                      <Ionicons name="lock-closed" size={10} color="#10B981" style={{ marginRight: 3 }} />
+                      <Text style={styles.privateBadgeText}>Privado</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.stalkingSub}>
+                    Ativar gravação discreta e rastro ao vivo apenas para os seus Sentinelas.
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#EF4444" />
+              </TouchableOpacity>
+            )}
+
             {/* Category selection */}
             <Text style={styles.sectionLabel}>TIPO DE OCORRÊNCIA</Text>
             <View style={styles.categoriesGrid}>
@@ -230,6 +262,54 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+  },
+  stalkingAlertCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E1B24',
+    borderWidth: 1.5,
+    borderColor: '#EF4444',
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 20,
+    gap: 12,
+  },
+  stalkingIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stalkingTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  stalkingTitle: {
+    color: '#F8FAFC',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  privateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: M3Shapes.full,
+  },
+  privateBadgeText: {
+    color: '#10B981',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  stalkingSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    lineHeight: 15,
   },
   sectionLabel: {
     fontSize: 11,

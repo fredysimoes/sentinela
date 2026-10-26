@@ -25,8 +25,10 @@ interface SearchBarProps {
   onTransportModeChange: (mode: TransportMode) => void;
   onSelectDestination: (name: string, coord: RouteCoordinate, mode: TransportMode) => void;
   onOpenSOSContacts?: () => void;
+  onOpenSentinels?: () => void;
   onOpenSettings?: () => void;
   emergencyContactsCount?: number;
+  sentinelsCount?: number;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -35,8 +37,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onTransportModeChange,
   onSelectDestination,
   onOpenSOSContacts,
+  onOpenSentinels,
   onOpenSettings,
   emergencyContactsCount = 0,
+  sentinelsCount = 0,
 }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
@@ -203,6 +207,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             color={transportMode === 'driving' ? M3Colors.onPrimaryContainer : M3Colors.primary}
           />
         </M3Pressable>
+
+        {/* Sentinels Circle Access Button */}
+        {onOpenSentinels && (
+          <M3Pressable
+            style={styles.contactsActionBtn}
+            onPress={onOpenSentinels}
+          >
+            <Ionicons name="shield-checkmark" size={17} color="#38BDF8" />
+            {sentinelsCount > 0 && (
+              <View style={[styles.contactsCountBadge, { backgroundColor: '#38BDF8' }]}>
+                <Text style={[styles.contactsCountText, { color: '#0F172A' }]}>{sentinelsCount}</Text>
+              </View>
+            )}
+          </M3Pressable>
+        )}
 
         {/* SOS Emergency Contacts Access Button */}
         {onOpenSOSContacts && (

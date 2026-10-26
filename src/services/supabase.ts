@@ -1,4 +1,5 @@
 import { createClient, RealtimeChannel } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Incident, SOSAlert } from '../types';
 
 /**
@@ -28,8 +29,10 @@ export function isSupabaseConfigured(): boolean {
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    persistSession: false,
-    autoRefreshToken: false,
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
   },
 });
 

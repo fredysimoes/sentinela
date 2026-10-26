@@ -67,6 +67,19 @@ import { ProtestRightsModal } from './src/components/ProtestRightsModal';
 import { M3Pressable } from './src/components/M3MotionWrapper';
 import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
 import { FeedbackModal } from './src/components/FeedbackModal';
+import { AuthModal } from './src/components/AuthModal';
+import { SentinelsModal } from './src/components/SentinelsModal';
+import { StalkingActiveModal } from './src/components/StalkingActiveModal';
+import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
+import { onAuthStateChange, UserProfile, signOutUser } from './src/services/authService';
+import { fetchMySentinels, SentinelContact } from './src/services/sentinelsService';
+import {
+  startStalkingTrackingSession,
+  stopStalkingTrackingSession,
+  getActiveStalkingSession,
+  subscribeToStalkingAlertsForSentinel,
+  StalkingTrackingSession,
+} from './src/services/stalkingService';
 import { syncPendingFeedback } from './src/services/feedbackService';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
 import { calculateDistanceMeters } from './src/utils/geo';
@@ -151,6 +164,15 @@ export default function App() {
     body: string;
     type: 'sos_alert' | 'proximity_alert';
   } | null>(null);
+
+  // User Profile, Sentinelas, & "Estou a ser seguido" Stalking Session States
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
+  const [mySentinels, setMySentinels] = useState<SentinelContact[]>([]);
+  const [activeStalkingSession, setActiveStalkingSession] = useState<StalkingTrackingSession | null>(null);
+  const [incomingStalkingAlert, setIncomingStalkingAlert] = useState<StalkingTrackingSession | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSentinelsModal, setShowSentinelsModal] = useState(false);
+  const [showIncomingTrackerModal, setShowIncomingTrackerModal] = useState(false);
 
   const handleToggleTorch = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -640,6 +662,96 @@ export default function App() {
     };
   }, []);
 
+  // Listen for Supabase Auth state, Sentinels, and Stalking alerts
+  useEffect(() => {
+    // 1. Check local session in progress
+    getActiveStalkingSession().then((session) => {
+      if (session && session.status === 'active') {
+        setActiveStalkingSession(session);
+      }
+    });
+
+    // 2. Subscribe to Auth State
+    const unsubscribeAuth = onAuthStateChange((profile) => {
+      setCurrentUserProfile(profile);
+      if (profile) {
+        fetchMySentinels(profile.id).then(setMySentinels);
+      } else {
+        setMySentinels([]);
+      }
+    });
+
+    return () => {
+      unsubscribeAuth();
+    };
+  }, []);
+
+  // Subscribe to incoming stalking alerts when user profile is active
+  useEffect(() => {
+    if (!currentUserProfile?.id) return;
+
+    const unsubscribeStalking = subscribeToStalkingAlertsForSentinel(
+      currentUserProfile.id,
+      (alertSession) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        setIncomingStalkingAlert(alertSession);
+        setShowIncomingTrackerModal(true);
+        setActiveBanner({
+          title: '🚨 ALERTA DE SENTINELA EM DIRETO',
+          body: `${alertSession.userName} indicou que está a ser seguido(a)! Toque para ver o trajeto.`,
+          type: 'sos_alert',
+        });
+      },
+      (resolvedId) => {
+        setIncomingStalkingAlert((prev) => (prev?.id === resolvedId ? null : prev));
+      }
+    );
+
+    return () => {
+      unsubscribeStalking();
+    };
+  }, [currentUserProfile?.id]);
+
+  // "Estou a ser seguido(a)" handlers
+  const handleStartStalkingTracking = async () => {
+    if (!userLocation) {
+      Alert.alert('Localização GPS', 'A aguardar sinal de GPS para iniciar o rastro ao vivo.');
+      return;
+    }
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+    const userName = currentUserProfile?.name || 'Utilizador Sentinela';
+    const userId = currentUserProfile?.id || 'local-guest';
+
+    const session = await startStalkingTrackingSession({
+      userId,
+      userName,
+      userAvatar: currentUserProfile?.avatarUrl,
+      initialCoords: {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      },
+    });
+
+    setActiveStalkingSession(session);
+  };
+
+  const handleStopStalkingTracking = async () => {
+    if (!activeStalkingSession) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await stopStalkingTrackingSession(activeStalkingSession.id);
+    setActiveStalkingSession(null);
+    Alert.alert('Alerta Concluído', 'A gravação do seu percurso terminou e os seus Sentinelas foram notificados de que está em segurança.');
+  };
+
+  const handleSignOut = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await signOutUser();
+    setCurrentUserProfile(null);
+    setMySentinels([]);
+  };
+
   // Quick navigation helpers for police stations and open pharmacies
   const handleQuickRouteToPolice = () => {
     if (!userLocation) {
@@ -842,6 +954,12 @@ export default function App() {
       <MaterialAlertBanner
         alert={activeBanner}
         onDismiss={() => setActiveBanner(null)}
+        onPress={() => {
+          if (incomingStalkingAlert) {
+            setShowIncomingTrackerModal(true);
+            setActiveBanner(null);
+          }
+        }}
       />
 
       {/* 1. Full-Screen Edge-to-Edge Map (Google Maps standard) */}
@@ -898,6 +1016,7 @@ export default function App() {
           isTorchActive={isTorchActive}
           onToggleTorch={handleToggleTorch}
           onOpenStrobe={handleOpenStrobe}
+          stalkingSession={activeStalkingSession || incomingStalkingAlert}
         />
       </View>
 
@@ -910,6 +1029,14 @@ export default function App() {
             onTransportModeChange={setTransportMode}
             onSelectDestination={(name, coord, mode) => handleRequestNavigation(name, coord, mode)}
             onOpenSOSContacts={() => setShowContactsModal(true)}
+            onOpenSentinels={() => {
+              if (currentUserProfile) {
+                setShowSentinelsModal(true);
+              } else {
+                setShowAuthModal(true);
+              }
+            }}
+            sentinelsCount={mySentinels.length}
             onOpenSettings={() => setShowSettingsModal(true)}
             emergencyContactsCount={emergencyContacts.filter((c) => c.phone !== '112').length}
           />
@@ -1195,6 +1322,7 @@ export default function App() {
         currentLocation={userLocation}
         targetCoordinate={targetCoordinate}
         initialCategory={notificationSettings.protestMode && reportCategory === 'dark_area' ? 'police_presence' : reportCategory}
+        onStartStalking={handleStartStalkingTracking}
       />
 
       {/* SOS Modal */}
@@ -1239,7 +1367,50 @@ export default function App() {
         onSaveSettings={handleSaveNotificationSettings}
         onOpenFeedback={() => setShowFeedbackModal(true)}
         onOpenProtestRights={() => setShowProtestRightsModal(true)}
+        currentUser={currentUserProfile}
+        onOpenAuth={() => setShowAuthModal(true)}
+        onOpenSentinels={() => setShowSentinelsModal(true)}
+        onSignOut={handleSignOut}
       />
+
+      {/* Auth Modal (Login / Sign Up with Google & Email) */}
+      <AuthModal
+        visible={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(profile) => {
+          setCurrentUserProfile(profile);
+          fetchMySentinels(profile.id).then(setMySentinels);
+        }}
+      />
+
+      {/* Sentinelas Management Modal */}
+      <SentinelsModal
+        visible={showSentinelsModal}
+        onClose={() => setShowSentinelsModal(false)}
+        currentUser={currentUserProfile}
+        onOpenAuth={() => setShowAuthModal(true)}
+      />
+
+      {/* Floating HUD for Active "Estou a ser seguido(a)" Session */}
+      {activeStalkingSession && (
+        <StalkingActiveModal
+          session={activeStalkingSession}
+          sentinelsCount={mySentinels.length}
+          onStopTracking={handleStopStalkingTracking}
+        />
+      )}
+
+      {/* Live Sentinel Tracker Modal for Protected Friend in Danger */}
+      {incomingStalkingAlert && (
+        <LiveSentinelTrackerModal
+          session={incomingStalkingAlert}
+          userLocation={userLocation}
+          onClose={() => setIncomingStalkingAlert(null)}
+          onNavigateToUser={(name, coord) => {
+            handleRequestNavigation(name, coord, 'walking');
+          }}
+        />
+      )}
 
       {/* Feedback & Bug Reporting Modal */}
       <FeedbackModal
