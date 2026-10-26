@@ -71,7 +71,7 @@ import { AuthModal } from './src/components/AuthModal';
 import { SentinelsModal } from './src/components/SentinelsModal';
 import { StalkingActiveModal } from './src/components/StalkingActiveModal';
 import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
-import { onAuthStateChange, UserProfile, signOutUser } from './src/services/authService';
+import { onAuthStateChange, UserProfile, signOutUser, initAuthDeepLinkListener } from './src/services/authService';
 import { fetchMySentinels, SentinelContact } from './src/services/sentinelsService';
 import {
   startStalkingTrackingSession,
@@ -675,14 +675,23 @@ export default function App() {
     const unsubscribeAuth = onAuthStateChange((profile) => {
       setCurrentUserProfile(profile);
       if (profile) {
+        setShowAuthModal(false);
         fetchMySentinels(profile.id).then(setMySentinels);
       } else {
         setMySentinels([]);
       }
     });
 
+    // 3. Deep link listener for OAuth redirect (sentinela://)
+    const unsubscribeDeepLink = initAuthDeepLinkListener((profile) => {
+      setCurrentUserProfile(profile);
+      setShowAuthModal(false);
+      fetchMySentinels(profile.id).then(setMySentinels);
+    });
+
     return () => {
       unsubscribeAuth();
+      unsubscribeDeepLink();
     };
   }, []);
 

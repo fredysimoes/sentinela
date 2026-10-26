@@ -2,7 +2,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import * as Crypto from 'expo-crypto';
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
 // Complete WebBrowser auth session if returning from OAuth
 WebBrowser.maybeCompleteAuthSession();
@@ -233,6 +233,129 @@ export async function signUpWithEmail(email: string, pass: string, name: string)
 }
 
 /**
+ * Extracts query and hash parameters directly from a URL string without relying
+ * on React Native's Blob/URL.js polyfill (whose `hash` getter truncates at `/`).
+ */
+function extractAuthParams(url: string): Record<string, string> {
+  const params: Record<string, string> = {};
+  const hashIdx = url.indexOf('#');
+  const queryIdx = url.indexOf('?');
+
+  const parseSegment = (segment: string) => {
+    for (const pair of segment.split('&')) {
+      if (!pair) continue;
+      const eqIdx = pair.indexOf('=');
+      if (eqIdx === -1) continue;
+      try {
+        const key = decodeURIComponent(pair.slice(0, eqIdx).replace(/\+/g, ' '));
+        const val = decodeURIComponent(pair.slice(eqIdx + 1).replace(/\+/g, ' '));
+        params[key] = val;
+      } catch {
+        const key = pair.slice(0, eqIdx);
+        const val = pair.slice(eqIdx + 1);
+        params[key] = val;
+      }
+    }
+  };
+
+  if (queryIdx !== -1) {
+    const queryEnd = hashIdx !== -1 && hashIdx > queryIdx ? hashIdx : url.length;
+    parseSegment(url.slice(queryIdx + 1, queryEnd));
+  }
+  if (hashIdx !== -1) {
+    parseSegment(url.slice(hashIdx + 1));
+  }
+  return params;
+}
+
+let inFlightCallbackPromise: Promise<{ user: any; profile: UserProfile | null; error?: string }> | null = null;
+let lastProcessedCallbackUrl: string | null = null;
+
+async function processOAuthRedirectUrl(
+  url: string
+): Promise<{ user: any; profile: UserProfile | null; error?: string }> {
+  if (lastProcessedCallbackUrl === url && inFlightCallbackPromise) {
+    return inFlightCallbackPromise;
+  }
+
+  lastProcessedCallbackUrl = url;
+  inFlightCallbackPromise = (async () => {
+    const params = extractAuthParams(url);
+
+    if (params.error_description || params.error) {
+      return {
+        user: null,
+        profile: null,
+        error: params.error_description || params.error,
+      };
+    }
+
+    const code = params.code;
+    const accessToken = params.access_token;
+    const refreshToken = params.refresh_token;
+
+    if (code) {
+      const { data: exchangeData, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+      if (exchangeErr || !exchangeData.user) {
+        return {
+          user: null,
+          profile: null,
+          error: exchangeErr?.message || 'Erro ao validar código de sessão Google.',
+        };
+      }
+      const profile = await fetchOrCreateProfile(exchangeData.user);
+      return { user: exchangeData.user, profile };
+    }
+
+    if (accessToken) {
+      const { data: sessionData, error: sessionErr } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || '',
+      });
+
+      if (sessionErr || !sessionData.user) {
+        return {
+          user: null,
+          profile: null,
+          error: sessionErr?.message || 'Erro ao validar sessão Google.',
+        };
+      }
+
+      const profile = await fetchOrCreateProfile(sessionData.user);
+      return { user: sessionData.user, profile };
+    }
+
+    return { user: null, profile: null };
+  })();
+
+  return inFlightCallbackPromise;
+}
+
+/**
+ * Initializes deep link listener to handle OAuth redirect callbacks seamlessly
+ */
+export function initAuthDeepLinkListener(onProfileLoaded?: (profile: UserProfile) => void): () => void {
+  const handleDeepLink = async (url: string | null) => {
+    if (!url || !url.startsWith('sentinela://')) return;
+    try {
+      const res = await processOAuthRedirectUrl(url);
+      if (res.profile) {
+        onProfileLoaded?.(res.profile);
+      }
+    } catch (e) {
+      console.warn('Erro ao processar deep link de auth:', e);
+    }
+  };
+
+  Linking.getInitialURL().then((url) => handleDeepLink(url || null));
+  const subscription = Linking.addEventListener('url', ({ url }: { url: string }) => handleDeepLink(url));
+
+  return () => {
+    subscription.remove();
+  };
+}
+
+/**
  * Signs in with Google via Supabase OAuth using Expo WebBrowser
  */
 export async function signInWithGoogle(): Promise<{ user: any; profile: UserProfile | null; error?: string }> {
@@ -257,31 +380,37 @@ export async function signInWithGoogle(): Promise<{ user: any; profile: UserProf
     }
 
     // Open WebBrowser OAuth session
+    inFlightCallbackPromise = null;
+    lastProcessedCallbackUrl = null;
     const authResult = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
     if (authResult.type === 'success' && authResult.url) {
-      // Parse tokens from hash or query params
-      const parsedUrl = new URL(authResult.url);
-      const params = new URLSearchParams(parsedUrl.hash ? parsedUrl.hash.substring(1) : parsedUrl.search);
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token');
-
-      if (accessToken) {
-        const { data: sessionData, error: sessionErr } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
-        });
-
-        if (sessionErr || !sessionData.user) {
-          return { user: null, profile: null, error: sessionErr?.message || 'Erro ao validar sessão Google.' };
-        }
-
-        const profile = await fetchOrCreateProfile(sessionData.user);
-        return { user: sessionData.user, profile };
+      const res = await processOAuthRedirectUrl(authResult.url);
+      if (res.user && res.profile) {
+        return res;
+      }
+      if (res.error) {
+        return res;
       }
     }
 
-    // Check if session was already established
+    // On Android, AppState 'active' often wins Promise.race in expo-web-browser
+    // slightly before the Linking 'url' event arrives from MainActivity.onNewIntent.
+    if (!inFlightCallbackPromise) {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+    if (inFlightCallbackPromise) {
+      const pendingResult: { user: any; profile: UserProfile | null; error?: string } =
+        await inFlightCallbackPromise;
+      if (pendingResult.user && pendingResult.profile) {
+        return pendingResult;
+      }
+      if (pendingResult.error) {
+        return pendingResult;
+      }
+    }
+
+    // Check if session was already established (e.g. via Linking listener when returning from Custom Tabs)
     const { data: currentSession } = await supabase.auth.getSession();
     if (currentSession?.session?.user) {
       const profile = await fetchOrCreateProfile(currentSession.session.user);
