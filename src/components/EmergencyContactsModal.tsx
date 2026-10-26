@@ -16,6 +16,7 @@ import { EmergencyContact } from '../types';
 import Haptics from '../utils/haptics';
 import { pickContactFromDevice } from '../services/contactPicker';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
 interface EmergencyContactsModalProps {
   visible: boolean;
@@ -83,14 +84,9 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.overlay}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.header}>
+    <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
+      {/* Header */}
+      <View style={styles.header}>
             <View>
               <Text style={styles.headerTitle}>Contactos de Emergência</Text>
               <Text style={styles.headerSubtitle}>
@@ -191,9 +187,7 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
               </View>
             )}
           </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    </M3BottomSheetWrapper>
   );
 };
 

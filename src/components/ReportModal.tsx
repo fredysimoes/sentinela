@@ -15,6 +15,7 @@ import Haptics from '../utils/haptics';
 import { Incident, IncidentCategory, UserLocation } from '../types';
 import { CATEGORIES } from '../constants/categories';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
 interface ReportModalProps {
   visible: boolean;
@@ -75,19 +76,13 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const meta = CATEGORIES[selectedCategory];
 
   return (
-    <Modal
+    <M3BottomSheetWrapper
       visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
+      onClose={onClose}
+      style={styles.sheetContainer}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.overlay}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.header}>
+      {/* Header */}
+      <View style={styles.header}>
             <View>
               <Text style={styles.headerTitle}>Sinalizar no Mapa</Text>
               <Text style={styles.headerSubtitle}>
@@ -185,9 +180,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               <Text style={styles.submitButtonText}>Publicar Alerta Comunitário</Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    </M3BottomSheetWrapper>
   );
 };
 

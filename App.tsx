@@ -63,6 +63,7 @@ import { SettingsModal } from './src/components/SettingsModal';
 import { setTorch } from './src/services/torch';
 import { ProtestLightModal } from './src/components/ProtestLightModal';
 import { ProtestRightsModal } from './src/components/ProtestRightsModal';
+import { M3Pressable } from './src/components/M3MotionWrapper';
 import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
 import { FeedbackModal } from './src/components/FeedbackModal';
 import { syncPendingFeedback } from './src/services/feedbackService';
@@ -889,14 +890,14 @@ export default function App() {
               contentContainerStyle={styles.floatingChipsScroll}
             >
               {/* Casa Quick Chip */}
-              <TouchableOpacity
+              <M3Pressable
+                scaleOnPress={0.94}
                 style={[
                   styles.filterChip,
                   homeAddress && styles.filterChipHomeActive,
                 ]}
                 onPress={handlePressHome}
                 onLongPress={() => setShowHomeModal(true)}
-                activeOpacity={0.8}
               >
                 <Ionicons
                   name={homeAddress ? 'home' : 'home-outline'}
@@ -911,10 +912,11 @@ export default function App() {
                 >
                   {homeAddress ? 'Casa' : '+ Casa'}
                 </Text>
-              </TouchableOpacity>
+              </M3Pressable>
 
               {/* Police Quick Chip */}
-              <TouchableOpacity
+              <M3Pressable
+                scaleOnPress={0.94}
                 style={[
                   styles.filterChip,
                   selectedFilter === 'police' && styles.filterChipActivePolice,
@@ -923,7 +925,6 @@ export default function App() {
                   Haptics.selectionAsync();
                   setSelectedFilter(selectedFilter === 'police' ? 'all' : 'police');
                 }}
-                activeOpacity={0.8}
               >
                 <Ionicons
                   name="shield-sharp"
@@ -938,10 +939,11 @@ export default function App() {
                 >
                   Polícia (PSP/GNR)
                 </Text>
-              </TouchableOpacity>
+              </M3Pressable>
 
               {/* Pharmacy Quick Chip */}
-              <TouchableOpacity
+              <M3Pressable
+                scaleOnPress={0.94}
                 style={[
                   styles.filterChip,
                   selectedFilter === 'pharmacy' && styles.filterChipActivePharmacy,
@@ -950,7 +952,6 @@ export default function App() {
                   Haptics.selectionAsync();
                   setSelectedFilter(selectedFilter === 'pharmacy' ? 'all' : 'pharmacy');
                 }}
-                activeOpacity={0.8}
               >
                 <Ionicons
                   name="medical"
@@ -965,10 +966,11 @@ export default function App() {
                 >
                   Farmácias
                 </Text>
-              </TouchableOpacity>
+              </M3Pressable>
 
               {/* All Incidents Chip */}
-              <TouchableOpacity
+              <M3Pressable
+                scaleOnPress={0.94}
                 style={[
                   styles.filterChip,
                   selectedFilter === 'all' && styles.filterChipActive,
@@ -977,7 +979,6 @@ export default function App() {
                   Haptics.selectionAsync();
                   setSelectedFilter('all');
                 }}
-                activeOpacity={0.8}
               >
                 <Ionicons
                   name="layers-outline"
@@ -992,7 +993,7 @@ export default function App() {
                 >
                   Todos {incidents.length > 0 ? `(${incidents.length})` : ''}
                 </Text>
-              </TouchableOpacity>
+              </M3Pressable>
 
               {/* Hazard Category Chips */}
               {(Object.keys(CATEGORIES) as IncidentCategory[]).map((catKey) => {
@@ -1000,8 +1001,9 @@ export default function App() {
                 const isSelected = selectedFilter === catKey;
                 const count = incidents.filter((i) => i.category === catKey).length;
                 return (
-                  <TouchableOpacity
+                  <M3Pressable
                     key={catKey}
+                    scaleOnPress={0.94}
                     style={[
                       styles.filterChip,
                       isSelected && { backgroundColor: cat.color, borderColor: cat.color },
@@ -1010,7 +1012,6 @@ export default function App() {
                       Haptics.selectionAsync();
                       setSelectedFilter(isSelected ? 'all' : catKey);
                     }}
-                    activeOpacity={0.8}
                   >
                     <Ionicons
                       name={cat.icon as any}
@@ -1025,7 +1026,7 @@ export default function App() {
                     >
                       {cat.label} {count > 0 ? `(${count})` : ''}
                     </Text>
-                  </TouchableOpacity>
+                  </M3Pressable>
                 );
               })}
             </ScrollView>
@@ -1035,15 +1036,15 @@ export default function App() {
 
       {/* Bottom Action Floating Bar */}
       <View style={styles.bottomBar}>
-        {/* Signal Hazard Button - High Contrast Light Pill FAB */}
-        <TouchableOpacity
+        {/* Signal Hazard Button - High Contrast Light Pill FAB with Material Motion */}
+        <M3Pressable
+          scaleOnPress={0.94}
           style={styles.reportBtn}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setTargetCoordinate(null);
             setShowReportModal(true);
           }}
-          activeOpacity={0.88}
         >
           <View style={styles.reportIconCircle}>
             <Ionicons name="add" size={22} color="#FFFFFF" />
@@ -1052,20 +1053,20 @@ export default function App() {
             <Text style={styles.reportBtnTitle}>Sinalizar Perigo</Text>
             <Text style={styles.reportBtnSub}>Partilhar no mapa</Text>
           </View>
-        </TouchableOpacity>
+        </M3Pressable>
 
-        {/* SOS Emergency Button - M3 Squircle FAB */}
-        <TouchableOpacity
+        {/* SOS Emergency Button - M3 Squircle FAB with Material Motion */}
+        <M3Pressable
+          scaleOnPress={0.91}
           style={styles.sosBtn}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             setShowSOSModal(true);
           }}
-          activeOpacity={0.85}
         >
           <Ionicons name="megaphone" size={24} color="#FFFFFF" />
           <Text style={styles.sosBtnText}>SOS</Text>
-        </TouchableOpacity>
+        </M3Pressable>
       </View>
 
       {/* Incident Details Sheet */}

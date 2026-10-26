@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Linking,
   Platform,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
@@ -13,7 +14,7 @@ import { UserLocation } from '../types';
 import { RouteCoordinate, TransportMode } from '../types/navigation';
 import { calculateDistanceMeters, formatDistance, getGoogleMapsUrl } from '../utils/geo';
 import { formatDuration } from '../services/routingService';
-import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3Colors, M3Shapes, M3Elevation, M3Typography, M3Motion } from '../theme/m3';
 
 export interface SelectedMapPoint {
   name: string;
@@ -42,6 +43,29 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
   onSetAsOrigin,
 }) => {
   if (!place) return null;
+
+  // Material Design 3 Motion: Shared Axis Y Sheet Slide
+  const translateY = useRef(new Animated.Value(350)).current;
+
+  useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: 0,
+      duration: M3Motion.durations.long2,
+      easing: M3Motion.easings.emphasizedDecelerate,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const handleAnimatedClose = () => {
+    Animated.timing(translateY, {
+      toValue: 350,
+      duration: M3Motion.durations.medium1,
+      easing: M3Motion.easings.emphasizedAccelerate,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+    });
+  };
 
   const distanceMeters = userLocation
     ? calculateDistanceMeters(
@@ -84,7 +108,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { transform: [{ translateY }] }]}>
       {/* Drag handle */}
       <View style={styles.handle} />
 
@@ -95,7 +119,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           <Text style={styles.poiBadgeText}>DESTINO NO MAPA</Text>
         </View>
 
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+        <TouchableOpacity onPress={handleAnimatedClose} style={styles.closeBtn} activeOpacity={0.7}>
           <Ionicons name="close" size={20} color="#94A3B8" />
         </TouchableOpacity>
       </View>
@@ -195,7 +219,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           <Text style={styles.secondaryBtnText}>Google Maps</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

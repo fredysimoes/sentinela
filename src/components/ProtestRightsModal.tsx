@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
+import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
 interface ProtestRightsModalProps {
   visible: boolean;
@@ -21,11 +22,9 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
   onClose,
 }) => {
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.header}>
+    <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
+      {/* Header */}
+      <View style={styles.header}>
             <View style={styles.headerTitleWrap}>
               <View style={styles.headerIconBadge}>
                 <Ionicons name="book" size={20} color={M3Colors.primary} />
@@ -122,9 +121,7 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
               <Text style={styles.doneBtnText}>Entendido</Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
-      </View>
-    </Modal>
+    </M3BottomSheetWrapper>
   );
 };
 

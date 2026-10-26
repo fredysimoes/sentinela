@@ -16,6 +16,7 @@ import { PedestrianRoute, RouteCoordinate, TransportMode } from '../types/naviga
 import { formatDistance } from '../utils/geo';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { searchAddressSuggestions, AddressSuggestion } from '../services/geocodingService';
+import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
 export interface RouteEndpoint {
   name: string;
@@ -168,11 +169,9 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   const isDriving = (safeRoute.mode || currentMode) === 'driving';
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.header}>
+    <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
+      {/* Header */}
+      <View style={styles.header}>
             <View style={styles.modeIconCircle}>
               <Ionicons
                 name={isDriving ? 'car-sport' : 'walk'}
@@ -559,9 +558,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
               </View>
             </>
           )}
-        </View>
-      </View>
-    </Modal>
+    </M3BottomSheetWrapper>
   );
 };
 

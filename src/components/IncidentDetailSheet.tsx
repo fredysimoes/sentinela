@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,13 +6,14 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { Incident, UserLocation } from '../types';
 import { CATEGORIES } from '../constants/categories';
 import { calculateDistanceMeters, formatDistance, formatRelativeTime, getGoogleMapsUrl } from '../utils/geo';
-import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3Colors, M3Shapes, M3Elevation, M3Typography, M3Motion } from '../theme/m3';
 
 interface IncidentDetailSheetProps {
   incident: Incident | null;
@@ -34,6 +35,29 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
   onNavigate,
 }) => {
   if (!incident) return null;
+
+  // Material Design 3 Motion: Shared Axis Y Sheet Slide
+  const translateY = useRef(new Animated.Value(350)).current;
+
+  useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: 0,
+      duration: M3Motion.durations.long2,
+      easing: M3Motion.easings.emphasizedDecelerate,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const handleAnimatedClose = () => {
+    Animated.timing(translateY, {
+      toValue: 350,
+      duration: M3Motion.durations.medium1,
+      easing: M3Motion.easings.emphasizedAccelerate,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+    });
+  };
 
   const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
 
@@ -83,7 +107,7 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { transform: [{ translateY }] }]}>
       {/* Drag handle */}
       <View style={styles.handle} />
 
@@ -94,7 +118,7 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
           <Text style={[styles.categoryBadgeText, { color: meta.color }]}>{meta.label}</Text>
         </View>
 
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+        <TouchableOpacity onPress={handleAnimatedClose} style={styles.closeBtn}>
           <Ionicons name="close" size={20} color="#94A3B8" />
         </TouchableOpacity>
       </View>
@@ -180,7 +204,7 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
         <Ionicons name="trash-outline" size={16} color="#EF4444" />
         <Text style={styles.deleteBtnText}>Remover Ocorrência do Mapa</Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 };
 

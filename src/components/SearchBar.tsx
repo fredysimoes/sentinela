@@ -8,6 +8,7 @@ import {
   FlatList,
   Keyboard,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
@@ -15,7 +16,7 @@ import { searchAddressSuggestions, AddressSuggestion } from '../services/geocodi
 import { RouteCoordinate, TransportMode } from '../types/navigation';
 import { calculateDistanceMeters } from '../utils/geo';
 import { formatDuration, formatDistance } from '../services/routingService';
-import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
+import { M3Colors, M3Shapes, M3Elevation, M3Motion } from '../theme/m3';
 
 interface SearchBarProps {
   userLocation?: { latitude: number; longitude: number } | null;
@@ -41,6 +42,34 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Material Design Motion: Dropdown Container Transform
+  const dropdownOpacity = useRef(new Animated.Value(0)).current;
+  const dropdownTranslateY = useRef(new Animated.Value(-10)).current;
+
+  const showSuggestions = suggestions.length > 0 && (isFocused || query.trim().length >= 2);
+
+  useEffect(() => {
+    if (showSuggestions) {
+      Animated.parallel([
+        Animated.timing(dropdownOpacity, {
+          toValue: 1,
+          duration: M3Motion.durations.medium2,
+          easing: M3Motion.easings.emphasizedDecelerate,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dropdownTranslateY, {
+          toValue: 0,
+          duration: M3Motion.durations.medium2,
+          easing: M3Motion.easings.emphasizedDecelerate,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      dropdownOpacity.setValue(0);
+      dropdownTranslateY.setValue(-10);
+    }
+  }, [showSuggestions]);
 
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -203,9 +232,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         )}
       </View>
 
-      {/* Autocomplete Suggestions Dropdown (Floats over the map) */}
-      {suggestions.length > 0 && (isFocused || query.trim().length >= 2) && (
-        <View style={styles.dropdown}>
+      {/* Autocomplete Suggestions Dropdown (Material Motion Container Transform) */}
+      {showSuggestions && (
+        <Animated.View
+          style={[
+            styles.dropdown,
+            {
+              opacity: dropdownOpacity,
+              transform: [{ translateY: dropdownTranslateY }],
+            },
+          ]}
+        >
           <View style={styles.dropdownHeader}>
             <Text style={styles.dropdownHeaderText}>SUGESTÕES DE DESTINO</Text>
             <TouchableOpacity onPress={() => setSuggestions([])} style={{ padding: 4 }}>
@@ -255,7 +292,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               );
             }}
           />
-        </View>
+        </Animated.View>
       )}
     </View>
   );

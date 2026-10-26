@@ -16,6 +16,7 @@ import { EmergencyContact, SOSAlert, UserLocation } from '../types';
 import { createAndDispatchSOS, shareSOSToWhatsApp, shareSOSToSMS, createImSafeMessage } from '../services/sos';
 import { pickContactFromDevice } from '../services/contactPicker';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3Dialog } from './M3MotionWrapper';
 
 interface SOSModalProps {
   visible: boolean;
@@ -212,9 +213,8 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.card}>
+    <M3Dialog visible={visible} onClose={onClose} backdropClose={false}>
+      <View style={styles.card}>
           {showImSafeView ? (
             // I'M SAFE STATE
             <View style={styles.imSafeBox}>
@@ -556,8 +556,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
             </View>
           )}
         </View>
-      </View>
-    </Modal>
+    </M3Dialog>
   );
 };
 

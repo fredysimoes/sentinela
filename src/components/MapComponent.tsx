@@ -71,6 +71,7 @@ import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
 import { SelectedMapPoint } from './SelectedPlaceSheet';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
+import { M3Pressable } from './M3MotionWrapper';
 
 // -------------------------------------------------------------
 // High Performance Memoized Markers (prevents re-rendering 500 views)
@@ -650,37 +651,37 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
         {protestMode && (
           <>
             {/* Strobe Button */}
-            <TouchableOpacity
+            <M3Pressable
+              scaleOnPress={0.9}
               style={[styles.floatingControlBtn, styles.protestStrobeBtn]}
               onPress={onOpenStrobe}
-              activeOpacity={0.8}
             >
               <Ionicons name="flash" size={22} color="#EF4444" />
-            </TouchableOpacity>
+            </M3Pressable>
 
             {/* Hardware Flashlight Toggle Button */}
-            <TouchableOpacity
+            <M3Pressable
+              scaleOnPress={0.9}
               style={[
                 styles.floatingControlBtn,
                 isTorchActive ? styles.protestTorchBtnActive : styles.protestTorchBtn,
               ]}
               onPress={onToggleTorch}
-              activeOpacity={0.8}
             >
               <Ionicons
                 name={isTorchActive ? "flashlight" : "flashlight-outline"}
                 size={22}
                 color={isTorchActive ? "#000000" : "#F59E0B"}
               />
-            </TouchableOpacity>
+            </M3Pressable>
           </>
         )}
 
         {/* Gyroscope/Compass Heading Button */}
-        <TouchableOpacity
+        <M3Pressable
+          scaleOnPress={0.9}
           style={[styles.floatingControlBtn, followHeading && styles.floatingControlBtnActive]}
           onPress={toggleHeadingFollow}
-          activeOpacity={0.8}
         >
           <View style={{ transform: [{ rotate: `${-userHeading}deg` }] }}>
             <Ionicons
@@ -689,13 +690,13 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
               color={followHeading ? M3Colors.primary : M3Colors.onSurfaceVariant}
             />
           </View>
-        </TouchableOpacity>
+        </M3Pressable>
 
         {/* 3D / 2D Perspective Toggle */}
-        <TouchableOpacity
+        <M3Pressable
+          scaleOnPress={0.9}
           style={[styles.floatingControlBtn, is3DMode && styles.floatingControlBtnActive]}
           onPress={toggle3DMode}
-          activeOpacity={0.8}
         >
           <Text
             style={[
@@ -705,16 +706,16 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           >
             {is3DMode ? '3D' : '2D'}
           </Text>
-        </TouchableOpacity>
+        </M3Pressable>
 
         {/* Recenter GPS */}
-        <TouchableOpacity
+        <M3Pressable
+          scaleOnPress={0.9}
           style={styles.floatingControlBtn}
           onPress={handleRecenter}
-          activeOpacity={0.8}
         >
           <Ionicons name="locate" size={22} color={M3Colors.primary} />
-        </TouchableOpacity>
+        </M3Pressable>
       </View>
 
       {/* Re-center Navigation Pill (shown if user panned away during active navigation) */}

@@ -14,6 +14,7 @@ import { NotificationSettings, IncidentCategory } from '../types';
 import { CATEGORIES } from '../constants/categories';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 import Haptics, { ImpactFeedbackStyle } from '../utils/haptics';
+import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -104,16 +105,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   );
 
   return (
-    <Modal
+    <M3BottomSheetWrapper
       visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={handleDismiss}
+      onClose={handleDismiss}
+      style={styles.sheetContainer}
     >
-      <View style={styles.overlay}>
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.header}>
+      {/* Header */}
+      <View style={styles.header}>
             <View style={styles.dragHandle} />
             <View style={styles.headerRow}>
               <View style={styles.headerTitleWrap}>
@@ -381,9 +379,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <Text style={styles.saveBtnText}>Guardar Configurações</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
-    </Modal>
+    </M3BottomSheetWrapper>
   );
 };
 

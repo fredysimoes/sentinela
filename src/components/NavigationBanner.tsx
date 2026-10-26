@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationState } from '../types/navigation';
 import { formatDistance } from '../utils/geo';
-import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3Colors, M3Shapes, M3Elevation, M3Typography, M3Motion } from '../theme/m3';
 
 interface NavigationBannerProps {
   navState: NavigationState;
@@ -21,6 +22,46 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
 }) => {
   const currentStep = navState.route.steps[navState.currentStepIndex] || navState.route.steps[0];
 
+  // Material Motion: Entry animation (translateY + opacity)
+  const translateY = useRef(new Animated.Value(-60)).current;
+  const bannerOpacity = useRef(new Animated.Value(0)).current;
+
+  // Material Motion: Step change Shared Axis X transition
+  const stepAnim = useRef(new Animated.Value(1)).current;
+  const prevStepRef = useRef(navState.currentStepIndex);
+
+  useEffect(() => {
+    // Banner entry
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: M3Motion.durations.long1,
+        easing: M3Motion.easings.emphasizedDecelerate,
+        useNativeDriver: true,
+      }),
+      Animated.timing(bannerOpacity, {
+        toValue: 1,
+        duration: M3Motion.durations.medium2,
+        easing: M3Motion.easings.emphasizedDecelerate,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  useEffect(() => {
+    if (prevStepRef.current !== navState.currentStepIndex) {
+      prevStepRef.current = navState.currentStepIndex;
+      // Animate step transition using Material Design Fade Through / Shared Axis
+      stepAnim.setValue(0);
+      Animated.timing(stepAnim, {
+        toValue: 1,
+        duration: M3Motion.durations.medium1,
+        easing: M3Motion.easings.standardDecelerate,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [navState.currentStepIndex]);
+
   const getManeuverIcon = (modifier?: string, type?: string) => {
     if (type === 'arrive') return 'flag';
     if (modifier?.includes('left')) return 'arrow-undo';
@@ -31,7 +72,15 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
   const isSafe = navState.route.isSafe;
 
   return (
-    <View style={styles.container}>
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          opacity: bannerOpacity,
+          transform: [{ translateY }],
+        },
+      ]}
+    >
       {/* Top status indicator */}
       <View style={[styles.statusTag, isSafe ? styles.statusSafe : styles.statusWarning]}>
         <Ionicons
@@ -46,8 +95,26 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
         </Text>
       </View>
 
-      {/* Main instruction row */}
-      <View style={styles.mainRow}>
+      {/* Main instruction row with animated transition */}
+      <Animated.View
+        style={[
+          styles.mainRow,
+          {
+            opacity: stepAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.3, 1],
+            }),
+            transform: [
+              {
+                translateX: stepAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [12, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
         <View style={[styles.turnIconWrap, isSafe ? styles.turnIconSafe : styles.turnIconWarn]}>
           <Ionicons
             name={getManeuverIcon(currentStep?.maneuverModifier, currentStep?.maneuverType) as any}
@@ -68,7 +135,7 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
         <TouchableOpacity onPress={onExit} style={styles.exitBtn} activeOpacity={0.8}>
           <Ionicons name="close" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {/* Bottom ETA bar */}
       <View style={styles.etaBar}>
@@ -93,7 +160,7 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
           {navState.destinationName}
         </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

@@ -9,7 +9,7 @@ import {
   StatusBar as RNStatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
+import { M3Colors, M3Shapes, M3Elevation, M3Motion } from '../theme/m3';
 import Haptics from '../utils/haptics';
 
 export interface InAppAlertData {
@@ -54,17 +54,18 @@ export const MaterialAlertBanner: React.FC<MaterialAlertBannerProps> = ({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       }
 
-      // Animate entry
+      // Animate entry with Material Motion Emphasized Decelerate
       Animated.parallel([
-        Animated.spring(translateY, {
+        Animated.timing(translateY, {
           toValue: 0,
+          duration: M3Motion.durations.medium2,
+          easing: M3Motion.easings.emphasizedDecelerate,
           useNativeDriver: true,
-          tension: 70,
-          friction: 9,
         }),
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 250,
+          duration: M3Motion.durations.medium2,
+          easing: M3Motion.easings.emphasizedDecelerate,
           useNativeDriver: true,
         }),
       ]).start();
@@ -94,15 +95,18 @@ export const MaterialAlertBanner: React.FC<MaterialAlertBannerProps> = ({
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
+    // Animate exit with Material Motion Emphasized Accelerate
     Animated.parallel([
       Animated.timing(translateY, {
         toValue: -80,
-        duration: 220,
+        duration: M3Motion.durations.medium1,
+        easing: M3Motion.easings.emphasizedAccelerate,
         useNativeDriver: true,
       }),
       Animated.timing(opacity, {
         toValue: 0,
-        duration: 200,
+        duration: M3Motion.durations.medium1,
+        easing: M3Motion.easings.emphasizedAccelerate,
         useNativeDriver: true,
       }),
     ]).start(() => {

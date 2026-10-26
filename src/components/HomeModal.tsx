@@ -19,6 +19,7 @@ import { calculateDistanceMeters, formatDistance } from '../utils/geo';
 import { formatDuration } from '../services/routingService';
 import { searchAddressSuggestions, reverseGeocodeCoordinate, AddressSuggestion } from '../services/geocodingService';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
 interface HomeModalProps {
   visible: boolean;
@@ -166,14 +167,9 @@ export const HomeModal: React.FC<HomeModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.overlay}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.header}>
+    <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
+      {/* Header */}
+      <View style={styles.header}>
             <View style={styles.headerTitleWrap}>
               <View style={styles.homeIconCircle}>
                 <Ionicons name="home" size={20} color="#38BDF8" />
@@ -363,9 +359,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({
               )}
             </View>
           )}
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    </M3BottomSheetWrapper>
   );
 };
 

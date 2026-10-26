@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
   Linking,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafePlace, UserLocation } from '../types';
 import { calculateDistanceMeters, formatDistance, getGoogleMapsUrl } from '../utils/geo';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
-import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
+import { M3Colors, M3Shapes, M3Elevation, M3Typography, M3Motion } from '../theme/m3';
 
 interface SafePlaceDetailSheetProps {
   place: SafePlace | null;
@@ -26,6 +27,29 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
   onNavigate,
 }) => {
   if (!place) return null;
+
+  // Material Design 3 Motion: Shared Axis Y Sheet Slide
+  const translateY = useRef(new Animated.Value(350)).current;
+
+  useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: 0,
+      duration: M3Motion.durations.long2,
+      easing: M3Motion.easings.emphasizedDecelerate,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const handleAnimatedClose = () => {
+    Animated.timing(translateY, {
+      toValue: 350,
+      duration: M3Motion.durations.medium1,
+      easing: M3Motion.easings.emphasizedAccelerate,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+    });
+  };
 
   const distanceMeters = userLocation
     ? calculateDistanceMeters(
@@ -92,7 +116,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
   const meta = getTypeMeta();
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { transform: [{ translateY }] }]}>
       {/* Drag handle */}
       <View style={styles.handle} />
 
@@ -103,7 +127,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           <Text style={[styles.typeBadgeText, { color: meta.color }]}>{meta.badgeText}</Text>
         </View>
 
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+        <TouchableOpacity onPress={handleAnimatedClose} style={styles.closeBtn}>
           <Ionicons name="close" size={20} color="#94A3B8" />
         </TouchableOpacity>
       </View>
@@ -183,7 +207,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           <Text style={styles.mapsBtnText}>Abrir no Mapa</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

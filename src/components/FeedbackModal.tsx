@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import Haptics from '../utils/haptics';
 import { submitUserFeedback, FeedbackType } from '../services/feedbackService';
+import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
 interface FeedbackModalProps {
   visible: boolean;
@@ -110,14 +111,9 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={handleClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.overlay}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.header}>
+    <M3BottomSheetWrapper visible={visible} onClose={handleClose} style={styles.sheetContainer}>
+      {/* Header */}
+      <View style={styles.header}>
             <View style={styles.headerTitleWrap}>
               <View style={styles.headerIconBadge}>
                 <Ionicons name="chatbubbles" size={20} color={M3Colors.primary} />
@@ -283,9 +279,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    </M3BottomSheetWrapper>
   );
 };
 

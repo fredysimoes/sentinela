@@ -1,3 +1,5 @@
+import { Easing } from 'react-native';
+
 /**
  * Google Material Design 3 (M3) Design System Tokens for Sentinela
  * Based on official M3 specification: https://m3.material.io/
@@ -131,4 +133,39 @@ export const M3Typography = {
   labelLarge: { fontSize: 14, lineHeight: 20, fontWeight: '600' as const },
   labelMedium: { fontSize: 12, lineHeight: 16, fontWeight: '600' as const },
   labelSmall: { fontSize: 11, lineHeight: 14, fontWeight: '600' as const },
+};
+
+/**
+ * Material Design Motion System Tokens
+ * Conforming to: https://github.com/material-components/material-components-android/blob/master/docs/theming/Motion.md
+ */
+export const M3Motion = {
+  // Motion Durations (MDC Specification)
+  durations: {
+    short1: 50,    // Micro-interactions, radio/checkbox checks
+    short2: 100,   // Tactile press states, ripples
+    medium1: 200,  // Fast exits, icon rotations
+    medium2: 250,  // Banner entries, tooltip fades
+    long1: 300,    // Dialog popups (Shared Axis Z)
+    long2: 350,    // Bottom sheet slide entries (Shared Axis Y)
+    long3: 400,    // Large container transitions
+    long4: 450,    // Complex layout expansions
+    long5: 500,    // Full screen page/route transitions
+  },
+
+  // Motion Easings / Interpolators (MDC Specification)
+  easings: {
+    // Material Emphasized (Default for high-emphasis transforms, sheets, dialogs)
+    emphasized: Easing.bezier(0.2, 0.0, 0.0, 1.0),
+    emphasizedDecelerate: Easing.bezier(0.05, 0.7, 0.1, 1.0), // Elements entering the screen
+    emphasizedAccelerate: Easing.bezier(0.3, 0.0, 0.8, 0.15), // Elements exiting the screen
+
+    // Material Standard (For utility and persistent components like chips, FABs, status pills)
+    standard: Easing.bezier(0.2, 0.0, 0.0, 1.0),
+    standardDecelerate: Easing.bezier(0.0, 0.0, 0.2, 1.0),     // Small elements appearing
+    standardAccelerate: Easing.bezier(0.4, 0.0, 1.0, 1.0),     // Small elements disappearing
+
+    // Linear (For continuous rotations, loaders)
+    linear: Easing.linear,
+  },
 };
