@@ -24,6 +24,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "postinstall": "node scripts/patch-expo-notifications.js",
     "start": "expo start",
     "tunnel": "expo start --tunnel ngrok",
     "android": "expo run:android",
