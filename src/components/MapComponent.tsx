@@ -174,6 +174,10 @@ interface MapComponentProps {
   onMapLongPress?: (coordinate: { latitude: number; longitude: number }) => void;
   onRegionChangeComplete?: (region: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }) => void;
   pickingLocation?: boolean;
+  protestMode?: boolean;
+  isTorchActive?: boolean;
+  onToggleTorch?: () => void;
+  onOpenStrobe?: () => void;
 }
 
 export const MapComponent: React.FC<MapComponentProps> = memo(({
@@ -195,6 +199,10 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   onMapLongPress,
   onRegionChangeComplete,
   pickingLocation = false,
+  protestMode = false,
+  isTorchActive = false,
+  onToggleTorch,
+  onOpenStrobe,
 }) => {
   const mapRef = useRef<MapView | null>(null);
   const [is3DMode, setIs3DMode] = React.useState(false);
@@ -608,6 +616,36 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
 
       {/* Floating Map Controls Column (Compass, 3D/2D, Recenter) */}
       <View style={styles.floatingControlsStack}>
+        {/* Protest Mode Flashlight & Strobe Buttons (placed directly above compass) */}
+        {protestMode && (
+          <>
+            {/* Strobe Button */}
+            <TouchableOpacity
+              style={[styles.floatingControlBtn, styles.protestStrobeBtn]}
+              onPress={onOpenStrobe}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="flash" size={22} color="#EF4444" />
+            </TouchableOpacity>
+
+            {/* Hardware Flashlight Toggle Button */}
+            <TouchableOpacity
+              style={[
+                styles.floatingControlBtn,
+                isTorchActive ? styles.protestTorchBtnActive : styles.protestTorchBtn,
+              ]}
+              onPress={onToggleTorch}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={isTorchActive ? "flashlight" : "flashlight-outline"}
+                size={22}
+                color={isTorchActive ? "#000000" : "#F59E0B"}
+              />
+            </TouchableOpacity>
+          </>
+        )}
+
         {/* Gyroscope/Compass Heading Button */}
         <TouchableOpacity
           style={[styles.floatingControlBtn, followHeading && styles.floatingControlBtnActive]}
@@ -706,6 +744,23 @@ const styles = StyleSheet.create({
   floatingControlBtnActive: {
     borderColor: M3Colors.secondary,
     backgroundColor: M3Colors.secondaryContainer,
+  },
+  protestStrobeBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.18)',
+    borderColor: '#EF4444',
+  },
+  protestTorchBtn: {
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    borderColor: '#F59E0B',
+  },
+  protestTorchBtnActive: {
+    backgroundColor: '#F59E0B',
+    borderColor: '#F59E0B',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 8,
   },
   floatingControlText: {
     color: M3Colors.onSurfaceVariant,

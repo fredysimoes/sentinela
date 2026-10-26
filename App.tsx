@@ -54,7 +54,7 @@ import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedP
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
 import { HomeModal } from './src/components/HomeModal';
 import { SettingsModal } from './src/components/SettingsModal';
-import { ProtestHUD } from './src/components/ProtestHUD';
+import { setTorch } from './src/services/torch';
 import { ProtestLightModal } from './src/components/ProtestLightModal';
 import { ProtestRightsModal } from './src/components/ProtestRightsModal';
 import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
@@ -132,7 +132,8 @@ export default function App() {
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [protestLightMode, setProtestLightMode] = useState<'torch' | 'strobe' | null>(null);
+  const [isTorchActive, setIsTorchActive] = useState(false);
+  const [showStrobeModal, setShowStrobeModal] = useState(false);
   const [showProtestRightsModal, setShowProtestRightsModal] = useState(false);
   const [reportCategory, setReportCategory] = useState<IncidentCategory>('dark_area');
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
@@ -143,36 +144,25 @@ export default function App() {
     type: 'sos_alert' | 'proximity_alert';
   } | null>(null);
 
-  const handleOpenTorch = () => {
+  const handleToggleTorch = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setProtestLightMode('torch');
+    const nextState = !isTorchActive;
+    setIsTorchActive(nextState);
+    await setTorch(nextState);
   };
 
   const handleOpenStrobe = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    setProtestLightMode('strobe');
-  };
-
-  const handleOpenReportPolice = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setReportCategory('police_presence');
-    setTargetCoordinate(null);
-    setShowReportModal(true);
-  };
-
-  const handleExitProtestMode = async () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const updated: NotificationSettings = {
-      ...notificationSettings,
-      protestMode: false,
-    };
-    setNotificationSettings(updated);
-    await saveNotificationSettings(updated);
+    setShowStrobeModal(true);
   };
 
   const handleSaveNotificationSettings = async (newSettings: NotificationSettings) => {
     setNotificationSettings(newSettings);
     await saveNotificationSettings(newSettings);
+    if (!newSettings.protestMode && isTorchActive) {
+      setIsTorchActive(false);
+      await setTorch(false);
+    }
     if (newSettings.enabled && newSettings.backgroundTracking) {
       await startBackgroundLocationTracking();
     } else {
@@ -807,6 +797,10 @@ export default function App() {
             setShowReportModal(true);
           }}
           onRegionChangeComplete={handleRegionChangeComplete}
+          protestMode={!!notificationSettings.protestMode}
+          isTorchActive={isTorchActive}
+          onToggleTorch={handleToggleTorch}
+          onOpenStrobe={handleOpenStrobe}
         />
       </View>
 
@@ -972,17 +966,6 @@ export default function App() {
               })}
             </ScrollView>
           </View>
-
-          {/* Protest Mode Floating Quick Actions HUD */}
-          {notificationSettings.protestMode && (
-            <ProtestHUD
-              onOpenTorch={handleOpenTorch}
-              onOpenStrobe={handleOpenStrobe}
-              onOpenReportPolice={handleOpenReportPolice}
-              onOpenRights={() => setShowProtestRightsModal(true)}
-              onExitProtestMode={handleExitProtestMode}
-            />
-          )}
         </View>
       )}
 
@@ -1149,11 +1132,10 @@ export default function App() {
         userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : null}
       />
 
-      {/* Protest Screen Light / Strobe Beacon Modal */}
+      {/* Protest Screen Strobe Beacon Modal */}
       <ProtestLightModal
-        visible={protestLightMode !== null}
-        mode={protestLightMode || 'torch'}
-        onClose={() => setProtestLightMode(null)}
+        visible={showStrobeModal}
+        onClose={() => setShowStrobeModal(false)}
       />
 
       {/* Protest Portuguese Legal & Constitutional Rights Guide */}

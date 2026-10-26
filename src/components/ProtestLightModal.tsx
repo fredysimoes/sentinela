@@ -8,34 +8,49 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Brightness from 'expo-brightness';
 import Haptics from '../utils/haptics';
 
 interface ProtestLightModalProps {
   visible: boolean;
-  mode: 'torch' | 'strobe';
   onClose: () => void;
 }
 
 export const ProtestLightModal: React.FC<ProtestLightModalProps> = ({
   visible,
-  mode,
   onClose,
 }) => {
   const [strobeState, setStrobeState] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (visible && mode === 'strobe') {
+    if (visible) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+      // Maximize screen brightness for intense strobe effect
+      (async () => {
+        try {
+          await Brightness.setBrightnessAsync(1.0);
+        } catch (e) {
+          console.warn('Could not set max brightness:', e);
+        }
+      })();
+
+      // Rapid high-frequency strobe (~80ms alternating black and white)
       intervalRef.current = setInterval(() => {
         setStrobeState((prev) => !prev);
-      }, 100);
+      }, 80);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
       setStrobeState(false);
+      (async () => {
+        try {
+          await Brightness.restoreSystemBrightnessAsync();
+        } catch (e) {}
+      })();
     }
 
     return () => {
@@ -43,55 +58,60 @@ export const ProtestLightModal: React.FC<ProtestLightModalProps> = ({
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      (async () => {
+        try {
+          await Brightness.restoreSystemBrightnessAsync();
+        } catch (e) {}
+      })();
     };
-  }, [visible, mode]);
+  }, [visible]);
 
   if (!visible) return null;
 
-  const isTorch = mode === 'torch';
-  const backgroundColor = isTorch
-    ? '#FFFFFF'
-    : strobeState
-    ? '#FFFFFF'
-    : '#000000';
+  const backgroundColor = strobeState ? '#FFFFFF' : '#000000';
+  const textColor = strobeState ? '#000000' : '#FFFFFF';
 
-  const textColor = isTorch || strobeState ? '#000000' : '#FFFFFF';
+  const handleStop = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    try {
+      await Brightness.restoreSystemBrightnessAsync();
+    } catch (e) {}
+    onClose();
+  };
 
   return (
     <Modal
       visible={visible}
       animationType="fade"
       transparent={false}
-      onRequestClose={onClose}
+      onRequestClose={handleStop}
       statusBarTranslucent
     >
       <StatusBar hidden={true} />
       <TouchableOpacity
         style={[styles.container, { backgroundColor }]}
         activeOpacity={1}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          onClose();
-        }}
+        onPress={handleStop}
       >
         <View style={styles.contentWrap}>
           <Ionicons
-            name={isTorch ? 'flashlight' : 'flash'}
-            size={48}
+            name="flash"
+            size={56}
             color={textColor}
           />
           <Text style={[styles.title, { color: textColor }]}>
-            {isTorch ? 'LANTERNA DE ECRÃ' : 'MODO STROBE ATIVO'}
+            MODO STROBE
           </Text>
           <Text style={[styles.subtitle, { color: textColor }]}>
-            Toque em qualquer ponto do ecrã para desligar
+            Brilho Máximo • Toque no ecrã para desligar
           </Text>
         </View>
 
         <View style={styles.bottomHintWrap}>
-          <View style={[styles.pill, { borderColor: textColor }]}>
+          <View style={[styles.pill, { borderColor: textColor, backgroundColor: strobeState ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }]}>
+            <Ionicons name="power" size={16} color={textColor} />
             <Text style={[styles.pillText, { color: textColor }]}>
-              {isTorch ? 'Luz Contínua' : 'Sinal Estroboscópico de Alta Visibilidade'}
+              DESLIGAR STROBE
             </Text>
           </View>
         </View>
@@ -111,28 +131,31 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: '900',
-    letterSpacing: 1.5,
+    letterSpacing: 2,
   },
   subtitle: {
     fontSize: 14,
     fontWeight: '600',
-    opacity: 0.8,
+    opacity: 0.85,
   },
   bottomHintWrap: {
     position: 'absolute',
     bottom: 50,
   },
   pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     borderWidth: 1.5,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 24,
   },
   pillText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
 });

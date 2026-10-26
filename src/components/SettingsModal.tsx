@@ -59,7 +59,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     Haptics.notificationAsync(
       val ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning
     );
-    setLocalSettings((prev) => ({ ...prev, protestMode: val }));
+    const updated = { ...localSettings, protestMode: val };
+    setLocalSettings(updated);
+    onSaveSettings(updated);
+  };
+
+  const handleDismiss = () => {
+    onSaveSettings(localSettings);
+    onClose();
   };
 
   const handleExitProtestMode = () => {
@@ -101,7 +108,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       visible={visible}
       animationType="slide"
       transparent={true}
-      onRequestClose={onClose}
+      onRequestClose={handleDismiss}
     >
       <View style={styles.overlay}>
         <View style={styles.sheetContainer}>
@@ -117,7 +124,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </View>
               <TouchableOpacity
                 style={styles.closeBtn}
-                onPress={onClose}
+                onPress={handleDismiss}
                 activeOpacity={0.7}
               >
                 <Ionicons name="close" size={22} color={M3Colors.onSurfaceVariant} />
