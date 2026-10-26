@@ -35,19 +35,26 @@ export async function syncPendingFeedback(): Promise<number> {
     let syncedCount = 0;
 
     for (const item of pendingList) {
-      const { error } = await supabase.from('feedback').insert([
-        {
-          id: item.id,
-          type: item.type,
-          title: item.title,
-          description: item.description,
-          contact_info: item.contactInfo || null,
-          latitude: item.latitude || null,
-          longitude: item.longitude || null,
-          device_info: item.deviceInfo || null,
-          created_at: new Date(item.createdAt).toISOString(),
-        },
-      ]);
+      const payload: any = {
+        id: item.id,
+        type: item.type,
+        title: item.title,
+        description: item.description,
+        contact_info: item.contactInfo || null,
+        latitude: item.latitude || null,
+        longitude: item.longitude || null,
+        device_info: item.deviceInfo || null,
+        created_at: new Date(item.createdAt).toISOString(),
+      };
+
+      let { error } = await supabase.from('feedback').insert([payload]);
+
+      // If database id is numeric/bigint, retry omitting client string id
+      if (error && (error.message.includes('bigint') || error.code === '22P02')) {
+        delete payload.id;
+        const retry = await supabase.from('feedback').insert([payload]);
+        error = retry.error;
+      }
 
       if (!error) {
         syncedCount++;
@@ -108,19 +115,26 @@ export async function submitUserFeedback(feedback: {
   // 2. Forward to Supabase table 'feedback'
   if (isSupabaseConfigured()) {
     try {
-      const { error } = await supabase.from('feedback').insert([
-        {
-          id: item.id,
-          type: item.type,
-          title: item.title,
-          description: item.description,
-          contact_info: item.contactInfo || null,
-          latitude: item.latitude || null,
-          longitude: item.longitude || null,
-          device_info: item.deviceInfo || null,
-          created_at: new Date(item.createdAt).toISOString(),
-        },
-      ]);
+      const payload: any = {
+        id: item.id,
+        type: item.type,
+        title: item.title,
+        description: item.description,
+        contact_info: item.contactInfo || null,
+        latitude: item.latitude || null,
+        longitude: item.longitude || null,
+        device_info: item.deviceInfo || null,
+        created_at: new Date(item.createdAt).toISOString(),
+      };
+
+      let { error } = await supabase.from('feedback').insert([payload]);
+
+      // If database id is numeric/bigint, retry omitting client string id
+      if (error && (error.message.includes('bigint') || error.code === '22P02')) {
+        delete payload.id;
+        const retry = await supabase.from('feedback').insert([payload]);
+        error = retry.error;
+      }
 
       if (error) {
         console.warn('Aviso ao enviar feedback para o Supabase:', error.message);
