@@ -21,6 +21,7 @@ interface SettingsModalProps {
   settings: NotificationSettings;
   onSaveSettings: (settings: NotificationSettings) => void;
   onOpenFeedback?: () => void;
+  onOpenProtestRights?: () => void;
 }
 
 const RADIUS_OPTIONS = [
@@ -36,6 +37,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   settings,
   onSaveSettings,
   onOpenFeedback,
+  onOpenProtestRights,
 }) => {
   const [localSettings, setLocalSettings] = useState<NotificationSettings>(settings);
 
@@ -51,6 +53,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const toggleBackgroundTracking = (val: boolean) => {
     Haptics.impactAsync(ImpactFeedbackStyle.Light);
     setLocalSettings((prev) => ({ ...prev, backgroundTracking: val }));
+  };
+
+  const toggleProtestMode = (val: boolean) => {
+    Haptics.notificationAsync(
+      val ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning
+    );
+    setLocalSettings((prev) => ({ ...prev, protestMode: val }));
+  };
+
+  const handleExitProtestMode = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const updated = { ...localSettings, protestMode: false };
+    setLocalSettings(updated);
+    onSaveSettings(updated);
   };
 
   const setRadius = (radiusMeters: number) => {
@@ -157,6 +173,85 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   thumbColor={localSettings.backgroundTracking ? '#FFFFFF' : '#94A3B8'}
                 />
               </View>
+            </View>
+
+            {/* Protest Mode Card */}
+            <View style={[styles.sectionCard, localSettings.protestMode && styles.protestCardActive]}>
+              <View style={styles.switchRow}>
+                <View style={styles.switchLabelWrap}>
+                  <View style={styles.badgeRow}>
+                    <View style={styles.protestIconPill}>
+                      <Ionicons name="megaphone" size={14} color="#F59E0B" />
+                    </View>
+                    <Text style={[styles.settingTitle, localSettings.protestMode && styles.protestTitleActive]}>
+                      Modo Protesto & Manifestação
+                    </Text>
+                    {localSettings.protestMode && (
+                      <View style={styles.protestActiveBadge}>
+                        <Text style={styles.protestActiveBadgeText}>ATIVO</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.settingDesc}>
+                    Ferramentas dedicadas para manifestações pacíficas: lanterna de alta visibilidade, sinalizador de presença policial, strobe de localização e botão "Estou Bem" no SOS.
+                  </Text>
+                </View>
+                <Switch
+                  value={!!localSettings.protestMode}
+                  onValueChange={toggleProtestMode}
+                  trackColor={{ false: '#333842', true: '#F59E0B' }}
+                  thumbColor={localSettings.protestMode ? '#FFFFFF' : '#94A3B8'}
+                />
+              </View>
+
+              {/* Extended Protest Tools & Info when Active */}
+              {localSettings.protestMode && (
+                <View style={styles.protestDetailsBox}>
+                  <View style={styles.protestFeatureList}>
+                    <View style={styles.protestFeatureItem}>
+                      <Ionicons name="flashlight" size={14} color="#F59E0B" />
+                      <Text style={styles.protestFeatureText}>Lanterna contínua e Modo Strobe no ecrã</Text>
+                    </View>
+                    <View style={styles.protestFeatureItem}>
+                      <Ionicons name="shield" size={14} color="#3B82F6" />
+                      <Text style={styles.protestFeatureText}>Sinalização rápida de presença policial no mapa</Text>
+                    </View>
+                    <View style={styles.protestFeatureItem}>
+                      <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                      <Text style={styles.protestFeatureText}>Botão "Estou Bem" com GPS nos alertas de SOS</Text>
+                    </View>
+                  </View>
+
+                  {/* Constitutional & Legal Rights in PT Law */}
+                  {onOpenProtestRights && (
+                    <TouchableOpacity
+                      style={styles.protestRightsBtn}
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        onClose();
+                        onOpenProtestRights();
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="book-outline" size={16} color="#F59E0B" />
+                      <Text style={styles.protestRightsBtnText}>
+                        Direitos Legais em Manifestações (Lei Portuguesa)
+                      </Text>
+                      <Ionicons name="chevron-forward" size={16} color="#F59E0B" />
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Exit Protest Mode Button */}
+                  <TouchableOpacity
+                    style={styles.exitProtestBtn}
+                    onPress={handleExitProtestMode}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
+                    <Text style={styles.exitProtestBtnText}>Sair do Modo de Protesto</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
 
             {/* Radius Selector */}
@@ -521,5 +616,88 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontSize: 16,
     fontWeight: '800',
+  },
+  protestCardActive: {
+    borderColor: 'rgba(245, 158, 11, 0.4)',
+    backgroundColor: '#1E1B15',
+  },
+  protestTitleActive: {
+    color: '#FBBF24',
+  },
+  protestIconPill: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
+  protestActiveBadge: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  protestActiveBadgeText: {
+    color: '#000000',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  protestDetailsBox: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(245, 158, 11, 0.2)',
+  },
+  protestFeatureList: {
+    gap: 8,
+    marginBottom: 14,
+  },
+  protestFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  protestFeatureText: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  protestRightsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 8,
+    marginBottom: 10,
+  },
+  protestRightsBtnText: {
+    color: '#F59E0B',
+    fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
+  },
+  exitProtestBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  exitProtestBtnText: {
+    color: '#EF4444',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

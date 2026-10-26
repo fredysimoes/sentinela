@@ -4,7 +4,8 @@ export type IncidentCategory =
   | 'harassment'       // Assédio ou agressão verbal/física
   | 'theft_risk'       // Zona com furtos/assaltos recentes
   | 'hazard'           // Passeio cortado / cão solto / perigo na via
-  | 'safe_haven';      // Ponto seguro (farmácia 24h, esquadra, posto aberto)
+  | 'safe_haven'       // Ponto seguro (farmácia 24h, esquadra, posto aberto)
+  | 'police_presence'; // Presença policial / cordão / piquete de controlo
 
 export interface Incident {
   id: string;
@@ -82,5 +83,6 @@ export interface NotificationSettings {
   enabled: boolean;
   radiusMeters: number;
   backgroundTracking: boolean;
+  protestMode?: boolean;
   categories: Record<IncidentCategory, boolean>;
 }

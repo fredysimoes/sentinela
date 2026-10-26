@@ -135,12 +135,14 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: true,
   radiusMeters: 300,
   backgroundTracking: true,
+  protestMode: false,
   categories: {
     theft_risk: true,
     harassment: true,
     suspicious: true,
     hazard: true,
     dark_area: true,
+    police_presence: true,
     safe_haven: false,
   },
 };

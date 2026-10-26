@@ -56,6 +56,15 @@ export const CATEGORIES: Record<IncidentCategory, CategoryMeta> = {
     badgeBg: 'rgba(234, 179, 8, 0.15)',
     severity: 'low',
   },
+  police_presence: {
+    id: 'police_presence',
+    label: 'Presença Policial',
+    description: 'Polícia no local, cordão de segurança ou controlo de manifestação',
+    icon: 'shield',
+    color: '#3B82F6', // Blue
+    badgeBg: 'rgba(59, 130, 246, 0.15)',
+    severity: 'medium',
+  },
   safe_haven: {
     id: 'safe_haven',
     label: 'Ponto Seguro',

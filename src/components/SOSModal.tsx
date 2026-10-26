@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { EmergencyContact, SOSAlert, UserLocation } from '../types';
-import { createAndDispatchSOS, shareSOSToWhatsApp, shareSOSToSMS } from '../services/sos';
+import { createAndDispatchSOS, shareSOSToWhatsApp, shareSOSToSMS, createImSafeMessage } from '../services/sos';
 import { pickContactFromDevice } from '../services/contactPicker';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 
@@ -40,6 +40,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   const [isDispatched, setIsDispatched] = useState(false);
   const [createdAlert, setCreatedAlert] = useState<SOSAlert | null>(null);
   const [shareText, setShareText] = useState('');
+  const [showImSafeView, setShowImSafeView] = useState(false);
 
   const personalContacts = emergencyContacts.filter((c) => c.phone !== '112');
 
@@ -65,11 +66,13 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   useEffect(() => {
     if (visible && !isDispatched) {
       setCountdown(5);
+      setShowImSafeView(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     } else if (!visible) {
       setCountdown(null);
       setIsDispatched(false);
       setCreatedAlert(null);
+      setShowImSafeView(false);
     }
   }, [visible]);
 
@@ -158,14 +161,200 @@ export const SOSModal: React.FC<SOSModalProps> = ({
     setCreatedAlert(null);
     setIsDispatched(false);
     setCountdown(null);
+    setShowImSafeView(false);
     onClose();
+  };
+
+  const handleOpenImSafe = () => {
+    Haptics.selectionAsync();
+    setCountdown(null);
+    setShowImSafeView(true);
+  };
+
+  const handleSendImSafeWhatsApp = (phone?: string) => {
+    const lat = currentLocation?.latitude ?? 38.7223;
+    const lon = currentLocation?.longitude ?? -9.1393;
+    const msg = createImSafeMessage(lat, lon);
+    const targetPhone = phone || personalContacts[0]?.phone;
+    if (!targetPhone) {
+      Alert.alert(
+        'Sem Contacto Definido',
+        'Ainda não tem nenhum número de emergência associado. Deseja escolher um contacto da sua lista telefónica agora?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Escolher Contacto', onPress: handleImportDeviceContact },
+        ]
+      );
+      return;
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    shareSOSToWhatsApp(targetPhone, msg);
+  };
+
+  const handleSendImSafeSMS = (phone?: string) => {
+    const lat = currentLocation?.latitude ?? 38.7223;
+    const lon = currentLocation?.longitude ?? -9.1393;
+    const msg = createImSafeMessage(lat, lon);
+    const targetPhone = phone || personalContacts[0]?.phone;
+    if (!targetPhone) {
+      Alert.alert(
+        'Sem Contacto Definido',
+        'Ainda não tem nenhum número de emergência associado. Deseja escolher um contacto da sua lista telefónica agora?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Escolher Contacto', onPress: handleImportDeviceContact },
+        ]
+      );
+      return;
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    shareSOSToSMS(targetPhone, msg);
   };
 
   return (
     <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          {countdown !== null && countdown > 0 ? (
+          {showImSafeView ? (
+            // I'M SAFE STATE
+            <View style={styles.imSafeBox}>
+              <View style={styles.alertHeader}>
+                <View style={[styles.sirenIcon, { backgroundColor: '#10B981' }]}>
+                  <Ionicons name="shield-checkmark" size={28} color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.imSafeTitle}>Avisar que Estou Bem</Text>
+                  <Text style={styles.imSafeSubtitle}>
+                    Partilhe a sua localização e confirme que está em segurança
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.coordCardSafe}>
+                <Ionicons name="location" size={16} color="#10B981" />
+                <Text style={styles.coordTextSafe}>
+                  GPS: {(currentLocation?.latitude ?? 38.7223).toFixed(4)}, {(currentLocation?.longitude ?? -9.1393).toFixed(4)}
+                </Text>
+              </View>
+
+              <View style={styles.actionsGrid}>
+                {/* WhatsApp */}
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.imSafeWhatsAppBtn]}
+                  onPress={() => handleSendImSafeWhatsApp()}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="logo-whatsapp" size={22} color="#FFFFFF" />
+                  <View>
+                    <Text style={styles.actionBtnTitle}>Enviar "Estou Bem"</Text>
+                    <Text style={styles.actionBtnSub}>
+                      {personalContacts.length > 0
+                        ? `Para ${personalContacts[0].name}`
+                        : 'Via WhatsApp'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* SMS */}
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.imSafeSMSBtn]}
+                  onPress={() => handleSendImSafeSMS()}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="chatbubble-ellipses" size={22} color="#FFFFFF" />
+                  <View>
+                    <Text style={styles.actionBtnTitle}>Enviar por SMS</Text>
+                    <Text style={styles.actionBtnSub}>
+                      {personalContacts.length > 0
+                        ? `Para ${personalContacts[0].name}`
+                        : 'Sem necessidade de dados'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Personal Emergency Contacts Section */}
+              <View style={styles.contactsSection}>
+                <View style={styles.contactsSectionHeader}>
+                  <Text style={styles.contactsSectionTitle}>ESCOLHER CONTACTO ESPECÍFICO</Text>
+                  <TouchableOpacity
+                    onPress={handleImportDeviceContact}
+                    style={styles.addContactSmallBtn}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="person-add" size={13} color="#38BDF8" />
+                    <Text style={styles.addContactSmallText}>+ Contacto</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {personalContacts.length > 0 ? (
+                  personalContacts.map((contact) => (
+                    <View key={contact.id} style={styles.contactSOSCard}>
+                      <View style={[styles.contactAvatar, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                        <Ionicons name="person" size={16} color="#10B981" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.contactSOSName} numberOfLines={1}>
+                          {contact.name}
+                        </Text>
+                        <Text style={styles.contactSOSPhone}>{contact.phone}</Text>
+                      </View>
+                      <View style={styles.contactActionsRow}>
+                        <TouchableOpacity
+                          style={[styles.miniActionBtn, styles.miniWhatsAppBtn]}
+                          onPress={() => handleSendImSafeWhatsApp(contact.phone)}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons name="logo-whatsapp" size={14} color="#FFFFFF" />
+                          <Text style={styles.miniBtnText}>WhatsApp</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[styles.miniActionBtn, styles.miniSMSBtn]}
+                          onPress={() => handleSendImSafeSMS(contact.phone)}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons name="chatbubble" size={12} color="#FFFFFF" />
+                          <Text style={styles.miniBtnText}>SMS</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                ) : (
+                  <TouchableOpacity
+                    style={styles.noContactsWarning}
+                    onPress={handleImportDeviceContact}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="people" size={22} color="#38BDF8" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.noContactsTitle}>Adicionar Contacto da Lista</Text>
+                      <Text style={styles.noContactsSub}>
+                        Para enviar mensagem rápida aos seus familiares
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Close / Return */}
+              <TouchableOpacity
+                style={styles.closeImSafeBtn}
+                onPress={() => {
+                  if (createdAlert && onSOSResolved) {
+                    onSOSResolved(createdAlert.id);
+                  }
+                  setShowImSafeView(false);
+                  onClose();
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="checkmark-done-circle" size={18} color="#FFFFFF" />
+                <Text style={styles.closeImSafeBtnText}>Concluir & Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : countdown !== null && countdown > 0 ? (
             // COUNTDOWN STATE
             <View style={styles.countdownBox}>
               <View style={styles.iconPulseCircle}>
@@ -180,6 +369,16 @@ export const SOSModal: React.FC<SOSModalProps> = ({
               <View style={styles.timerCircle}>
                 <Text style={styles.timerNumber}>{countdown}</Text>
               </View>
+
+              {/* I'M SAFE BUTTON (Direct safe status notification) */}
+              <TouchableOpacity
+                style={styles.imSafeCountdownBtn}
+                onPress={handleOpenImSafe}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="shield-checkmark" size={18} color="#10B981" />
+                <Text style={styles.imSafeCountdownBtnText}>Estou Bem (Avisar Contactos)</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.cancelBtn}
@@ -269,6 +468,16 @@ export const SOSModal: React.FC<SOSModalProps> = ({
                   </View>
                 </TouchableOpacity>
               </View>
+
+              {/* I'm Safe option in dispatched state */}
+              <TouchableOpacity
+                style={styles.imSafeDispatchedBtn}
+                onPress={handleOpenImSafe}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="shield-checkmark" size={18} color="#10B981" />
+                <Text style={styles.imSafeDispatchedBtnText}>Enviar "Estou Bem" aos Contactos</Text>
+              </TouchableOpacity>
 
               {/* Personal Emergency Contacts Section */}
               <View style={styles.contactsSection}>
@@ -633,5 +842,92 @@ const styles = StyleSheet.create({
     color: M3Colors.onSurfaceVariant,
     fontSize: 11,
     marginTop: 2,
+  },
+  imSafeBox: {
+    width: '100%',
+  },
+  imSafeTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: M3Colors.onSurface,
+  },
+  imSafeSubtitle: {
+    fontSize: 12,
+    color: M3Colors.onSurfaceVariant,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  coordCardSafe: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: M3Shapes.small,
+    marginBottom: 16,
+  },
+  coordTextSafe: {
+    color: '#10B981',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  imSafeWhatsAppBtn: {
+    backgroundColor: '#16A34A',
+  },
+  imSafeSMSBtn: {
+    backgroundColor: '#0284C7',
+  },
+  closeImSafeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 13,
+    borderRadius: M3Shapes.full,
+    gap: 8,
+    marginTop: 8,
+  },
+  closeImSafeBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  imSafeCountdownBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1.5,
+    borderColor: '#10B981',
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: M3Shapes.full,
+    gap: 8,
+    marginBottom: 12,
+  },
+  imSafeCountdownBtnText: {
+    color: '#10B981',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  imSafeDispatchedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: M3Shapes.full,
+    gap: 8,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  imSafeDispatchedBtnText: {
+    color: '#10B981',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

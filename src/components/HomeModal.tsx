@@ -262,10 +262,25 @@ export const HomeModal: React.FC<HomeModalProps> = ({
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Privacy Guarantee Banner */}
+              <View style={styles.privacyCard}>
+                <Ionicons name="shield-checkmark" size={16} color="#10B981" />
+                <Text style={styles.privacyCardText}>
+                  Privacidade 100% Local: Esta morada é armazenada exclusivamente na memória encriptada do seu telemóvel e nunca é enviada para a nuvem nem para terceiros.
+                </Text>
+              </View>
             </View>
           ) : (
             // Set / Edit Home Screen
             <View style={styles.content}>
+              {/* Privacy Notice Banner */}
+              <View style={[styles.privacyCard, { marginBottom: 14 }]}>
+                <Ionicons name="lock-closed" size={16} color="#38BDF8" />
+                <Text style={styles.privacyCardText}>
+                  Privacidade Garantida: A sua morada fica gravada apenas no telemóvel para cálculo de rotas seguras e nunca sai do seu dispositivo.
+                </Text>
+              </View>
               {/* Option A: Use Current Location */}
               <TouchableOpacity
                 style={styles.currentLocBtn}
@@ -588,5 +603,24 @@ const styles = StyleSheet.create({
     color: M3Colors.onSurfaceVariant,
     fontSize: 13,
     fontWeight: '600',
+  },
+  privacyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 10,
+    marginTop: 14,
+  },
+  privacyCardText: {
+    flex: 1,
+    color: '#A6F4C5',
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '500',
   },
 });

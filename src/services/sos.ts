@@ -51,6 +51,11 @@ export async function createAndDispatchSOS(params: {
   };
 }
 
+export function createImSafeMessage(latitude: number, longitude: number): string {
+  const mapUrl = getGoogleMapsUrl(latitude, longitude);
+  return `✅ *ESTOU BEM E EM SEGURANÇA*\nNão te preocupes, está tudo tranquilo comigo!\n📍 A minha localização atual:\n🗺️ ${mapUrl}\n(Enviado via app Sentinela)`;
+}
+
 export function normalizePhoneForWhatsApp(phone: string): string {
   let cleaned = phone.replace(/[^\d+]/g, '');
   if (cleaned.startsWith('+')) {

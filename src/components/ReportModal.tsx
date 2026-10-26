@@ -22,6 +22,7 @@ interface ReportModalProps {
   onSubmit: (incident: Omit<Incident, 'id' | 'createdAt' | 'confirmations' | 'dismissals'>) => void;
   currentLocation: UserLocation | null;
   targetCoordinate: { latitude: number; longitude: number } | null;
+  initialCategory?: IncidentCategory;
 }
 
 export const ReportModal: React.FC<ReportModalProps> = ({
@@ -30,10 +31,17 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   onSubmit,
   currentLocation,
   targetCoordinate,
+  initialCategory = 'dark_area',
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<IncidentCategory>('dark_area');
+  const [selectedCategory, setSelectedCategory] = useState<IncidentCategory>(initialCategory);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+
+  React.useEffect(() => {
+    if (visible && initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [visible, initialCategory]);
 
   const reportCoord = targetCoordinate || {
     latitude: currentLocation?.latitude ?? 38.7223,

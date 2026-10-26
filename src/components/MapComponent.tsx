@@ -200,6 +200,19 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   const [is3DMode, setIs3DMode] = React.useState(false);
   const [followHeading, setFollowHeading] = React.useState(false);
   const [isUserInteracting, setIsUserInteracting] = React.useState(false);
+  const [mapCenter, setMapCenter] = React.useState<{ latitude: number; longitude: number } | null>(null);
+
+  const handleRegionChange = (region: {
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  }) => {
+    setMapCenter({ latitude: region.latitude, longitude: region.longitude });
+    if (onRegionChangeComplete) {
+      onRegionChangeComplete(region);
+    }
+  };
 
   const initialRegion = {
     latitude: userLocation?.latitude ?? 38.7223,
@@ -338,19 +351,36 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
     }
   };
 
-  // Memoized filter of safe places (limits visible markers to 60 to prevent Android frame drops)
+  // Memoized filter of safe places (prioritizes places near current map center / view)
   const filteredSafePlaces = useMemo(() => {
+    const center = mapCenter || (userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : { latitude: 38.7223, longitude: -9.1393 });
+
+    const sortByDistanceToCenter = (list: SafePlaceWithDistance[]) => {
+      return [...list].sort((a, b) => {
+        const distA = Math.hypot(a.latitude - center.latitude, a.longitude - center.longitude);
+        const distB = Math.hypot(b.latitude - center.latitude, b.longitude - center.longitude);
+        return distA - distB;
+      });
+    };
+
     if (selectedCategoryFilter === 'police') {
-      return safePlaces.filter((p) => p.type === 'psp' || p.type === 'gnr' || p.type === 'pj');
+      const police = safePlaces.filter((p) => p.type === 'psp' || p.type === 'gnr' || p.type === 'pj');
+      return sortByDistanceToCenter(police).slice(0, 50);
     }
+
     if (selectedCategoryFilter === 'pharmacy') {
-      return safePlaces.filter((p) => p.type === 'pharmacy').slice(0, 50);
+      const pharmacies = safePlaces.filter((p) => p.type === 'pharmacy');
+      return sortByDistanceToCenter(pharmacies).slice(0, 60);
     }
-    // 'all': Show all police stations + nearest 35 pharmacies
+
+    // 'all': Show nearest 30 police stations + nearest 40 pharmacies to visible map center
     const police = safePlaces.filter((p) => p.type === 'psp' || p.type === 'gnr' || p.type === 'pj');
-    const pharmacies = safePlaces.filter((p) => p.type === 'pharmacy').slice(0, 35);
-    return [...police, ...pharmacies];
-  }, [safePlaces, selectedCategoryFilter]);
+    const pharmacies = safePlaces.filter((p) => p.type === 'pharmacy');
+    const nearestPolice = sortByDistanceToCenter(police).slice(0, 30);
+    const nearestPharmacies = sortByDistanceToCenter(pharmacies).slice(0, 40);
+
+    return [...nearestPolice, ...nearestPharmacies];
+  }, [safePlaces, selectedCategoryFilter, mapCenter, userLocation]);
 
   // Memoized filter of incidents
   const filteredIncidents = useMemo(() => {
@@ -375,7 +405,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
         userInterfaceStyle="dark"
         customMapStyle={GOOGLE_MAPS_DARK_STYLE}
         onPanDrag={() => setIsUserInteracting(true)}
-        onRegionChangeComplete={onRegionChangeComplete}
+        onRegionChangeComplete={handleRegionChange}
         onPoiClick={(e) => {
           if (onSelectMapPoint) {
             onSelectMapPoint({

@@ -54,6 +54,9 @@ import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedP
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
 import { HomeModal } from './src/components/HomeModal';
 import { SettingsModal } from './src/components/SettingsModal';
+import { ProtestHUD } from './src/components/ProtestHUD';
+import { ProtestLightModal } from './src/components/ProtestLightModal';
+import { ProtestRightsModal } from './src/components/ProtestRightsModal';
 import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
 import { FeedbackModal } from './src/components/FeedbackModal';
 import { syncPendingFeedback } from './src/services/feedbackService';
@@ -129,6 +132,9 @@ export default function App() {
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [protestLightMode, setProtestLightMode] = useState<'torch' | 'strobe' | null>(null);
+  const [showProtestRightsModal, setShowProtestRightsModal] = useState(false);
+  const [reportCategory, setReportCategory] = useState<IncidentCategory>('dark_area');
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activeBanner, setActiveBanner] = useState<{
@@ -136,6 +142,33 @@ export default function App() {
     body: string;
     type: 'sos_alert' | 'proximity_alert';
   } | null>(null);
+
+  const handleOpenTorch = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setProtestLightMode('torch');
+  };
+
+  const handleOpenStrobe = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setProtestLightMode('strobe');
+  };
+
+  const handleOpenReportPolice = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setReportCategory('police_presence');
+    setTargetCoordinate(null);
+    setShowReportModal(true);
+  };
+
+  const handleExitProtestMode = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const updated: NotificationSettings = {
+      ...notificationSettings,
+      protestMode: false,
+    };
+    setNotificationSettings(updated);
+    await saveNotificationSettings(updated);
+  };
 
   const handleSaveNotificationSettings = async (newSettings: NotificationSettings) => {
     setNotificationSettings(newSettings);
@@ -939,6 +972,17 @@ export default function App() {
               })}
             </ScrollView>
           </View>
+
+          {/* Protest Mode Floating Quick Actions HUD */}
+          {notificationSettings.protestMode && (
+            <ProtestHUD
+              onOpenTorch={handleOpenTorch}
+              onOpenStrobe={handleOpenStrobe}
+              onOpenReportPolice={handleOpenReportPolice}
+              onOpenRights={() => setShowProtestRightsModal(true)}
+              onExitProtestMode={handleExitProtestMode}
+            />
+          )}
         </View>
       )}
 
@@ -1044,10 +1088,14 @@ export default function App() {
       {/* Report Modal */}
       <ReportModal
         visible={showReportModal}
-        onClose={() => setShowReportModal(false)}
+        onClose={() => {
+          setShowReportModal(false);
+          setReportCategory('dark_area');
+        }}
         onSubmit={handleAddIncident}
         currentLocation={userLocation}
         targetCoordinate={targetCoordinate}
+        initialCategory={notificationSettings.protestMode && reportCategory === 'dark_area' ? 'police_presence' : reportCategory}
       />
 
       {/* SOS Modal */}
@@ -1091,6 +1139,7 @@ export default function App() {
         settings={notificationSettings}
         onSaveSettings={handleSaveNotificationSettings}
         onOpenFeedback={() => setShowFeedbackModal(true)}
+        onOpenProtestRights={() => setShowProtestRightsModal(true)}
       />
 
       {/* Feedback & Bug Reporting Modal */}
@@ -1098,6 +1147,19 @@ export default function App() {
         visible={showFeedbackModal}
         onClose={() => setShowFeedbackModal(false)}
         userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : null}
+      />
+
+      {/* Protest Screen Light / Strobe Beacon Modal */}
+      <ProtestLightModal
+        visible={protestLightMode !== null}
+        mode={protestLightMode || 'torch'}
+        onClose={() => setProtestLightMode(null)}
+      />
+
+      {/* Protest Portuguese Legal & Constitutional Rights Guide */}
+      <ProtestRightsModal
+        visible={showProtestRightsModal}
+        onClose={() => setShowProtestRightsModal(false)}
       />
     </SafeAreaView>
   );
