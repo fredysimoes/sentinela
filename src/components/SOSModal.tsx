@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { EmergencyContact, SOSAlert, UserLocation } from '../types';
 import { createAndDispatchSOS, shareSOSToWhatsApp, shareSOSToSMS, createImSafeMessage } from '../services/sos';
+import { TvdeTripSession, formatTvdeSOSContext } from '../services/tvdeService';
 import { loadDeviceContactsList, DeviceContactItem } from '../services/contactPicker';
 import { ContactPickerModal } from './ContactPickerModal';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
@@ -27,6 +28,7 @@ interface SOSModalProps {
   onSOSCreated: (alert: SOSAlert) => void;
   onUpdateContacts?: (contacts: EmergencyContact[]) => void;
   onSOSResolved?: (alertId?: string) => void;
+  activeTvdeTrip?: TvdeTripSession | null;
 }
 
 export const SOSModal: React.FC<SOSModalProps> = ({
@@ -37,6 +39,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   onSOSCreated,
   onUpdateContacts,
   onSOSResolved,
+  activeTvdeTrip,
 }) => {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isDispatched, setIsDispatched] = useState(false);
@@ -111,6 +114,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
     const result = await createAndDispatchSOS({
       latitude: lat,
       longitude: lon,
+      message: activeTvdeTrip ? formatTvdeSOSContext(activeTvdeTrip) : undefined,
     });
 
     setCreatedAlert(result.alert);

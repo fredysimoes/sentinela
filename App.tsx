@@ -72,6 +72,17 @@ import { AuthModal } from './src/components/AuthModal';
 import { SentinelsModal } from './src/components/SentinelsModal';
 import { StalkingActiveModal } from './src/components/StalkingActiveModal';
 import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
+import { TvdeTripModal } from './src/components/TvdeTripModal';
+import {
+  TvdeTripSession,
+  ParsedTvdeDraft,
+  loadActiveTvdeTrip,
+  saveActiveTvdeTrip,
+  checkPendingSharedTrip,
+  checkPendingNotificationTrip,
+  subscribeToTvdeNativeEvents,
+  parseAndEnrichTvdeTrip,
+} from './src/services/tvdeService';
 import { onAuthStateChange, UserProfile, signOutUser, initAuthDeepLinkListener } from './src/services/authService';
 import { fetchMySentinels, SentinelContact } from './src/services/sentinelsService';
 import {
@@ -174,6 +185,93 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSentinelsModal, setShowSentinelsModal] = useState(false);
   const [showIncomingTrackerModal, setShowIncomingTrackerModal] = useState(false);
+
+  // TVDE Ride Protection States (Uber / Bolt / Táxi)
+  const [showTvdeModal, setShowTvdeModal] = useState(false);
+  const [activeTvdeTrip, setActiveTvdeTrip] = useState<TvdeTripSession | null>(null);
+  const [incomingTvdeDraft, setIncomingTvdeDraft] = useState<ParsedTvdeDraft | null>(null);
+
+  useEffect(() => {
+    // Load any persisted active TVDE trip
+    loadActiveTvdeTrip().then((savedTrip) => {
+      if (savedTrip) {
+        setActiveTvdeTrip(savedTrip);
+      }
+    });
+
+    // Check if Android launched the app via Share Sheet ("Partilhar Viagem" from Uber/Bolt)
+    checkPendingSharedTrip().then(async (shared) => {
+      if (shared && shared.text) {
+        const parsed = await parseAndEnrichTvdeTrip(
+          `${shared.subject ? shared.subject + ' ' : ''}${shared.text}`,
+          'share_sheet'
+        );
+        setIncomingTvdeDraft(parsed);
+        setShowTvdeModal(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    });
+
+    // Check if Android NotificationListener captured a pending Uber/Bolt trip notification
+    checkPendingNotificationTrip().then(async (notif) => {
+      if (notif) {
+        const combined = [notif.title, notif.text, notif.bigText].filter(Boolean).join(' • ');
+        const parsed = await parseAndEnrichTvdeTrip(combined, 'notification', notif.packageName);
+        setIncomingTvdeDraft(parsed);
+        setShowTvdeModal(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      }
+    });
+
+    // Subscribe to real-time Share Sheet and NotificationListener events while app is open/backgrounded
+    const unsubscribeTvde = subscribeToTvdeNativeEvents({
+      onSharedTrip: async (shared) => {
+        if (!shared?.text) return;
+        const parsed = await parseAndEnrichTvdeTrip(
+          `${shared.subject ? shared.subject + ' ' : ''}${shared.text}`,
+          'share_sheet'
+        );
+        setIncomingTvdeDraft(parsed);
+        setShowTvdeModal(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      },
+      onNotificationTrip: async (notif) => {
+        const combined = [notif.title, notif.text, notif.bigText].filter(Boolean).join(' • ');
+        if (!combined) return;
+        const parsed = await parseAndEnrichTvdeTrip(combined, 'notification', notif.packageName);
+        setIncomingTvdeDraft(parsed);
+        setActiveBanner({
+          title: `Viagem ${parsed.platform} Detetada`,
+          body: [
+            parsed.licensePlate ? `Matrícula: ${parsed.licensePlate}` : '',
+            parsed.vehicleModel || '',
+            parsed.driverName ? `Motorista: ${parsed.driverName}` : '',
+          ]
+            .filter(Boolean)
+            .join(' • ') || 'Toque em Viagem TVDE para ativar o acompanhamento.',
+          type: 'proximity_alert',
+        });
+        setShowTvdeModal(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      },
+    });
+
+    return () => {
+      unsubscribeTvde();
+    };
+  }, []);
+
+  const handleStartTvdeTrip = async (trip: TvdeTripSession) => {
+    setActiveTvdeTrip(trip);
+    setIncomingTvdeDraft(null);
+    await saveActiveTvdeTrip(trip);
+  };
+
+  const handleEndTvdeTrip = async () => {
+    setActiveTvdeTrip(null);
+    setIncomingTvdeDraft(null);
+    await saveActiveTvdeTrip(null);
+  };
 
   const handleToggleTorch = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -1225,6 +1323,35 @@ export default function App() {
                 </Text>
               </M3Pressable>
 
+              {/* TVDE (Uber / Bolt) Quick Protection Chip */}
+              <M3Pressable
+                scaleOnPress={0.94}
+                style={[
+                  styles.filterChip,
+                  activeTvdeTrip && styles.filterChipTvdeActive,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setShowTvdeModal(true);
+                }}
+              >
+                <Ionicons
+                  name="car-sport"
+                  size={14}
+                  color={activeTvdeTrip ? '#0F172A' : '#38BDF8'}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    activeTvdeTrip && styles.filterChipTextTvdeActive,
+                  ]}
+                >
+                  {activeTvdeTrip
+                    ? `${activeTvdeTrip.platform} • ${activeTvdeTrip.licensePlate || 'Em Curso'}`
+                    : 'Viagem TVDE'}
+                </Text>
+              </M3Pressable>
+
               {/* Police Quick Chip */}
               <M3Pressable
                 scaleOnPress={0.94}
@@ -1357,6 +1484,44 @@ export default function App() {
               })}
             </ScrollView>
           </View>
+
+          {/* Active TVDE Trip Protection Floating Banner */}
+          {activeTvdeTrip && (
+            <M3Pressable
+              scaleOnPress={0.98}
+              style={styles.tvdeActiveBanner}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setShowTvdeModal(true);
+              }}
+            >
+              <View style={styles.tvdeBannerIconCircle}>
+                <MaterialCommunityIcons name="shield-car" size={20} color="#0F172A" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.tvdeBannerTopRow}>
+                  <Text style={styles.tvdeBannerTitle}>
+                    Viagem {activeTvdeTrip.platform} Protegida
+                  </Text>
+                  {activeTvdeTrip.licensePlate ? (
+                    <View style={styles.tvdeMiniPlate}>
+                      <Text style={styles.tvdeMiniPlateText}>{activeTvdeTrip.licensePlate}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={styles.tvdeBannerSub} numberOfLines={1}>
+                  {[
+                    activeTvdeTrip.vehicleModel,
+                    activeTvdeTrip.driverName ? `Condutor: ${activeTvdeTrip.driverName}` : '',
+                    activeTvdeTrip.destination ? `Destino: ${activeTvdeTrip.destination}` : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' • ') || 'Toque para gerir ou partilhar dados da viagem'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#38BDF8" />
+            </M3Pressable>
+          )}
         </View>
       )}
 
@@ -1506,6 +1671,24 @@ export default function App() {
         onSOSCreated={handleSOSCreated}
         onUpdateContacts={handleSaveContacts}
         onSOSResolved={handleResolveSOS}
+        activeTvdeTrip={activeTvdeTrip}
+      />
+
+      {/* TVDE Ride Protection Modal (Uber / Bolt / Táxi) */}
+      <TvdeTripModal
+        visible={showTvdeModal}
+        onClose={() => setShowTvdeModal(false)}
+        activeTrip={activeTvdeTrip}
+        incomingDraft={incomingTvdeDraft}
+        onStartTrip={handleStartTvdeTrip}
+        onEndTrip={handleEndTvdeTrip}
+        onTriggerSOSWithTrip={(trip) => {
+          setActiveTvdeTrip(trip);
+          setShowSOSModal(true);
+        }}
+        userLocation={userLocation}
+        homeAddress={homeAddress}
+        emergencyContacts={emergencyContacts}
       />
 
       {/* Emergency Contacts Modal */}
@@ -1644,6 +1827,65 @@ const styles = StyleSheet.create({
   filterChipTextHomeActive: {
     color: M3Colors.onPrimaryContainer,
     fontWeight: '700',
+  },
+  filterChipTvdeActive: {
+    backgroundColor: '#38BDF8',
+    borderColor: '#7DD3FC',
+  },
+  filterChipTextTvdeActive: {
+    color: '#0F172A',
+    fontWeight: '800',
+  },
+  tvdeActiveBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 14,
+    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: 'rgba(15, 23, 42, 0.96)',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    ...M3Elevation.level3,
+  },
+  tvdeBannerIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#38BDF8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tvdeBannerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tvdeBannerTitle: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  tvdeMiniPlate: {
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    borderLeftWidth: 4,
+    borderLeftColor: '#1D4ED8',
+  },
+  tvdeMiniPlateText: {
+    color: '#0F172A',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  tvdeBannerSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
   },
   filterChipActivePolice: {
     backgroundColor: '#1D4ED8',

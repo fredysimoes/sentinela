@@ -9,7 +9,10 @@ import com.facebook.react.uimanager.ViewManager
 
 class TorchPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return listOf(TorchModule(reactContext))
+        return listOf(
+            TorchModule(reactContext),
+            TvdeBridgeModule(reactContext)
+        )
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<View, ReactShadowNode<*>>> {
