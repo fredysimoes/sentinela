@@ -435,9 +435,9 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
         return false;
       }
 
-      // Infiltrator caution rule: only show publicly on map after verification threshold (>= 2 signals within 300m)
+      // Infiltrator caution rule: only show publicly on map after verification threshold (>= 3 signals within 300m, i.e. > 2 users)
       if (item.category === 'protest_infiltrator') {
-        return isProtestInfiltratorVerified(item, incidents, 300, 2);
+        return isProtestInfiltratorVerified(item, incidents, 300, 3);
       }
 
       return true;

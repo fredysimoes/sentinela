@@ -65,14 +65,39 @@ export function countNearbyReporters(
 }
 
 /**
- * Checks if a protest infiltrator incident has reached the community verification threshold (>= 2 signals within 300m)
+ * Counts total protest infiltrator signals (reports + confirmations) within a given radius in meters.
+ */
+export function countNearbyInfiltratorSignals(
+  location: { latitude: number; longitude: number },
+  allIncidents: Array<{ id: string; category: string; latitude: number; longitude: number; confirmations?: number }>,
+  radiusMeters: number = 300
+): number {
+  let totalSignals = 0;
+  for (const item of allIncidents) {
+    if (item.category === 'protest_infiltrator') {
+      const dist = calculateDistanceMeters(
+        location.latitude,
+        location.longitude,
+        item.latitude,
+        item.longitude
+      );
+      if (dist <= radiusMeters) {
+        totalSignals += Math.max(1, item.confirmations || 1);
+      }
+    }
+  }
+  return totalSignals;
+}
+
+/**
+ * Checks if a protest infiltrator incident has reached the community verification threshold (>= 3 signals within 300m, i.e., more than 2 reporters)
  * to be displayed publicly on the map.
  */
 export function isProtestInfiltratorVerified(
   incident: { id: string; category: string; latitude: number; longitude: number; confirmations?: number },
   allIncidents: Array<{ id: string; category: string; latitude: number; longitude: number; confirmations?: number }>,
   radiusMeters: number = 300,
-  minSignalsThreshold: number = 2
+  minSignalsThreshold: number = 3
 ): boolean {
   if (incident.category !== 'protest_infiltrator') return true;
 
@@ -81,21 +106,11 @@ export function isProtestInfiltratorVerified(
     return true;
   }
 
-  // Count distinct infiltrator reports and additional confirmations in the 300m area
-  let totalSignals = 0;
-  for (const other of allIncidents) {
-    if (other.category === 'protest_infiltrator') {
-      const dist = calculateDistanceMeters(
-        incident.latitude,
-        incident.longitude,
-        other.latitude,
-        other.longitude
-      );
-      if (dist <= radiusMeters) {
-        totalSignals += Math.max(1, other.confirmations || 1);
-      }
-    }
-  }
+  const totalSignals = countNearbyInfiltratorSignals(
+    { latitude: incident.latitude, longitude: incident.longitude },
+    allIncidents,
+    radiusMeters
+  );
 
   return totalSignals >= minSignalsThreshold;
 }

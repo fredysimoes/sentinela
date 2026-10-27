@@ -13,7 +13,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { Incident, IncidentCategory, UserLocation } from '../types';
 import { CATEGORIES } from '../constants/categories';
-import { countNearbyReporters } from '../utils/geo';
+import { countNearbyInfiltratorSignals } from '../utils/geo';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
@@ -49,29 +49,26 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     longitude: currentLocation?.longitude ?? -9.1393,
   };
 
-  // Count active reporters within 300 meters
-  const nearbyReportersCount = useMemo(() => {
-    return countNearbyReporters(reportCoord, incidents, 300);
+  // Count active infiltrator signals within 300 meters
+  const nearbyInfiltratorSignals = useMemo(() => {
+    return countNearbyInfiltratorSignals(reportCoord, incidents, 300);
   }, [reportCoord, incidents]);
-
-  // Infiltrator report button is only unlocked when protest mode is active AND > 2 users are reporting within 300m
-  const canReportInfiltrator = !!protestMode && nearbyReportersCount > 2;
 
   useEffect(() => {
     if (visible && initialCategory) {
-      if (initialCategory === 'protest_infiltrator' && !canReportInfiltrator) {
+      if (initialCategory === 'protest_infiltrator' && !protestMode) {
         setSelectedCategory('dark_area');
       } else {
         setSelectedCategory(initialCategory);
       }
     }
-  }, [visible, initialCategory, canReportInfiltrator]);
+  }, [visible, initialCategory, protestMode]);
 
   useEffect(() => {
-    if (selectedCategory === 'protest_infiltrator' && !canReportInfiltrator) {
+    if (selectedCategory === 'protest_infiltrator' && !protestMode) {
       setSelectedCategory('dark_area');
     }
-  }, [canReportInfiltrator, selectedCategory]);
+  }, [protestMode, selectedCategory]);
 
   const handleSelectCategory = (cat: IncidentCategory) => {
     Haptics.selectionAsync();
@@ -94,10 +91,19 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       });
 
       if (selectedCategory === 'protest_infiltrator') {
-        Alert.alert(
-          'Sinalização Registada',
-          'O seu reporte preventivo foi registado. Para segurança coletiva e prevenção de alarmismo, o alerta só será divulgado publicamente no mapa após validação comunitária num raio de 300m.'
-        );
+        const nextTotal = nearbyInfiltratorSignals + 1;
+        if (nextTotal >= 3) {
+          Alert.alert(
+            'Alerta Publicado no Mapa',
+            'Com a sua sinalização foi atingido o limiar de verificação comunitária (3 ou mais sinalizações num raio de 300m). O marcador de possíveis infiltrados está agora visível no mapa.'
+          );
+        } else {
+          const remaining = Math.max(1, 3 - nextTotal);
+          Alert.alert(
+            'Sinalização Registada',
+            `A sua sinalização foi registada (${nextTotal}/3 num raio de 300m). Por precaução e para evitar alarmismo, o marcador só ficará visível no mapa quando mais ${remaining === 1 ? '1 pessoa sinalizar' : `${remaining} pessoas sinalizarem`} nesta zona.`
+          );
+        }
       }
 
       setTitle('');
@@ -108,8 +114,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     // Caution confirmation specifically for infiltrator reports
     if (selectedCategory === 'protest_infiltrator') {
       Alert.alert(
-        'Aviso de Cautela e Responsabilidade',
-        'A sinalização de possíveis infiltrados deve ser feita com máxima ponderação para evitar alarmismo injustificado ou incidentes. Confirma que presenciou diretamente comportamentos de incitamento à desordem ou provocação deliberada?',
+        'Aviso de Cautela e Visibilidade',
+        'A sinalização de possíveis infiltrados deve ser usada com máxima cautela. Este marcador só aparecerá visível no mapa depois de mais de 2 utilizadores (mínimo de 3 sinalizações num raio de 300m) reportarem a situação na mesma zona. Confirma que presenciou comportamentos de provocação deliberada?',
         [
           { text: 'Cancelar', style: 'cancel' },
           {
@@ -127,7 +133,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
   const meta = CATEGORIES[selectedCategory] || CATEGORIES.suspicious;
 
-  // Filter general categories grid: exclude protest_infiltrator so it is only triggered via the verified protest button
+  // Filter general categories grid: exclude protest_infiltrator so it is only triggered via the dedicated Protest Mode button
   const availableCategories = (Object.keys(CATEGORIES) as IncidentCategory[]).filter(
     (catKey) => catKey !== 'protest_infiltrator'
   );
@@ -182,75 +188,51 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </TouchableOpacity>
         )}
 
-        {/* Protest Mode - Infiltrator Danger Action Button (Only visible in Protest Mode) */}
+        {/* Protest Mode - Infiltrator Danger Action Button (Always available when Protest Mode is active) */}
         {protestMode && (
-          canReportInfiltrator ? (
-            <TouchableOpacity
-              style={[
-                styles.infiltratorAlertCard,
-                selectedCategory === 'protest_infiltrator' && styles.infiltratorAlertCardActive,
-              ]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                handleSelectCategory('protest_infiltrator');
-                if (!title) {
-                  setTitle('Possíveis Infiltrados na Manifestação');
-                }
-              }}
-              activeOpacity={0.8}
-            >
-              <View style={styles.infiltratorIconCircle}>
-                <Ionicons name="eye-off" size={22} color="#FFFFFF" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={styles.infiltratorTitleRow}>
-                  <Text style={styles.infiltratorTitle}>Possíveis Infiltrados</Text>
-                  <View style={styles.infiltratorBadge}>
-                    <Ionicons name="shield-checkmark" size={10} color="#EF4444" style={{ marginRight: 3 }} />
-                    <Text style={styles.infiltratorBadgeText}>Modo Protesto</Text>
-                  </View>
+          <TouchableOpacity
+            style={[
+              styles.infiltratorAlertCard,
+              selectedCategory === 'protest_infiltrator' && styles.infiltratorAlertCardActive,
+            ]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              handleSelectCategory('protest_infiltrator');
+              if (!title) {
+                setTitle('Possíveis Infiltrados na Manifestação');
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.infiltratorIconCircle}>
+              <Ionicons name="eye-off" size={22} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.infiltratorTitleRow}>
+                <Text style={styles.infiltratorTitle}>Possíveis Infiltrados</Text>
+                <View style={styles.infiltratorBadge}>
+                  <Ionicons name="shield-checkmark" size={10} color="#EF4444" style={{ marginRight: 3 }} />
+                  <Text style={styles.infiltratorBadgeText}>Modo Protesto</Text>
                 </View>
-                <Text style={styles.infiltratorSub}>
-                  Sinalizar provocadores ou desestabilizadores violentos. Utilizar com máxima responsabilidade.
+              </View>
+              <Text style={styles.infiltratorSub}>
+                Sinalizar provocadores na manifestação. Usar com cautela: o marcador só aparece no mapa quando mais pessoas sinalizarem (mín. 3 num raio de 300m).
+              </Text>
+              <View style={styles.infiltratorMetaRow}>
+                <Ionicons name="people" size={12} color="#FCA5A5" />
+                <Text style={styles.infiltratorMetaText}>
+                  {nearbyInfiltratorSignals >= 3
+                    ? `Visível no mapa (${nearbyInfiltratorSignals} sinalizações num raio de 300m)`
+                    : `${nearbyInfiltratorSignals} de 3 sinalizações num raio de 300m para aparecer no mapa`}
                 </Text>
-                <View style={styles.infiltratorMetaRow}>
-                  <Ionicons name="people" size={12} color="#EF4444" />
-                  <Text style={styles.infiltratorMetaText}>
-                    {nearbyReportersCount} utilizadores a reportar num raio de 300m
-                  </Text>
-                </View>
-              </View>
-              <Ionicons
-                name={selectedCategory === 'protest_infiltrator' ? 'checkmark-circle' : 'chevron-forward'}
-                size={20}
-                color={selectedCategory === 'protest_infiltrator' ? '#FFFFFF' : '#EF4444'}
-              />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.infiltratorLockedCard}>
-              <View style={styles.infiltratorLockedIconCircle}>
-                <Ionicons name="lock-closed" size={20} color="#64748B" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={styles.infiltratorTitleRow}>
-                  <Text style={styles.infiltratorLockedTitle}>Sinalizar Infiltrados (Bloqueado)</Text>
-                  <View style={styles.lockedBadge}>
-                    <Ionicons name="shield-outline" size={10} color="#94A3B8" style={{ marginRight: 3 }} />
-                    <Text style={styles.lockedBadgeText}>Cautela</Text>
-                  </View>
-                </View>
-                <Text style={styles.infiltratorLockedSub}>
-                  Função de alta sensibilidade. Requer mais de 2 utilizadores a reportar num raio de 300m para prevenir alarmismo falso.
-                </Text>
-                <View style={styles.infiltratorMetaRow}>
-                  <Ionicons name="people-outline" size={12} color="#64748B" />
-                  <Text style={styles.infiltratorLockedMetaText}>
-                    {nearbyReportersCount} de 3 utilizadores necessários no raio de 300m
-                  </Text>
-                </View>
               </View>
             </View>
-          )
+            <Ionicons
+              name={selectedCategory === 'protest_infiltrator' ? 'checkmark-circle' : 'chevron-forward'}
+              size={20}
+              color={selectedCategory === 'protest_infiltrator' ? '#FFFFFF' : '#EF4444'}
+            />
+          </TouchableOpacity>
         )}
 
         {/* Category selection */}
@@ -303,9 +285,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           <View style={styles.cautionBanner}>
             <Ionicons name="warning" size={20} color="#F59E0B" style={{ marginTop: 1 }} />
             <View style={{ flex: 1, marginLeft: 8 }}>
-              <Text style={styles.cautionBannerTitle}>USO COM MÁXIMA CAUTELA</Text>
+              <Text style={styles.cautionBannerTitle}>USO COM CAUTELA — VISIBILIDADE CONDICIONADA</Text>
               <Text style={styles.cautionBannerText}>
-                Este reporte deve basear-se em factos observados e atos objetivos de provocação, salvaguardando a integridade física de todos os manifestantes e evitando acusações infundadas.
+                Para evitar falso alarmismo, a sua sinalização ficará registada em espera e o marcador só aparecerá no mapa público quando mais de 2 utilizadores (mínimo de 3 sinalizações num raio de 300m) reportarem esta situação.
               </Text>
             </View>
           </View>
@@ -416,12 +398,12 @@ const styles = StyleSheet.create({
   stalkingAlertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1B24',
+    backgroundColor: 'rgba(220, 38, 38, 0.14)',
     borderWidth: 1.5,
     borderColor: '#EF4444',
     borderRadius: 18,
     padding: 14,
-    marginBottom: 16,
+    marginBottom: 12,
     gap: 12,
   },
   stalkingIconCircle: {
@@ -457,16 +439,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   stalkingSub: {
-    color: '#94A3B8',
+    color: '#CBD5E1',
     fontSize: 11,
     lineHeight: 15,
   },
   infiltratorAlertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2A1215',
+    backgroundColor: 'rgba(220, 38, 38, 0.18)',
     borderWidth: 1.5,
-    borderColor: '#EF4444',
+    borderColor: '#DC2626',
     borderRadius: 18,
     padding: 14,
     marginBottom: 16,
@@ -524,54 +506,6 @@ const styles = StyleSheet.create({
     color: '#FCA5A5',
     fontSize: 10,
     fontWeight: '700',
-  },
-  infiltratorLockedCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 16,
-    gap: 12,
-    opacity: 0.85,
-  },
-  infiltratorLockedIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: M3Colors.surfaceContainerHigh,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infiltratorLockedTitle: {
-    color: M3Colors.onSurfaceVariant,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  lockedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(148, 163, 184, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: M3Shapes.full,
-  },
-  lockedBadgeText: {
-    color: '#94A3B8',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  infiltratorLockedSub: {
-    color: M3Colors.outline,
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  infiltratorLockedMetaText: {
-    color: '#94A3B8',
-    fontSize: 10,
-    fontWeight: '600',
   },
   cautionBanner: {
     flexDirection: 'row',

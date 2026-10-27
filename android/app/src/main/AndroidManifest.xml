@@ -12,9 +12,7 @@
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.READ_CONTACTS"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" tools:replace="android:maxSdkVersion"/>
-  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
-  <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" tools:replace="android:maxSdkVersion"/>
   <queries>
     <intent>
@@ -50,14 +48,5 @@
         <data android:mimeType="text/plain"/>
       </intent-filter>
     </activity>
-    <service
-      android:name=".TvdeNotificationService"
-      android:label="Sentinela Acompanhamento TVDE"
-      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-      android:exported="true">
-      <intent-filter>
-        <action android:name="android.service.notification.NotificationListenerService"/>
-      </intent-filter>
-    </service>
   </application>
 </manifest>

@@ -94,7 +94,7 @@ import {
 } from './src/services/stalkingService';
 import { syncPendingFeedback } from './src/services/feedbackService';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
-import { calculateDistanceMeters, formatDistance } from './src/utils/geo';
+import { calculateDistanceMeters, formatDistance, isProtestInfiltratorVerified } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
 import { reverseGeocodeCoordinate } from './src/services/geocodingService';
 import {
@@ -1439,12 +1439,12 @@ export default function App() {
                   (catKey) =>
                     catKey !== 'protest_infiltrator' ||
                     !!notificationSettings.protestMode ||
-                    incidents.some((i) => i.category === 'protest_infiltrator')
+                    incidents.some((i) => i.category === 'protest_infiltrator' && isProtestInfiltratorVerified(i, incidents, 300, 3))
                 )
                 .map((catKey) => {
                 const cat = CATEGORIES[catKey];
                 const isSelected = selectedFilter === catKey;
-                const count = incidents.filter((i) => i.category === catKey).length;
+                const count = incidents.filter((i) => i.category === catKey && (i.category !== 'protest_infiltrator' || isProtestInfiltratorVerified(i, incidents, 300, 3))).length;
                 return (
                   <M3Pressable
                     key={catKey}

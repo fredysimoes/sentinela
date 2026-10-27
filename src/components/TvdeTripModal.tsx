@@ -258,39 +258,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
             </View>
           </View>
 
-          {Platform.OS === 'android' && (
-            <View style={[styles.integrationRow, styles.integrationRowDivider]}>
-              <View
-                style={[
-                  styles.integrationStatusDotActive,
-                  !listenerEnabled && { backgroundColor: '#F59E0B' },
-                ]}
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.integrationTitle}>
-                  Deteção Automática por Notificação:{' '}
-                  <Text style={{ color: listenerEnabled ? '#10B981' : '#F59E0B' }}>
-                    {listenerEnabled ? 'Ativa' : 'Desativada'}
-                  </Text>
-                </Text>
-                <Text style={styles.integrationDesc}>
-                  Deteta automaticamente quando o motorista aceita ou inicia a viagem na Uber e Bolt sem ter de sair da aplicação.
-                </Text>
-                {!listenerEnabled && (
-                  <TouchableOpacity
-                    style={styles.enableListenerBtn}
-                    onPress={handleOpenNotificationSettings}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="settings-outline" size={14} color="#0F172A" />
-                    <Text style={styles.enableListenerBtnText}>
-                      Autorizar Leitura de Notificações TVDE
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          )}
+
         </View>
 
         {/* Link or Text Extractor Box */}
