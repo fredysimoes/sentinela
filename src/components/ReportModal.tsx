@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { Incident, IncidentCategory, UserLocation } from '../types';
 import { CATEGORIES } from '../constants/categories';
@@ -147,7 +147,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                     activeOpacity={0.7}
                   >
                     <View style={[styles.catIconWrap, { backgroundColor: cat.color }]}>
-                      <Ionicons name={cat.icon as any} size={18} color="#FFFFFF" />
+                      {cat.icon === 'shield-account' ? (
+                        <MaterialCommunityIcons name="shield-account" size={18} color="#FFFFFF" />
+                      ) : (
+                        <Ionicons name={cat.icon as any} size={18} color="#FFFFFF" />
+                      )}
                     </View>
                     <Text
                       style={[

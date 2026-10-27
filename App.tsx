@@ -14,7 +14,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import Haptics from './src/utils/haptics';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Incident, IncidentCategory, SOSAlert, EmergencyContact, UserLocation, SafePlace, HomeAddress, NotificationSettings } from './src/types';
 import { CATEGORIES } from './src/constants/categories';
 import { getSafePlaces, SafePlaceWithDistance, loadLiveOsmPlacesForRegion } from './src/services/safePlacesService';
@@ -1324,11 +1324,19 @@ export default function App() {
                       setSelectedFilter(isSelected ? 'all' : catKey);
                     }}
                   >
-                    <Ionicons
-                      name={cat.icon as any}
-                      size={14}
-                      color={isSelected ? '#FFFFFF' : cat.color}
-                    />
+                    {cat.icon === 'shield-account' ? (
+                      <MaterialCommunityIcons
+                        name="shield-account"
+                        size={14}
+                        color={isSelected ? '#FFFFFF' : cat.color}
+                      />
+                    ) : (
+                      <Ionicons
+                        name={cat.icon as any}
+                        size={14}
+                        color={isSelected ? '#FFFFFF' : cat.color}
+                      />
+                    )}
                     <Text
                       style={[
                         styles.filterChipText,

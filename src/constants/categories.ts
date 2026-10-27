@@ -59,10 +59,10 @@ export const CATEGORIES: Record<IncidentCategory, CategoryMeta> = {
   police_presence: {
     id: 'police_presence',
     label: 'Presença Policial',
-    description: 'Polícia no local, cordão de segurança ou controlo de manifestação',
-    icon: 'shield',
-    color: '#3B82F6', // Blue
-    badgeBg: 'rgba(59, 130, 246, 0.15)',
+    description: 'Agentes policiais, patrulha no local ou operação de fiscalização',
+    icon: 'shield-account',
+    color: '#38BDF8',
+    badgeBg: 'rgba(56, 189, 248, 0.15)',
     severity: 'medium',
   },
   safe_haven: {

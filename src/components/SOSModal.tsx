@@ -14,7 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { EmergencyContact, SOSAlert, UserLocation } from '../types';
 import { createAndDispatchSOS, shareSOSToWhatsApp, shareSOSToSMS, createImSafeMessage } from '../services/sos';
-import { pickContactFromDevice } from '../services/contactPicker';
+import { loadDeviceContactsList, DeviceContactItem } from '../services/contactPicker';
+import { ContactPickerModal } from './ContactPickerModal';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 import { M3Dialog } from './M3MotionWrapper';
 
@@ -42,13 +43,21 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   const [createdAlert, setCreatedAlert] = useState<SOSAlert | null>(null);
   const [shareText, setShareText] = useState('');
   const [showImSafeView, setShowImSafeView] = useState(false);
+  const [deviceContacts, setDeviceContacts] = useState<DeviceContactItem[]>([]);
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+  const [showDevicePicker, setShowDevicePicker] = useState(false);
 
   const personalContacts = emergencyContacts.filter((c) => c.phone !== '112');
 
   const handleImportDeviceContact = async () => {
-    const picked = await pickContactFromDevice();
-    if (!picked) return;
+    setIsLoadingContacts(true);
+    setShowDevicePicker(true);
+    const loaded = await loadDeviceContactsList();
+    setDeviceContacts(loaded);
+    setIsLoadingContacts(false);
+  };
 
+  const handleSelectDeviceContact = (picked: DeviceContactItem) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const newContact: EmergencyContact = {
       id: `contact-${Date.now()}`,
@@ -213,7 +222,8 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   };
 
   return (
-    <M3Dialog visible={visible} onClose={onClose} backdropClose={false}>
+    <>
+      <M3Dialog visible={visible} onClose={onClose} backdropClose={false}>
       <View style={styles.card}>
           {showImSafeView ? (
             // I'M SAFE STATE
@@ -556,7 +566,16 @@ export const SOSModal: React.FC<SOSModalProps> = ({
             </View>
           )}
         </View>
-    </M3Dialog>
+      </M3Dialog>
+
+      <ContactPickerModal
+        visible={showDevicePicker}
+        contacts={deviceContacts}
+        isLoading={isLoadingContacts}
+        onClose={() => setShowDevicePicker(false)}
+        onSelectContact={handleSelectDeviceContact}
+      />
+    </>
   );
 };
 

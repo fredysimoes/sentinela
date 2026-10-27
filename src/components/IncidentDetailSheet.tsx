@@ -8,7 +8,7 @@ import {
   Alert,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { Incident, UserLocation } from '../types';
 import { CATEGORIES } from '../constants/categories';
@@ -114,7 +114,11 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
       {/* Top row */}
       <View style={styles.topRow}>
         <View style={[styles.categoryBadge, { backgroundColor: meta.badgeBg, borderColor: meta.color }]}>
-          <Ionicons name={meta.icon as any} size={14} color={meta.color} />
+          {meta.icon === 'shield-account' ? (
+            <MaterialCommunityIcons name="shield-account" size={14} color={meta.color} />
+          ) : (
+            <Ionicons name={meta.icon as any} size={14} color={meta.color} />
+          )}
           <Text style={[styles.categoryBadgeText, { color: meta.color }]}>{meta.label}</Text>
         </View>
 

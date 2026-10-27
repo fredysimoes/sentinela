@@ -14,7 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { EmergencyContact } from '../types';
 import Haptics from '../utils/haptics';
-import { pickContactFromDevice } from '../services/contactPicker';
+import { loadDeviceContactsList, DeviceContactItem } from '../services/contactPicker';
+import { ContactPickerModal } from './ContactPickerModal';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 import { M3BottomSheetWrapper } from './M3MotionWrapper';
 
@@ -36,6 +37,9 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
   const [newPhone, setNewPhone] = useState('');
   const [newRelation, setNewRelation] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [deviceContacts, setDeviceContacts] = useState<DeviceContactItem[]>([]);
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+  const [showDevicePicker, setShowDevicePicker] = useState(false);
 
   const handleAddContact = () => {
     if (!newName.trim() || !newPhone.trim()) return;
@@ -66,10 +70,15 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
     onSaveContacts(updated);
   };
 
-  const handleImportDeviceContact = async () => {
-    const picked = await pickContactFromDevice();
-    if (!picked) return;
+  const handleOpenDeviceContactPicker = async () => {
+    setIsLoadingContacts(true);
+    setShowDevicePicker(true);
+    const loaded = await loadDeviceContactsList();
+    setDeviceContacts(loaded);
+    setIsLoadingContacts(false);
+  };
 
+  const handleSelectDeviceContact = (picked: DeviceContactItem) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const newContact: EmergencyContact = {
       id: `contact-${Date.now()}`,
@@ -78,13 +87,14 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
       relation: 'Contacto Pessoal',
     };
 
-    const updated = [newContact, ...list];
+    const updated = [newContact, ...list.filter((c) => c.phone !== picked.phone)];
     setList(updated);
     onSaveContacts(updated);
   };
 
   return (
-    <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
+    <>
+      <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
       {/* Header */}
       <View style={styles.header}>
             <View>
@@ -124,7 +134,7 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
               <View style={styles.actionButtonsStack}>
                 <TouchableOpacity
                   style={styles.importContactsBtn}
-                  onPress={handleImportDeviceContact}
+                  onPress={handleOpenDeviceContactPicker}
                   activeOpacity={0.85}
                 >
                   <Ionicons name="people" size={20} color="#0F172A" />
@@ -188,6 +198,15 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
             )}
           </ScrollView>
     </M3BottomSheetWrapper>
+
+    <ContactPickerModal
+      visible={showDevicePicker}
+      contacts={deviceContacts}
+      isLoading={isLoadingContacts}
+      onClose={() => setShowDevicePicker(false)}
+      onSelectContact={handleSelectDeviceContact}
+    />
+    </>
   );
 };
 

@@ -1,16 +1,22 @@
-import { Alert, Platform } from 'react-native';
-import { Contact, requestPermissionsAsync, ContactField } from 'expo-contacts';
+import { Alert } from 'react-native';
+import { Contact, requestPermissionsAsync } from 'expo-contacts';
 
 export interface PickedContactResult {
   name: string;
   phone: string;
 }
 
+export interface DeviceContactItem {
+  id: string;
+  name: string;
+  phone: string;
+}
+
 /**
- * Robust cross-platform contact picker for Expo SDK 58.
- * Uses modern Contact.presentPicker() with graceful fallback to legacy or manual input.
+ * Loads device contacts directly without relying on Android ACTION_PICK intent,
+ * preventing phones (like Xiaomi, Samsung, etc.) from wrongly routing to the file manager.
  */
-export async function pickContactFromDevice(): Promise<PickedContactResult | null> {
+export async function loadDeviceContactsList(): Promise<DeviceContactItem[]> {
   try {
     const { status } = await requestPermissionsAsync();
     if (status !== 'granted') {
@@ -18,106 +24,67 @@ export async function pickContactFromDevice(): Promise<PickedContactResult | nul
         'Permissão de Contactos',
         'O Sentinela necessita de aceder aos seus contactos para selecionar os números de emergência para onde enviar SMS e WhatsApp em caso de SOS.'
       );
-      return null;
+      return [];
     }
 
-    // 1. Try modern Expo SDK 58 Contact.presentPicker()
+    // 1. Try legacy getContactsAsync (returns all contacts with phone numbers at once)
     try {
-      const picked = await Contact.presentPicker();
-      if (!picked) {
-        // User voluntarily dismissed or cancelled the picker
-        return null;
-      }
+      const { getContactsAsync, Fields } = await import('expo-contacts/legacy');
+      const response = await getContactsAsync({
+        fields: [Fields.Name, Fields.PhoneNumbers],
+      });
 
-      // Fetch phone numbers from selected contact
-      let phones = await picked.getPhones().catch(() => []);
-      let rawPhone = phones[0]?.number;
+      if (response && response.data && response.data.length > 0) {
+        const list: DeviceContactItem[] = [];
+        for (const item of response.data) {
+          const phones = item.phoneNumbers || [];
+          const validPhone = phones.find((p) => p.number && p.number.trim().length >= 4);
+          if (validPhone && validPhone.number) {
+            const rawName =
+              item.name ||
+              [item.firstName, item.lastName].filter(Boolean).join(' ') ||
+              'Contacto';
 
-      // If phones array was empty from getter, try getDetails
-      if (!rawPhone) {
-        try {
-          const details = await picked.getDetails([ContactField.PHONES]);
-          if (details?.phones && details.phones.length > 0) {
-            rawPhone = details.phones[0].number;
+            list.push({
+              id: item.id || `c-${Math.random()}`,
+              name: rawName.trim(),
+              phone: validPhone.number.trim(),
+            });
           }
-        } catch (_) {}
+        }
+
+        if (list.length > 0) {
+          return list.sort((a, b) => a.name.localeCompare(b.name));
+        }
       }
-
-      if (!rawPhone) {
-        Alert.alert(
-          'Contacto Sem Telefone',
-          'O contacto selecionado não possui nenhum número de telefone associado.'
-        );
-        return null;
-      }
-
-      let rawName = '';
-      try {
-        rawName = await picked.getFullName();
-      } catch (_) {}
-
-      if (!rawName) {
-        try {
-          const given = (await picked.getGivenName()) || '';
-          const family = (await picked.getFamilyName()) || '';
-          rawName = `${given} ${family}`.trim();
-        } catch (_) {}
-      }
-
-      if (!rawName) {
-        rawName = 'Contacto Pessoal';
-      }
-
-      return {
-        name: rawName.trim(),
-        phone: rawPhone.trim(),
-      };
-    } catch (pickerErr: any) {
-      console.warn('Contact.presentPicker falhou, a tentar legado:', pickerErr);
+    } catch (legacyErr) {
+      console.warn('Erro ao carregar contactos via legacy:', legacyErr);
     }
 
-    // 2. Fallback to legacy expo-contacts/legacy if modern method encountered native issue
+    // 2. Fallback to modern SDK 58 Contact.getAll
     try {
-      const legacyContacts = await import('expo-contacts/legacy');
-      const legacyPicked = await legacyContacts.presentContactPickerAsync();
-      if (!legacyPicked) {
-        return null;
+      const contacts = await Contact.getAll();
+      const list: DeviceContactItem[] = [];
+      for (const c of contacts) {
+        const phones = await c.getPhones().catch(() => []);
+        const validPhone = phones.find((p) => p.number && p.number.trim().length >= 4);
+        if (validPhone && validPhone.number) {
+          const rawName = (await c.getFullName().catch(() => '')) || 'Contacto';
+          list.push({
+            id: c.id || `c-${Math.random()}`,
+            name: rawName.trim(),
+            phone: validPhone.number.trim(),
+          });
+        }
       }
-
-      const phoneNumbers = legacyPicked.phoneNumbers || [];
-      if (phoneNumbers.length === 0 || !phoneNumbers[0]?.number) {
-        Alert.alert(
-          'Contacto Sem Telefone',
-          'O contacto selecionado não tem nenhum número de telefone associado.'
-        );
-        return null;
-      }
-
-      const rawName =
-        legacyPicked.name ||
-        [legacyPicked.firstName, legacyPicked.lastName].filter(Boolean).join(' ') ||
-        'Contacto Pessoal';
-
-      return {
-        name: rawName.trim(),
-        phone: phoneNumbers[0].number.trim(),
-      };
-    } catch (legacyErr: any) {
-      console.warn('expo-contacts/legacy também falhou:', legacyErr);
+      return list.sort((a, b) => a.name.localeCompare(b.name));
+    } catch (modernErr) {
+      console.warn('Erro ao carregar contactos via modern:', modernErr);
     }
 
-    // If both failed, alert user that they can enter details manually in the form
-    Alert.alert(
-      'Contactos',
-      'Não foi possível abrir o seletor nativo no seu dispositivo. Pode adicionar o contacto diretamente preenchendo os campos abaixo.'
-    );
-    return null;
-  } catch (err: any) {
-    console.error('Erro global ao aceder aos contactos:', err);
-    Alert.alert(
-      'Contactos',
-      'Não foi possível aceder à lista de contactos. Pode introduzir o número manualmente.'
-    );
-    return null;
+    return [];
+  } catch (err) {
+    console.error('Erro global ao obter contactos do dispositivo:', err);
+    return [];
   }
 }

@@ -7,7 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import MapView, { Marker, Circle, Polyline } from 'react-native-maps';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StalkingTrackingSession } from '../services/stalkingService';
 
 const GOOGLE_MAPS_DARK_STYLE = [
@@ -84,27 +84,18 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
       tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.5 }}
     >
-      <View style={styles.pharmacyPinContainer}>
-        <View
-          style={[
-            styles.pharmacyRing,
-            {
-              borderColor: status.ringColor,
-              shadowColor: status.ringColor,
-              backgroundColor: status.isOpen
-                ? 'rgba(34, 197, 94, 0.2)'
-                : 'rgba(239, 68, 68, 0.15)',
-            },
-          ]}
-        >
-          <View style={styles.pharmacyInnerCore}>
-            <Ionicons name="medical" size={17} color={status.ringColor} />
-          </View>
-        </View>
-        <View style={[styles.pharmacyBadge, { backgroundColor: status.ringColor }]}>
-          <Text style={styles.pharmacyBadgeText}>{status.badgeText}</Text>
-        </View>
+      <View style={styles.pharmacyCleanWrap}>
+        <Ionicons
+          name="medical"
+          size={24}
+          color={status.ringColor}
+          style={styles.cleanMarkerShadow}
+        />
+        {status.badgeText ? (
+          <View style={[styles.cleanStatusDot, { backgroundColor: status.ringColor }]} />
+        ) : null}
       </View>
     </Marker>
   );
@@ -113,22 +104,25 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
 const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
   const isPSP = place.type === 'psp';
   const isGNR = place.type === 'gnr';
-  const policeColor = isPSP ? '#3B82F6' : isGNR ? '#10B981' : '#6366F1';
+  const policeColor = isPSP ? '#38BDF8' : isGNR ? '#10B981' : '#818CF8';
   const policeTag = isPSP ? 'PSP' : isGNR ? 'GNR' : 'PJ';
-  const policeIcon = isPSP ? 'shield-sharp' : isGNR ? 'shield-checkmark' : 'briefcase';
 
   return (
     <Marker
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
       tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.5 }}
     >
-      <View style={[styles.policePin, { borderColor: policeColor }]}>
-        <View style={[styles.policeIconWrap, { backgroundColor: policeColor }]}>
-          <Ionicons name={policeIcon as any} size={15} color="#FFFFFF" />
-        </View>
-        <View style={[styles.policeBadge, { backgroundColor: policeColor }]}>
-          <Text style={styles.policeBadgeText}>{policeTag}</Text>
+      <View style={styles.policeCleanWrap}>
+        <Ionicons
+          name="business"
+          size={22}
+          color={policeColor}
+          style={styles.cleanMarkerShadow}
+        />
+        <View style={[styles.policeCleanTag, { backgroundColor: policeColor }]}>
+          <Text style={styles.policeCleanTagText}>{policeTag}</Text>
         </View>
       </View>
     </Marker>
@@ -137,15 +131,22 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
 
 const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSelect: () => void }) => {
   const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
+  const isPolicePresence = incident.category === 'police_presence';
+
   return (
     <Marker
       coordinate={{ latitude: incident.latitude, longitude: incident.longitude }}
       onPress={onSelect}
       tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.5 }}
     >
       <View style={[styles.markerPin, { borderColor: meta.color }]}>
         <View style={[styles.markerIconWrap, { backgroundColor: meta.color }]}>
-          <Ionicons name={meta.icon as any} size={16} color="#FFFFFF" />
+          {isPolicePresence ? (
+            <MaterialCommunityIcons name="shield-account" size={17} color="#FFFFFF" />
+          ) : (
+            <Ionicons name={meta.icon as any} size={15} color="#FFFFFF" />
+          )}
         </View>
         {incident.confirmations > 0 && (
           <View style={styles.votesBadge}>
@@ -1088,85 +1089,45 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Pharmacy Pins with Dynamic Open/Closed Status Ring
-  pharmacyPinContainer: {
-    width: 48,
-    height: 48,
+  // Clean Pharmacy Pins (no large circle)
+  pharmacyCleanWrap: {
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 3,
   },
-  pharmacyRing: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 6,
-  },
-  pharmacyInnerCore: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#0F172A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pharmacyBadge: {
-    position: 'absolute',
-    bottom: -3,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 5,
+  cleanStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 1,
     borderWidth: 1,
     borderColor: '#0F172A',
-  },
-  pharmacyBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '900',
-    letterSpacing: 0.4,
   },
 
-  // Police Pins (PSP, GNR, PJ)
-  policePin: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#0F172A',
-    borderWidth: 2.5,
-    justifyContent: 'center',
+  // Clean Police Pins (PSP, GNR, PJ - no large circle)
+  policeCleanWrap: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  policeIconWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: 3,
   },
-  policeBadge: {
-    position: 'absolute',
-    bottom: -4,
-    paddingHorizontal: 5,
+  policeCleanTag: {
+    marginTop: 1,
+    paddingHorizontal: 3,
     paddingVertical: 1,
-    borderRadius: 5,
-    borderWidth: 1,
+    borderRadius: 4,
+    borderWidth: 0.8,
     borderColor: '#0F172A',
   },
-  policeBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 8,
+  policeCleanTagText: {
+    color: '#0F172A',
+    fontSize: 7.5,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
+  },
+  cleanMarkerShadow: {
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1.5 },
+    textShadowRadius: 3,
   },
 
   // Selected Map Point Pin (POI / Custom Point)

@@ -63,6 +63,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
 
   const [selectedRouteId, setSelectedRouteId] = useState<string>(safeRoute.id);
   const [showDetailedSteps, setShowDetailedSteps] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [activeInput, setActiveInput] = useState<'origin' | 'destination' | null>(null);
   const [originText, setOriginText] = useState(originName);
   const [destText, setDestText] = useState(destinationName);
@@ -251,7 +252,8 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
       onClose={onClose}
       style={[
         styles.sheetContainer,
-        activeInput !== null && styles.sheetContainerExpanded,
+        !isExpanded && activeInput === null && styles.sheetContainerCompact,
+        (isExpanded || activeInput !== null) && styles.sheetContainerExpanded,
       ]}
     >
       {/* Header */}
@@ -273,9 +275,25 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
           </Text>
         </View>
 
-        <M3Pressable onPress={onClose} style={styles.closeBtn}>
-          <Ionicons name="close" size={20} color="#94A3B8" />
-        </M3Pressable>
+        <View style={styles.headerRightActions}>
+          <M3Pressable
+            onPress={() => {
+              Haptics.impactAsync(ImpactFeedbackStyle.Light);
+              setIsExpanded(!isExpanded);
+            }}
+            style={styles.expandBtn}
+          >
+            <Ionicons
+              name={isExpanded ? 'contract' : 'expand'}
+              size={18}
+              color="#94A3B8"
+            />
+          </M3Pressable>
+
+          <M3Pressable onPress={onClose} style={styles.closeBtn}>
+            <Ionicons name="close" size={20} color="#94A3B8" />
+          </M3Pressable>
+        </View>
       </View>
 
       {/* TWO SEPARATE SEARCH BARS: ONE FOR POINT A AND ONE FOR POINT B */}
@@ -773,6 +791,9 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                       style={styles.stepsAccordionHeader}
                       onPress={() => {
                         Haptics.impactAsync(ImpactFeedbackStyle.Light);
+                        if (!showDetailedSteps && !isExpanded) {
+                          setIsExpanded(true);
+                        }
                         setShowDetailedSteps(!showDetailedSteps);
                       }}
                       activeOpacity={0.7}
@@ -865,14 +886,19 @@ const styles = StyleSheet.create({
     backgroundColor: M3Colors.surfaceContainer,
     borderTopLeftRadius: M3Shapes.extraLarge,
     borderTopRightRadius: M3Shapes.extraLarge,
-    maxHeight: '82%',
+    maxHeight: '94%',
+    height: '92%',
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
     ...M3Elevation.level4,
   },
+  sheetContainerCompact: {
+    maxHeight: '62%',
+    height: '58%',
+  },
   sheetContainerExpanded: {
     maxHeight: '94%',
-    height: '90%',
+    height: '92%',
   },
   header: {
     flexDirection: 'row',
@@ -883,6 +909,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: M3Colors.outlineVariant,
     gap: 12,
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  expandBtn: {
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(148, 163, 184, 0.12)',
+  },
+  closeBtn: {
+    padding: 6,
   },
   modeIconCircle: {
     width: 38,
@@ -901,9 +940,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: M3Colors.onSurfaceVariant,
     marginTop: 2,
-  },
-  closeBtn: {
-    padding: 6,
   },
 
   // Two Search Bars Card (Point A & Point B)
