@@ -15,5 +15,10 @@
     "**/android/app/build": true,
     "**/android/.gradle": true,
     "**/.expo": true
+  },
+  "terminal.integrated.env.osx": {
+    "ANDROID_HOME": "/Users/frederico/Library/Android/sdk",
+    "ANDROID_SDK_ROOT": "/Users/frederico/Library/Android/sdk",
+    "PATH": "${env:HOME}/Library/Android/sdk/emulator:${env:HOME}/Library/Android/sdk/platform-tools:/usr/local/bin:${env:PATH}"
   }
 }
