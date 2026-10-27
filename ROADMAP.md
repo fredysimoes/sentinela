@@ -1,130 +1,127 @@
-# 🗺️ Roadmap Estratégico — Projeto Sentinela
+# Roadmap Estratégico — Projeto Sentinela
 
-Este documento detalha o plano de evolução do **Sentinela**, definindo os objetivos, funcionalidades e marcos de desenvolvimento para as **Fases 1 e 2**, focadas no crescimento orgânico, retenção de utilizadores e início da sustentabilidade comunitária sem recurso a anúncios.
+Este documento estabelece o plano diretor de desenvolvimento da aplicação Sentinela para as Fases 1 e 2. O foco centra-se na consolidação do efeito de rede, na retenção de utilizadores através de incentivos cívicos e na criação de sustentabilidade financeira sem recurso a publicidade.
 
 ---
 
 ```mermaid
 flowchart LR
-    A["Fase 1: Efeito de Rede & Retenção"] --> B["Validação de Tração & Densidade"]
-    B --> C["Fase 2: Apoio Comunitário & Fundador"]
-    C --> D["Sustentabilidade & Expansão"]
+    A["Fase 1: Efeito de Rede & Gamificação Cívica"] --> B["Massa Crítica de Utilizadores"]
+    B --> C["Fase 2: Sustentabilidade & Membro Fundador"]
+    C --> D["Expansão Institucional"]
 ```
 
 ---
 
-## 📍 Fase 1 (Fase Atual): Efeito de Rede & Crescimento Orgânico
+## Fase 1 (Fase Atual): Efeito de Rede, Retenção e Gamificação Cívica
 
-### 🎯 Objetivo Principal
-Garantir que a aplicação é indispensável no quotidiano dos utilizadores, maximizando a densidade de alertas reais na cidade. Em segurança comunitária, **o valor da app cresce exponencialmente com o número de utilizadores ativos** (*efeito de rede*).
+### Objetivo Principal
+Criar densidade crítica de dados e tornar a aplicação indispensável nas deslocações diárias a pé e de carro. Em plataformas de segurança colaborativa, a utilidade do sistema aumenta exponencialmente com o número de cidadãos ativos a partilhar e validar ocorrências em tempo real.
 
 > [!IMPORTANT]
-> **Princípio da Fase 1:** Toda a aplicação permanece 100% gratuita, aberta e sem qualquer fricção de entrada, permitindo criar rapidamente massa crítica de utilizadores em cidades-piloto (ex.: Porto e Lisboa).
+> **Princípio Orientador:** O acesso à plataforma permanece integralmente gratuito, universal e sem qualquer anúncio publicitário, garantindo a máxima adesão nas cidades de lançamento piloto.
 
 ---
 
-### 📦 Funcionalidades Existentes (Base Sólida)
-* [x] Mapa com estilo escuro e cálculo de percursos pedestres e automóveis (Valhalla / OSRM).
-* [x] Algoritmo de desvio inteligente que contorna incidentes e ruas escuras.
-* [x] Modo de Simulação de Percurso passo a passo para planeamento prévio.
-* [x] Sinalização de 7 categorias de perigo com validação e resolução comunitária.
-* [x] Modo «Estou a ser seguido» com transmissão do trajeto em direto para Sentinelas.
-* [x] Botão de Emergência SOS com envio automático de coordenadas e morada para contactos e 112.
-* [x] Mapeamento de farmácias com horários dinâmicos e esquadras policiais (PSP/GNR).
+### Funcionalidades Consolidadas no Sistema
+* Algoritmo de rotas seguras com desvio automático de ocorrências ativas e ruas mal iluminadas (motores Valhalla e OSRM).
+* Modo de simulação de percurso passo a passo com avanço automático e manual para planeamento antecipado.
+* Sinalização comunitária de sete categorias de ocorrências urbanas com confirmação e resolução em tempo real.
+* Modo de acompanhamento em direto («Estou a ser seguido») com transmissão cifrada para a rede de contactos de confiança.
+* Acionamento de alerta SOS com envio imediato de coordenadas geográficas e morada aproximada via SMS e WhatsApp.
+* Mapeamento georreferenciado de postos policiais (PSP e GNR) e farmácias com verificação de horário em tempo real.
 
 ---
 
-### 🚀 O Que Esperamos Implementar na Fase 1
+### Desenvolvimentos Previstos para a Fase 1
 
-#### 1. Mecanismo de Convite e Partilha Rápida («Adiciona um Sentinela»)
-* **Problema:** Para o modo «Estou a ser seguido» e SOS funcionarem no seu potencial máximo, os contactos de confiança também devem ter a app instalada.
-* **Solução:**
-  * Criação de um link de convite rápido via WhatsApp e SMS com mensagem personalizada:
-    > *«Olá! Adicionei-te como meu contacto de confiança no Sentinela para podermos acompanhar os nossos trajetos à noite. Instala a app aqui: [link]»*
-  * Emparelhamento automático: ao abrir o link, os dois utilizadores ficam automaticamente ligados como Sentinelas mútuos.
+#### 1. Sistema de Pontuação Colaborativa (Autor e Validador)
+* **Conceito:** Incentivar a vigilância cívica premiando tanto quem reporta inicialmente uma situação como quem a valida no terreno.
+* **Mecânica de Atribuição de Pontos:**
+  * **Autor do Alerta:** Recebe a maior fatia da pontuação (exemplo: 10 pontos por cada confirmação recebida de outro utilizador), recompensando a iniciativa e a utilidade da informação prestada.
+  * **Validador (Utilizador que confirma):** Recebe também uma bonificação (exemplo: 3 pontos por validação fidedigna), incentivando a comunidade a verificar os alertas circundantes e a manter o mapa rigoroso.
+  * **Resolução Cívica:** A quem sinaliza que um obstáculo ou perigo já foi resolvido é atribuída uma bonificação de civismo (exemplo: 5 pontos).
+* **Mecanismos Anti-Fraude:**
+  * Validação apenas permitida se o utilizador se encontrar no raio geográfico da ocorrência.
+  * Limite diário de pontuações entre os mesmos utilizadores para impedir conluios ou reportes artificiais.
 
-#### 2. Onboarding Interativo de 3 Passos
-* **Problema:** Novos utilizadores precisam de compreender de imediato o conceito preventivo da app logo na primeira abertura.
-* **Solução:**
-  * Apresentação visual limpa na primeira abertura:
-    1. *Rotas que protegem:* como o mapa evita perigos.
-    2. *Comunidade ativa:* como reportar e confirmar alertas.
-    3. *Rede de Sentinelas:* como configurar os contactos de emergência.
+#### 2. Loja Cívica: Desbloqueio de Avatares e Marcadores de Posição
+* **Conceito:** Permitir que os pontos acumulados sejam utilizados como moeda interna para personalização estética, gerando lealdade e retenção contínua.
+* **Itens Desbloqueáveis:**
+  * **Avatares de Perfil:** Estilos de ilustração exclusivos, insígnias temáticas e patentes cívicas representativas do nível de contribuição na cidade.
+  * **Marcadores de Posição no Mapa (Pucks de Navegação):** Substituição do cursor padrão de navegação por ícones temáticos personalizados à escolha do utilizador:
+    * Veículos estilizados (carros urbanos, motas, trotinetes).
+    * Figuras e silhuetas personalizadas de caminhantes.
+    * Objetos icónicos de segurança e orientação.
 
-#### 3. Reputação Cívica e Gamificação Positiva («Guardião Local»)
-* **Problema:** Incentivar os utilizadores a reportarem com regularidade e com rigor.
+#### 3. Mecanismo de Convite Direto («Adicionar um Sentinela»)
+* **Problema:** O acompanhamento de trajetos e a receção de alertas de perseguição ganham máxima eficácia se os contactos próximos tiverem a aplicação instalada.
 * **Solução:**
-  * Sistema de pontuação comunitária invisível a spammers:
-    * +1 ponto por reporte confirmado por outro utilizador.
-    * Níveis cívicos no perfil: *Explorador* (nível 1), *Vigilante* (nível 2), *Guardião do Bairro* (nível 3).
-    * Notificação de impacto positivo: *«O teu alerta ajudou 14 vizinhos a evitar uma rua escura ontem à noite!»*
+  * Geração de ligações de convite direto por mensagem de texto ou WhatsApp com parâmetros de associação automática.
+  * Ao abrir a ligação, os dois utilizadores ficam instantaneamente interligados na lista mútua de proteção.
 
-#### 4. Otimização Contínua de Desempenho e Bateria
+#### 4. Apresentação Inicial Guiada (Onboarding em Três Passos)
 * **Solução:**
-  * Gestão ultra-eficiente do sensor GPS em segundo plano para que o rastro ao vivo consuma menos de 3% a 4% de bateria por hora de caminhada.
+  * Apresentação resumida na primeira utilização com explicação clara dos três pilares práticos:
+    1. Escolha de rotas protegidas em detrimento do trajeto mais curto.
+    2. Como reportar e confirmar alertas na via pública para acumular pontos.
+    3. Definição da rede de contactos de emergência.
 
 ---
 
-### 📊 Métricas de Sucesso da Fase 1 (Critérios para avançar para a Fase 2)
-1. **Densidade de Dados:** Pelo menos 15 a 25 reportes comunitários ativos validados semanalmente numa cidade piloto.
-2. **Retenção:** Utilizadores abrem a app pelo menos 3 vezes por semana em deslocações noturnas ou regressos a casa.
-3. **Rede:** Pelo menos 60% dos utilizadores ativos têm pelo menos 1 a 2 Sentinelas configurados.
+### Critérios de Transição para a Fase 2
+1. Pelo menos 20 a 30 confirmações semanais validadas por utilizadores independentes nas zonas de teste.
+2. Taxa de retorno semanal superior a 40% nas deslocações de regresso a casa.
+3. Mais de metade da base de utilizadores ativos com pontos acumulados e avatares personalizados desbloqueados.
 
 ---
 
-## 📍 Fase 2: Sustentabilidade Comunitária & Crachá Fundador
+## Fase 2: Sustentabilidade Comunitária e Reconhecimento de Pioneiros
 
-### 🎯 Objetivo Principal
-Cobrir os custos operacionais da infraestrutura (servidores Supabase, API de mapas, notificações push) e testar a predisposição da comunidade para apoiar financeiramente o projeto, sem introduzir barreiras de acesso nem publicidade.
+### Objetivo Principal
+Assegurar a cobertura integral dos custos de servidores, serviços de mapas e envio de comunicações de emergência, permitindo aos cidadãos contribuir voluntariamente para a continuidade da infraestrutura pública.
 
 > [!NOTE]
-> **Filosofia da Fase 2:** A monetização é voluntária e baseada em orgulho cívico. O utilizador não paga para ter segurança básica; paga para **apoiar e fazer parte da construção de cidades mais seguras**.
+> **Princípio Orientador:** A monetização é estritamente opcional. Não existem bloqueios de segurança básica nem funcionalidades vitais reservadas a pagamentos. O apoio financeiro traduz-se em distinção cívica e reconhecimento dentro da comunidade.
 
 ---
 
-### 🚀 O Que Esperamos Implementar na Fase 2
+### Desenvolvimentos Previstos para a Fase 2
 
-#### 1. Módulo «Apoiar o Projeto Sentinela» nas Definições
-* **Localização:** Área destacada no topo ou no menu de Definições da app.
-* **Opções de Contribuição:**
-  * **1,00 €** — *«Café da Segurança»* (apoio simbólico)
-  * **2,50 €** — *«Guardião da Comunidade»* (cobre custos de servidores de 1 mês para o teu bairro)
-  * **5,00 €** — *«Patrono Sentinela»* (grande impulsionador da plataforma)
-* **Métodos de Pagamento Integrados:**
-  * **Google Play In-App Purchases (IAP):** Pagamento seguro e instantâneo com 1 clique usando o saldo ou cartão associado à conta Google.
-  * **MB WAY / Referência Multibanco:** Pagamento direto muito popular em Portugal através de gateway segura (ex.: Stripe ou Ifthenpay).
+#### 1. Módulo de Contribuição Voluntária («Apoiar o Sentinela»)
+* **Localização:** Secção autónoma nas Definições da aplicação.
+* **Níveis de Contribuição Única:**
+  * **1,00 €** — Apoio Base de Segurança.
+  * **2,50 €** — Cobertura Mensal de Infraestrutura de Bairro.
+  * **5,00 €** — Patrono Comunitário Sentinela.
+* **Processamento de Pagamento Integrado:**
+  * **Google Play:** Pagamento imediato através da conta de aplicações Android.
+  * **MB WAY / Referência Multibanco:** Integração direta e sem fricção adaptada ao mercado português.
 
-#### 2. Atribuição do Crachá «Membro Sentinela Fundador»
-* **Reconhecimento Visual Imediato:**
-  * Atribuição de uma insígnia dourada permanente no ecrã de Perfil do utilizador: **«Membro Fundador»**.
-  * Nos reportes publicados no mapa pelo utilizador, o pino e a folha de detalhes apresentam uma pequena estrela/marca dourada distintiva (*«Reportado por Membro Fundador»*), conferindo maior credibilidade comunitária ao aviso.
-* **Benefícios de Cortesia (Sem criar desvantagens aos utilizadores gratuitos):**
-  * Mensagem de agradecimento personalizada e nome listado (opcional) no painel de agradecimentos da app.
-  * Acesso prioritário a funcionalidades em versão Beta antes do lançamento público.
+#### 2. Atribuição da Insígnia «Membro Sentinela Fundador»
+* **Reconhecimento no Perfil:**
+  * Atribuição de uma insígnia dourada permanente no ecrã de perfil do utilizador.
+* **Autoridade Comunitária nos Reportes:**
+  * Os alertas criados por um Membro Fundador passam a exibir um elemento visual distintivo no mapa e na ficha informativa do incidente, sinalizando aos restantes utilizadores que o alerta provém de um apoiante verificado.
+* **Privilégios de Cortesia:**
+  * Inclusão do nome (se autorizado) no painel de honra e agradecimentos do projeto.
+  * Acesso antecipado a novas funcionalidades experimentais antes da disponibilização geral.
 
-#### 3. Painel de Transparência Comunitária
-* **Conceito:** A transparência é o maior motor de micro-doações em projetos cívicos.
-* **Implementação:**
-  * Um gráfico discreto no ecrã de apoio:
-    > *«Custos mensais de infraestrutura cobertos pela comunidade este mês: 68%»*
-  * Demonstra com clareza aos utilizadores onde é aplicado cada cêntimo (alojamento de servidores, mapas e mensagens de emergência).
+#### 3. Painel de Transparência Operacional
+* **Conceito:** Publicação de indicadores em tempo real que demonstram o destino dos fundos angariados.
+* **Indicadores Apresentados:**
+  * Percentagem mensal de despesas de servidor e mapas asseguradas pelas contribuições cívicas.
+  * Total de alertas mantidos ativos e pessoas protegidas através da infraestrutura sustentada pela comunidade.
 
 ---
 
-## 📋 Tabela Comparativa das Fases
+## Resumo Comparativo das Fases
 
-| Aspeto | Fase 1 (Atual) | Fase 2 |
+| Vetor de Análise | Fase 1 (Atual) | Fase 2 |
 | :--- | :--- | :--- |
-| **Foco Estratégico** | Adoção em massa, testes de campo e retenção | Sustentabilidade financeira e lealdade cívica |
-| **Custo para o Utilizador** | 100% Gratuito | 100% Gratuito + Contribuição Voluntária (1€, 2.5€, 5€) |
-| **Publicidade** | Nenhuma | Nenhuma |
-| **Perfil do Utilizador** | Conta básica com avatar | Conta com Crachá Dourado «Membro Fundador» para apoiantes |
-| **Funcionalidades Chave** | Navegação segura, simulação, SOS e Sentinelas | Sistema de doações Google Play / MB WAY, painel de transparência |
-| **Impacto no Negócio** | Criação de base de dados e validação do produto | Cobertura de custos de servidores e preparação para parcerias B2B |
-
----
-
-## 📅 Próximos Passos Imediatos
-1. Continuar os testes de campo da versão **v1.7.3** com os beta testers no Firebase.
-2. Recolher feedback sobre a usabilidade do novo menu de navegação e do modo de simulação.
-3. Preparar o módulo de partilha de convites (*Fase 1.1*) assim que a versão atual estiver consolidada.
+| **Prioridade Operacional** | Adoção em escala, validação de alertas e gamificação | Autossuficiência de custos e consolidação comunitária |
+| **Modelo Financeiro** | 100% Gratuito | 100% Gratuito com Micro-Doações Voluntárias (1€, 2.5€, 5€) |
+| **Incentivos ao Utilizador** | Pontos por reportes e confirmações; desbloqueio de avatares e cursores | Insígnia de Membro Fundador e autoridade cívica nos reportes |
+| **Presença de Publicidade** | Nenhuma | Nenhuma |
+| **Destino dos Pontos** | Personalização de avatares, veículos e marcadores de posição no mapa | Continuidade da progressão aliada ao estatuto de apoiante |
+| **Resultado Esperado** | Efeito de rede robusto e dados urbanos de elevada qualidade | Infraestrutura auto-sustentada pronta para parcerias institucionais |
