@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "expo.vscode-expo-tools",
+    "msjsdiag.vscode-react-native",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "dsznajder.es7-react-js-snippets",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "eamodio.gitlens"
+  ]
+}
