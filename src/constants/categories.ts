@@ -65,6 +65,15 @@ export const CATEGORIES: Record<IncidentCategory, CategoryMeta> = {
     badgeBg: 'rgba(56, 189, 248, 0.15)',
     severity: 'medium',
   },
+  protest_infiltrator: {
+    id: 'protest_infiltrator',
+    label: 'Possíveis Infiltrados',
+    description: 'Sinalizar suspeita de infiltrados ou elementos provocadores na manifestação',
+    icon: 'eye-off',
+    color: '#DC2626',
+    badgeBg: 'rgba(220, 38, 38, 0.15)',
+    severity: 'critical',
+  },
   safe_haven: {
     id: 'safe_haven',
     label: 'Ponto Seguro',

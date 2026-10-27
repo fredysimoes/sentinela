@@ -42,3 +42,60 @@ export function formatRelativeTime(timestamp: number): string {
 export function getGoogleMapsUrl(latitude: number, longitude: number): string {
   return `https://maps.google.com/?q=${latitude},${longitude}`;
 }
+
+/**
+ * Counts unique reporters/incidents within a given radius in meters
+ */
+export function countNearbyReporters(
+  location: { latitude: number; longitude: number },
+  incidents: Array<{ id: string; latitude: number; longitude: number; reportedBy?: string; confirmations?: number }>,
+  radiusMeters: number = 300
+): number {
+  const nearby = incidents.filter((inc) => {
+    const dist = calculateDistanceMeters(location.latitude, location.longitude, inc.latitude, inc.longitude);
+    return dist <= radiusMeters;
+  });
+
+  const uniqueUsers = new Set<string>();
+  nearby.forEach((inc) => {
+    uniqueUsers.add(inc.reportedBy || inc.id);
+  });
+
+  return uniqueUsers.size;
+}
+
+/**
+ * Checks if a protest infiltrator incident has reached the community verification threshold (>= 2 signals within 300m)
+ * to be displayed publicly on the map.
+ */
+export function isProtestInfiltratorVerified(
+  incident: { id: string; category: string; latitude: number; longitude: number; confirmations?: number },
+  allIncidents: Array<{ id: string; category: string; latitude: number; longitude: number; confirmations?: number }>,
+  radiusMeters: number = 300,
+  minSignalsThreshold: number = 2
+): boolean {
+  if (incident.category !== 'protest_infiltrator') return true;
+
+  // If this specific incident already has >= minSignalsThreshold confirmations
+  if ((incident.confirmations || 1) >= minSignalsThreshold) {
+    return true;
+  }
+
+  // Count distinct infiltrator reports and additional confirmations in the 300m area
+  let totalSignals = 0;
+  for (const other of allIncidents) {
+    if (other.category === 'protest_infiltrator') {
+      const dist = calculateDistanceMeters(
+        incident.latitude,
+        incident.longitude,
+        other.latitude,
+        other.longitude
+      );
+      if (dist <= radiusMeters) {
+        totalSignals += Math.max(1, other.confirmations || 1);
+      }
+    }
+  }
+
+  return totalSignals >= minSignalsThreshold;
+}

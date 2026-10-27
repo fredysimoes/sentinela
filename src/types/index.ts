@@ -1,11 +1,12 @@
 export type IncidentCategory =
-  | 'dark_area'        // Iluminação fraca / apagada
-  | 'suspicious'       // Atividade suspeita
-  | 'harassment'       // Assédio ou agressão verbal/física
-  | 'theft_risk'       // Zona com furtos/assaltos recentes
-  | 'hazard'           // Passeio cortado / cão solto / perigo na via
-  | 'safe_haven'       // Ponto seguro (farmácia 24h, esquadra, posto aberto)
-  | 'police_presence'; // Presença policial / cordão / piquete de controlo
+  | 'dark_area'            // Iluminação fraca / apagada
+  | 'suspicious'           // Atividade suspeita
+  | 'harassment'           // Assédio ou agressão verbal/física
+  | 'theft_risk'           // Zona com furtos/assaltos recentes
+  | 'hazard'               // Passeio cortado / cão solto / perigo na via
+  | 'safe_haven'           // Ponto seguro (farmácia 24h, esquadra, posto aberto)
+  | 'police_presence'      // Presença policial / cordão / piquete de controlo
+  | 'protest_infiltrator'; // Possíveis infiltrados na manifestação (modo protesto verificado)
 
 export interface Incident {
   id: string;

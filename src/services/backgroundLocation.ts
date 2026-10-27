@@ -2,7 +2,7 @@ import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import { Platform } from 'react-native';
 import { Incident, NotificationSettings } from '../types';
-import { calculateDistanceMeters } from '../utils/geo';
+import { calculateDistanceMeters, isProtestInfiltratorVerified } from '../utils/geo';
 import { loadIncidents, loadNotificationSettings } from './storage';
 import { sendDangerProximityPushNotification } from './notifications';
 
@@ -55,6 +55,11 @@ export async function checkProximityAndNotify(
     // Check if the user enabled notifications for this category
     const isCategoryEnabled = settings.categories[incident.category] !== false;
     if (!isCategoryEnabled) continue;
+
+    // Protest infiltrator caution rule: only trigger proximity push if verified by community (>= 2 signals within 300m)
+    if (incident.category === 'protest_infiltrator' && !isProtestInfiltratorVerified(incident, incidents, 300, 2)) {
+      continue;
+    }
 
     const distance = calculateDistanceMeters(
       userLat,

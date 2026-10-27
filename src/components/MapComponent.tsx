@@ -70,6 +70,7 @@ import { PedestrianRoute, RouteCoordinate } from '../types/navigation';
 import { CATEGORIES } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
+import { isProtestInfiltratorVerified } from '../utils/geo';
 import { SelectedMapPoint } from './SelectedPlaceSheet';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { M3Pressable } from './M3MotionWrapper';
@@ -428,8 +429,19 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
       (selectedCategoryFilter !== 'police' && selectedCategoryFilter !== 'pharmacy');
 
     if (!showIncidents) return [];
-    if (selectedCategoryFilter === 'all') return incidents;
-    return incidents.filter((item) => item.category === selectedCategoryFilter);
+
+    return incidents.filter((item) => {
+      if (selectedCategoryFilter !== 'all' && item.category !== selectedCategoryFilter) {
+        return false;
+      }
+
+      // Infiltrator caution rule: only show publicly on map after verification threshold (>= 2 signals within 300m)
+      if (item.category === 'protest_infiltrator') {
+        return isProtestInfiltratorVerified(item, incidents, 300, 2);
+      }
+
+      return true;
+    });
   }, [incidents, selectedCategoryFilter]);
 
   return (

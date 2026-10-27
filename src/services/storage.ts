@@ -145,6 +145,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     hazard: true,
     dark_area: true,
     police_presence: true,
+    protest_infiltrator: true,
     safe_haven: false,
   },
 };

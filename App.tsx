@@ -1307,7 +1307,14 @@ export default function App() {
               </M3Pressable>
 
               {/* Hazard Category Chips */}
-              {(Object.keys(CATEGORIES) as IncidentCategory[]).map((catKey) => {
+              {(Object.keys(CATEGORIES) as IncidentCategory[])
+                .filter(
+                  (catKey) =>
+                    catKey !== 'protest_infiltrator' ||
+                    !!notificationSettings.protestMode ||
+                    incidents.some((i) => i.category === 'protest_infiltrator')
+                )
+                .map((catKey) => {
                 const cat = CATEGORIES[catKey];
                 const isSelected = selectedFilter === catKey;
                 const count = incidents.filter((i) => i.category === catKey).length;
@@ -1486,6 +1493,8 @@ export default function App() {
         targetCoordinate={targetCoordinate}
         initialCategory={notificationSettings.protestMode && reportCategory === 'dark_area' ? 'police_presence' : reportCategory}
         onStartStalking={handleStartStalkingTracking}
+        protestMode={!!notificationSettings.protestMode}
+        incidents={incidents}
       />
 
       {/* SOS Modal */}
