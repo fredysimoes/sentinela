@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Iniciar Emulador Android (Pixel 8)",
+      "type": "shell",
+      "command": "$HOME/Library/Android/sdk/emulator/emulator -avd Pixel_8",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Iniciar Emulador Android (Medium Phone)",
+      "type": "shell",
+      "command": "$HOME/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Iniciar Expo e Abrir no Android",
+      "type": "shell",
+      "command": "npx expo start --android",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}
