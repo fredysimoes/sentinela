@@ -83,35 +83,35 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
       case 'psp':
         return {
           title: 'PSP - Polícia de Segurança Pública',
-          color: '#3B82F6',
-          bg: 'rgba(59, 130, 246, 0.15)',
-          icon: 'shield-sharp',
-          isMci: false,
+          color: '#F8FAFC',
+          bg: 'rgba(248, 250, 252, 0.14)',
+          icon: 'police-badge',
+          isMci: true,
           badgeText: 'ESQUADRA PSP',
         };
       case 'gnr':
         return {
           title: 'GNR - Guarda Nacional Republicana',
-          color: '#10B981',
-          bg: 'rgba(16, 185, 129, 0.15)',
-          icon: 'shield-checkmark',
-          isMci: false,
+          color: '#F8FAFC',
+          bg: 'rgba(248, 250, 252, 0.14)',
+          icon: 'police-badge',
+          isMci: true,
           badgeText: 'POSTO GNR',
         };
       case 'pj':
         return {
           title: 'PJ - Polícia Judiciária',
-          color: '#6366F1',
-          bg: 'rgba(99, 102, 241, 0.15)',
-          icon: 'briefcase',
-          isMci: false,
+          color: '#F8FAFC',
+          bg: 'rgba(248, 250, 252, 0.14)',
+          icon: 'police-badge',
+          isMci: true,
           badgeText: 'DIRETORIA PJ',
         };
       case 'hospital':
         return {
           title: 'Hospital / Unidade de Urgência',
-          color: placeStatus?.statusColor || '#10B981',
-          bg: placeStatus?.isOpen ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          color: placeStatus?.isOpen ? '#0EA5E9' : '#94A3B8',
+          bg: placeStatus?.isOpen ? 'rgba(14, 165, 233, 0.16)' : 'rgba(148, 163, 184, 0.12)',
           icon: 'hospital-building',
           isMci: true,
           badgeText: placeStatus?.isOpen ? 'HOSPITAL ABERTO' : 'HOSPITAL FECHADO',
@@ -119,10 +119,10 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
       case 'pharmacy':
         return {
           title: 'Farmácia de Atendimento',
-          color: placeStatus?.statusColor || '#10B981',
-          bg: placeStatus?.isOpen ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-          icon: 'medical',
-          isMci: false,
+          color: placeStatus?.isOpen ? '#10B981' : '#94A3B8',
+          bg: placeStatus?.isOpen ? 'rgba(16, 185, 129, 0.16)' : 'rgba(148, 163, 184, 0.12)',
+          icon: placeStatus?.isOpen ? 'plus-thick' : 'plus',
+          isMci: true,
           badgeText: placeStatus?.badgeText || 'FARMÁCIA',
         };
     }
@@ -209,8 +209,8 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           onPress={() => onNavigate(place)}
           activeOpacity={0.85}
         >
-          <Ionicons name="navigate" size={18} color="#FFFFFF" />
-          <Text style={styles.navigateBtnText}>Navegar com Rota Segura</Text>
+          <Ionicons name="navigate" size={18} color="#06140E" />
+          <Text style={styles.navigateBtnText}>Navegar com Rota Segura Néon</Text>
         </TouchableOpacity>
       )}
 
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: M3Colors.primaryContainer,
+    backgroundColor: '#10B981',
     paddingVertical: 14,
     borderRadius: M3Shapes.full,
     gap: 8,
@@ -355,8 +355,8 @@ const styles = StyleSheet.create({
     ...M3Elevation.level2,
   },
   navigateBtnText: {
-    color: M3Colors.onPrimaryContainer,
-    fontWeight: '700',
+    color: '#06140E',
+    fontWeight: '800',
     fontSize: 14,
   },
   actionBtn: {

@@ -146,11 +146,16 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     >
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Sinalizar no Mapa</Text>
-          <Text style={styles.headerSubtitle}>
-            Ajude outros pedestres a caminhar em segurança
-          </Text>
+        <View style={styles.headerLeftRow}>
+          <View style={styles.headerIconBadge}>
+            <Ionicons name="warning-outline" size={20} color="#FBBF24" />
+          </View>
+          <View>
+            <Text style={styles.headerTitle}>Sinalizar no Mapa</Text>
+            <Text style={styles.headerSubtitle}>
+              Ajude outros pedestres a caminhar em segurança
+            </Text>
+          </View>
         </View>
         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
           <Ionicons name="close" size={22} color="#94A3B8" />
@@ -373,6 +378,22 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: M3Colors.outlineVariant,
+  },
+  headerLeftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  headerIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(251, 191, 36, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 19,

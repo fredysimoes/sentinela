@@ -97,16 +97,21 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
       <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
       {/* Header */}
       <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>Contactos de Emergência</Text>
-              <Text style={styles.headerSubtitle}>
-                Quem receberá o seu SOS por WhatsApp e SMS
-              </Text>
-            </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#94A3B8" />
-            </TouchableOpacity>
+        <View style={styles.headerLeftRow}>
+          <View style={styles.headerIconBadge}>
+            <Ionicons name="call-outline" size={20} color="#10B981" />
           </View>
+          <View>
+            <Text style={styles.headerTitle}>Contactos de Emergência</Text>
+            <Text style={styles.headerSubtitle}>
+              Quem receberá o seu SOS por WhatsApp e SMS
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <Ionicons name="close" size={22} color="#94A3B8" />
+        </TouchableOpacity>
+      </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             {/* Contact List */}
@@ -235,6 +240,22 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: M3Colors.outlineVariant,
+  },
+  headerLeftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  headerIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 19,

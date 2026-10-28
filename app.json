@@ -3,7 +3,7 @@
     "name": "Sentinela",
     "slug": "sentinela",
     "scheme": "sentinela",
-    "version": "1.7.8",
+    "version": "1.8.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -26,7 +26,7 @@
     },
     "android": {
       "package": "com.sentinela.app",
-      "versionCode": 178,
+      "versionCode": 180,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAauiNB51SJ4QdfHGGoTB87sJZ-DVsozjk"

@@ -128,7 +128,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.iconCircle}>
-            <Ionicons name="people-circle" size={26} color="#38BDF8" />
+            <Ionicons name="shield-checkmark-outline" size={22} color="#38BDF8" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>Os Meus Sentinelas</Text>
@@ -311,11 +311,11 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
 
 const styles = StyleSheet.create({
   sheetContainer: {
-    backgroundColor: '#141820',
+    backgroundColor: M3Colors.surfaceContainer,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     borderTopWidth: 1,
-    borderTopColor: '#272E3B',
+    borderTopColor: M3Colors.outlineVariant,
     maxHeight: '85%',
   },
   scrollContent: {

@@ -849,9 +849,15 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     <Ionicons
                       name={selectedRoute.isSafe ? 'navigate' : 'navigate-outline'}
                       size={18}
-                      color="#FFFFFF"
+                      color={selectedRoute.isSafe ? '#06140E' : '#FFFFFF'}
                     />
-                    <Text style={styles.startBtnText} numberOfLines={1}>
+                    <Text
+                      style={[
+                        styles.startBtnText,
+                        selectedRoute.isSafe && { color: '#06140E', fontWeight: '800' },
+                      ]}
+                      numberOfLines={1}
+                    >
                       {selectedRoute.isSafe
                         ? `Iniciar (${selectedRoute.formattedDuration || `${selectedRoute.durationMinutes} min`})`
                         : 'Iniciar Percurso'}
@@ -1359,7 +1365,7 @@ const styles = StyleSheet.create({
     ...M3Elevation.level2,
   },
   startBtnSafe: {
-    backgroundColor: '#0284C7',
+    backgroundColor: '#10B981',
   },
   startBtnWarn: {
     backgroundColor: M3Colors.warningContainer,

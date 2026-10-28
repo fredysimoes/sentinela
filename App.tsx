@@ -184,10 +184,6 @@ export default function App() {
     notificationSettingsRef.current = notificationSettings;
   }, [notificationSettings]);
 
-  // Ensure screen stays awake during navigation, driving, simulation, or TVDE protection
-  useEffect(() => {
-    setKeepScreenOn(true);
-  }, [navState, transportMode, activeTvdeTrip]);
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
@@ -208,6 +204,7 @@ export default function App() {
   const [showTvdeModal, setShowTvdeModal] = useState(false);
   const [activeTvdeTrip, setActiveTvdeTrip] = useState<TvdeTripSession | null>(null);
   const [incomingTvdeDraft, setIncomingTvdeDraft] = useState<ParsedTvdeDraft | null>(null);
+  const [mapRecenterSignal, setMapRecenterSignal] = useState(0);
 
   useEffect(() => {
     // Load any persisted active TVDE trip
@@ -386,6 +383,11 @@ export default function App() {
   const [previewOriginCoord, setPreviewOriginCoord] = useState<RouteCoordinate | null>(null);
   const [previewDestName, setPreviewDestName] = useState('');
   const [previewDestCoord, setPreviewDestCoord] = useState<RouteCoordinate | null>(null);
+
+  // Ensure screen stays awake during navigation, driving, simulation, or TVDE protection
+  useEffect(() => {
+    setKeepScreenOn(true);
+  }, [navState, transportMode, activeTvdeTrip]);
 
   const handleRequestNavigation = async (
     destName: string,
@@ -1307,6 +1309,7 @@ export default function App() {
           onToggleTorch={handleToggleTorch}
           onOpenStrobe={handleOpenStrobe}
           stalkingSession={activeStalkingSession || incomingStalkingAlert}
+          recenterSignal={mapRecenterSignal}
         />
       </View>
 
@@ -1319,14 +1322,6 @@ export default function App() {
             onTransportModeChange={setTransportMode}
             onSelectDestination={(name, coord, mode) => handleRequestNavigation(name, coord, mode)}
             onOpenSOSContacts={() => setShowContactsModal(true)}
-            onOpenSentinels={() => {
-              if (currentUserProfile) {
-                setShowSentinelsModal(true);
-              } else {
-                setShowAuthModal(true);
-              }
-            }}
-            sentinelsCount={mySentinels.length}
             onOpenSettings={() => setShowSettingsModal(true)}
             emergencyContactsCount={emergencyContacts.filter((c) => c.phone !== '112').length}
           />
@@ -1405,15 +1400,15 @@ export default function App() {
                   setShowPoliceOnMap((prev) => !prev);
                 }}
               >
-                <Ionicons
-                  name="shield-sharp"
+                <MaterialCommunityIcons
+                  name="police-badge"
                   size={14}
-                  color={showPoliceOnMap ? '#FFFFFF' : '#3B82F6'}
+                  color={showPoliceOnMap ? '#080A0C' : '#F8FAFC'}
                 />
                 <Text
                   style={[
                     styles.filterChipText,
-                    showPoliceOnMap && styles.filterChipTextActiveWhite,
+                    showPoliceOnMap && styles.filterChipTextActiveDark,
                   ]}
                 >
                   Polícia (PSP/GNR)
@@ -1432,15 +1427,15 @@ export default function App() {
                   setShowPharmaciesOnMap((prev) => !prev);
                 }}
               >
-                <Ionicons
-                  name="medical"
+                <MaterialCommunityIcons
+                  name="plus-thick"
                   size={14}
-                  color={showPharmaciesOnMap ? '#FFFFFF' : M3Colors.success}
+                  color={showPharmaciesOnMap ? '#06140E' : '#10B981'}
                 />
                 <Text
                   style={[
                     styles.filterChipText,
-                    showPharmaciesOnMap && styles.filterChipTextActiveWhite,
+                    showPharmaciesOnMap && styles.filterChipTextActiveDark,
                   ]}
                 >
                   Farmácias
@@ -1462,48 +1457,19 @@ export default function App() {
                 <MaterialCommunityIcons
                   name="hospital-building"
                   size={14}
-                  color={showHospitalsOnMap ? '#FFFFFF' : '#0EA5E9'}
+                  color={showHospitalsOnMap ? '#04131D' : '#0EA5E9'}
                 />
                 <Text
                   style={[
                     styles.filterChipText,
-                    showHospitalsOnMap && styles.filterChipTextActiveWhite,
+                    showHospitalsOnMap && styles.filterChipTextActiveDark,
                   ]}
                 >
                   Hospitais
                 </Text>
               </M3Pressable>
 
-              {/* 6. TVDE (Uber / Bolt) Quick Protection Chip */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  activeTvdeTrip && styles.filterChipTvdeActive,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setShowTvdeModal(true);
-                }}
-              >
-                <Ionicons
-                  name="car-sport"
-                  size={14}
-                  color={activeTvdeTrip ? '#0F172A' : '#38BDF8'}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    activeTvdeTrip && styles.filterChipTextTvdeActive,
-                  ]}
-                >
-                  {activeTvdeTrip
-                    ? `${activeTvdeTrip.platform} • ${activeTvdeTrip.licensePlate || 'Em Curso'}`
-                    : 'Viagem TVDE'}
-                </Text>
-              </M3Pressable>
-
-              {/* 7. Hazard Category Chips (Unselected by default) */}
+              {/* 6. Hazard Category Chips (Unselected by default) */}
               {(Object.keys(CATEGORIES) as IncidentCategory[])
                 .filter(
                   (catKey) =>
@@ -1566,7 +1532,7 @@ export default function App() {
               }}
             >
               <View style={styles.tvdeBannerIconCircle}>
-                <MaterialCommunityIcons name="shield-car" size={20} color="#0F172A" />
+                <Ionicons name="car-sport" size={19} color="#06140E" />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.tvdeBannerTopRow}>
@@ -1589,46 +1555,167 @@ export default function App() {
                     .join(' • ') || 'Toque para gerir ou partilhar dados da viagem'}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#38BDF8" />
+              <Ionicons name="chevron-forward" size={18} color="#10B981" />
             </M3Pressable>
           )}
         </View>
       )}
 
-      {/* Bottom Action Floating Bar */}
+      {/* 3. Stealth Floating Pill Bottom Dock Bar (5 Quick-Access Positions) */}
       {!navState && !simulationState && (
-        <View style={styles.bottomBar}>
-          {/* Signal Hazard Button - High Contrast Light Pill FAB with Material Motion */}
-          <M3Pressable
-            scaleOnPress={0.94}
-            style={styles.reportBtn}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setTargetCoordinate(null);
-              setShowReportModal(true);
-            }}
-          >
-            <View style={styles.reportIconCircle}>
-              <Ionicons name="add" size={22} color="#FFFFFF" />
-            </View>
-            <View>
-              <Text style={styles.reportBtnTitle}>Sinalizar Perigo</Text>
-              <Text style={styles.reportBtnSub}>Partilhar no mapa</Text>
-            </View>
-          </M3Pressable>
+        <View style={styles.bottomDockContainer} pointerEvents="box-none">
+          <View style={styles.bottomPillDock}>
+            {/* 1. Mapa (Active White Pill like Image 2) */}
+            <M3Pressable
+              scaleOnPress={0.94}
+              style={[
+                styles.dockMapPill,
+                (showReportModal || showTvdeModal || showSentinelsModal || showSOSModal) &&
+                  styles.dockMapPillInactive,
+              ]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setShowReportModal(false);
+                setShowTvdeModal(false);
+                setShowSentinelsModal(false);
+                setSelectedIncident(null);
+                setSelectedSafePlace(null);
+                setSelectedMapPoint(null);
+                setMapRecenterSignal((prev) => prev + 1);
+              }}
+            >
+              <Ionicons
+                name="home"
+                size={16}
+                color={
+                  showReportModal || showTvdeModal || showSentinelsModal || showSOSModal
+                    ? '#CBD5E1'
+                    : '#080A0C'
+                }
+              />
+              <Text
+                style={[
+                  styles.dockMapPillText,
+                  (showReportModal || showTvdeModal || showSentinelsModal || showSOSModal) &&
+                    styles.dockMapPillTextInactive,
+                ]}
+              >
+                Mapa
+              </Text>
+            </M3Pressable>
 
-          {/* SOS Emergency Button - M3 Squircle FAB with Material Motion */}
-          <M3Pressable
-            scaleOnPress={0.91}
-            style={styles.sosBtn}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              setShowSOSModal(true);
-            }}
-          >
-            <Ionicons name="megaphone" size={24} color="#FFFFFF" />
-            <Text style={styles.sosBtnText}>SOS</Text>
-          </M3Pressable>
+            {/* 2. Sinalizar (Community Report & "Estou a ser seguido") */}
+            <M3Pressable
+              scaleOnPress={0.92}
+              style={[
+                styles.dockActionItem,
+                showReportModal && styles.dockActionItemActive,
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setTargetCoordinate(null);
+                setShowReportModal(true);
+              }}
+            >
+              <View style={styles.dockIconWrap}>
+                <Ionicons
+                  name="warning-outline"
+                  size={19}
+                  color={showReportModal ? '#FBBF24' : '#CBD5E1'}
+                />
+                {activeStalkingSession && <View style={styles.dockLiveBadgeDotRed} />}
+              </View>
+              <Text
+                style={[
+                  styles.dockActionLabel,
+                  showReportModal && { color: '#FBBF24', fontWeight: '800' },
+                ]}
+              >
+                Sinalizar
+              </Text>
+            </M3Pressable>
+
+            {/* 3. TVDE (Uber / Bolt / Táxi Ride Protection) */}
+            <M3Pressable
+              scaleOnPress={0.92}
+              style={[
+                styles.dockActionItem,
+                (showTvdeModal || !!activeTvdeTrip) && styles.dockActionItemActiveNeon,
+              ]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setShowTvdeModal(true);
+              }}
+            >
+              <View style={styles.dockIconWrap}>
+                <Ionicons
+                  name="car-sport-outline"
+                  size={20}
+                  color={showTvdeModal || activeTvdeTrip ? '#10B981' : '#CBD5E1'}
+                />
+                {activeTvdeTrip && <View style={styles.dockLiveBadgeDotNeon} />}
+              </View>
+              <Text
+                style={[
+                  styles.dockActionLabel,
+                  (showTvdeModal || activeTvdeTrip) && { color: '#10B981', fontWeight: '800' },
+                ]}
+              >
+                TVDE
+              </Text>
+            </M3Pressable>
+
+            {/* 4. Sentinelas (Trusted Circle & Live Tracking) */}
+            <M3Pressable
+              scaleOnPress={0.92}
+              style={[
+                styles.dockActionItem,
+                showSentinelsModal && styles.dockActionItemActiveCyan,
+              ]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                if (currentUserProfile) {
+                  setShowSentinelsModal(true);
+                } else {
+                  setShowAuthModal(true);
+                }
+              }}
+            >
+              <View style={styles.dockIconWrap}>
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={19}
+                  color={showSentinelsModal ? '#38BDF8' : '#CBD5E1'}
+                />
+                {mySentinels.length > 0 && (
+                  <View style={styles.dockCountBadge}>
+                    <Text style={styles.dockCountBadgeText}>{mySentinels.length}</Text>
+                  </View>
+                )}
+              </View>
+              <Text
+                style={[
+                  styles.dockActionLabel,
+                  showSentinelsModal && { color: '#38BDF8', fontWeight: '800' },
+                ]}
+              >
+                Sentinelas
+              </Text>
+            </M3Pressable>
+
+            {/* 5. SOS (Emergency Pill Button on the Right Edge) */}
+            <M3Pressable
+              scaleOnPress={0.91}
+              style={styles.dockSosPill}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                setShowSOSModal(true);
+              }}
+            >
+              <Ionicons name="megaphone" size={16} color="#FFFFFF" />
+              <Text style={styles.dockSosPillText}>SOS</Text>
+            </M3Pressable>
+          </View>
         </View>
       )}
 
@@ -1882,12 +1969,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
+    paddingHorizontal: 13,
     paddingVertical: 7,
     borderRadius: M3Shapes.full,
-    backgroundColor: 'rgba(29, 32, 36, 0.94)',
+    backgroundColor: 'rgba(14, 18, 23, 0.94)',
     borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     ...M3Elevation.level2,
   },
   filterChipHomeActive: {
@@ -1898,14 +1985,6 @@ const styles = StyleSheet.create({
     color: M3Colors.onPrimaryContainer,
     fontWeight: '700',
   },
-  filterChipTvdeActive: {
-    backgroundColor: '#38BDF8',
-    borderColor: '#7DD3FC',
-  },
-  filterChipTextTvdeActive: {
-    color: '#0F172A',
-    fontWeight: '800',
-  },
   tvdeActiveBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1915,16 +1994,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 16,
-    backgroundColor: 'rgba(15, 23, 42, 0.96)',
+    backgroundColor: 'rgba(14, 18, 23, 0.96)',
     borderWidth: 1.5,
-    borderColor: '#38BDF8',
+    borderColor: '#10B981',
     ...M3Elevation.level3,
   },
   tvdeBannerIconCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#38BDF8',
+    backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1947,7 +2026,7 @@ const styles = StyleSheet.create({
     borderLeftColor: '#1D4ED8',
   },
   tvdeMiniPlateText: {
-    color: '#0F172A',
+    color: '#080A0C',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -1958,15 +2037,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   filterChipActivePolice: {
-    backgroundColor: '#1D4ED8',
-    borderColor: '#3B82F6',
+    backgroundColor: '#F8FAFC',
+    borderColor: '#FFFFFF',
   },
   filterChipActivePharmacy: {
-    backgroundColor: '#0F5132',
-    borderColor: M3Colors.success,
+    backgroundColor: '#10B981',
+    borderColor: '#34D399',
   },
   filterChipActiveHospital: {
-    backgroundColor: '#0369A1',
+    backgroundColor: '#0EA5E9',
     borderColor: '#38BDF8',
   },
   filterChipActive: {
@@ -1975,7 +2054,7 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 12,
-    color: M3Colors.onSurfaceVariant,
+    color: '#CBD5E1',
     fontWeight: '600',
   },
   filterChipTextActive: {
@@ -1986,78 +2065,159 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
+  filterChipTextActiveDark: {
+    color: '#080A0C',
+    fontWeight: '800',
+  },
   mapContainer: {
     flex: 1,
   },
-  bottomBar: {
+  bottomDockContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'android' ? 24 : 20,
-    left: 14,
-    right: 14,
-    flexDirection: 'row',
+    bottom: Platform.OS === 'android' ? 20 : 18,
+    left: 12,
+    right: 12,
     alignItems: 'center',
-    gap: 12,
+    zIndex: 900,
   },
-  reportBtn: {
-    flex: 1,
+  bottomPillDock: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: M3Shapes.large,
-    gap: 12,
-    height: 56,
+    justifyContent: 'space-between',
+    width: '100%',
+    backgroundColor: 'rgba(16, 20, 27, 0.96)',
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    elevation: 12,
   },
-  reportIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#0284C7',
-    justifyContent: 'center',
+  dockMapPill: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 14,
+    height: 44,
+    borderRadius: 999,
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  reportBtnTitle: {
-    color: '#0F172A',
-    fontSize: 15,
+  dockMapPillInactive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  dockMapPillText: {
+    color: '#080A0C',
+    fontSize: 13,
     fontWeight: '800',
+    letterSpacing: 0.2,
   },
-  reportBtnSub: {
-    color: '#475569',
-    fontSize: 11,
+  dockMapPillTextInactive: {
+    color: '#CBD5E1',
     fontWeight: '600',
   },
-  sosBtn: {
+  dockActionItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 44,
+    borderRadius: 999,
+    paddingHorizontal: 4,
+  },
+  dockActionItemActive: {
+    backgroundColor: 'rgba(251, 191, 36, 0.14)',
+  },
+  dockActionItemActiveNeon: {
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+  },
+  dockActionItemActiveCyan: {
+    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+  },
+  dockIconWrap: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dockActionLabel: {
+    color: '#CBD5E1',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+    letterSpacing: 0.1,
+  },
+  dockLiveBadgeDotRed: {
+    position: 'absolute',
+    top: -1,
+    right: -4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#EF4444',
+    borderWidth: 1,
+    borderColor: '#10141B',
+  },
+  dockLiveBadgeDotNeon: {
+    position: 'absolute',
+    top: -1,
+    right: -4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#10B981',
+    borderWidth: 1,
+    borderColor: '#10141B',
+  },
+  dockCountBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -9,
+    backgroundColor: '#38BDF8',
+    borderRadius: 8,
+    minWidth: 14,
+    height: 14,
+    paddingHorizontal: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#10141B',
+  },
+  dockCountBadgeText: {
+    color: '#080A0C',
+    fontSize: 8.5,
+    fontWeight: '900',
+  },
+  dockSosPill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: M3Colors.sosBright,
-    paddingHorizontal: 22,
-    borderRadius: M3Shapes.large,
-    gap: 8,
-    height: 56,
+    gap: 5,
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 15,
+    height: 44,
+    borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    ...M3Elevation.level4,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 6,
   },
-  sosPulse: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    borderRadius: M3Shapes.large,
-    backgroundColor: 'rgba(220, 38, 38, 0.3)',
-  },
-  sosBtnText: {
+  dockSosPillText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
 });

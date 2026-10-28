@@ -125,7 +125,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <View style={styles.headerRow}>
               <View style={styles.headerTitleWrap}>
                 <View style={styles.headerIconCircle}>
-                  <Ionicons name="notifications" size={20} color="#38BDF8" />
+                  <Ionicons name="options-outline" size={20} color="#10B981" />
                 </View>
                 <Text style={styles.headerTitle}>Notificações & Perigos</Text>
               </View>
@@ -471,12 +471,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: '#111318',
+    backgroundColor: M3Colors.surfaceContainer,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: '88%',
     borderWidth: 1,
-    borderColor: '#282A2F',
+    borderColor: M3Colors.outlineVariant,
     ...M3Elevation.level4,
   },
   header: {
@@ -484,14 +484,14 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1D2024',
+    borderBottomColor: M3Colors.outlineVariant,
     alignItems: 'center',
   },
   dragHandle: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#3E4249',
+    backgroundColor: M3Colors.outlineVariant,
     marginBottom: 12,
   },
   headerRow: {
@@ -505,23 +505,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.35)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   headerTitle: {
     ...M3Typography.titleMedium,
-    color: '#E2E2E5',
+    color: M3Colors.onSurface,
     fontWeight: '800',
     fontSize: 18,
   },
   headerSubtitle: {
     ...M3Typography.bodySmall,
-    color: '#94A3B8',
+    color: M3Colors.onSurfaceVariant,
     marginTop: 6,
     width: '100%',
   },
@@ -529,7 +531,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#1D2024',
+    backgroundColor: M3Colors.surfaceContainerHigh,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -540,12 +542,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionCard: {
-    backgroundColor: '#1D2024',
+    backgroundColor: M3Colors.surfaceContainerLow,
     borderRadius: 20,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#282A2F',
+    borderColor: M3Colors.outlineVariant,
   },
   userAvatarWrap: {
     width: 40,
@@ -741,12 +743,12 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     padding: 16,
-    backgroundColor: '#111318',
+    backgroundColor: M3Colors.surfaceContainer,
     borderTopWidth: 1,
-    borderTopColor: '#1D2024',
+    borderTopColor: M3Colors.outlineVariant,
   },
   saveBtn: {
-    backgroundColor: '#38BDF8',
+    backgroundColor: '#10B981',
     height: 52,
     borderRadius: 26,
     flexDirection: 'row',
@@ -755,7 +757,7 @@ const styles = StyleSheet.create({
     ...M3Elevation.level2,
   },
   saveBtnText: {
-    color: '#0F172A',
+    color: '#06140E',
     fontSize: 16,
     fontWeight: '800',
   },

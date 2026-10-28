@@ -11,58 +11,97 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StalkingTrackingSession } from '../services/stalkingService';
 
 const GOOGLE_MAPS_DARK_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#17191d' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#111318' }, { weight: 3 }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#c4c7c5' }] },
+  { elementType: 'geometry', stylers: [{ color: '#0A0D12' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#080A0C' }, { weight: 3.5 }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#94A3B8' }] },
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#e2e2e5' }],
+    stylers: [{ color: '#CBD5E1' }],
+  },
+  {
+    featureType: 'administrative.neighborhood',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#94A3B8' }],
+  },
+  {
+    featureType: 'landscape.man_made',
+    elementType: 'geometry.fill',
+    stylers: [{ color: '#12161E' }],
+  },
+  {
+    featureType: 'landscape.man_made',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#1E2633' }, { weight: 1 }],
   },
   {
     featureType: 'poi',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#a8c7fa' }],
+    stylers: [{ color: '#94A3B8' }],
+  },
+  {
+    featureType: 'poi.business',
+    stylers: [{ visibility: 'off' }],
   },
   {
     featureType: 'poi.park',
     elementType: 'geometry',
-    stylers: [{ color: '#18281d' }],
+    stylers: [{ color: '#0D1F17' }],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#6EE7B7' }],
   },
   {
     featureType: 'road',
     elementType: 'geometry',
-    stylers: [{ color: '#2b2d33' }],
+    stylers: [{ color: '#1B212B' }],
   },
   {
     featureType: 'road',
     elementType: 'geometry.stroke',
-    stylers: [{ color: '#1d2024' }],
+    stylers: [{ color: '#0B0E13' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#CBD5E1' }],
+  },
+  {
+    featureType: 'road.local',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#94A3B8' }],
   },
   {
     featureType: 'road.highway',
     elementType: 'geometry',
-    stylers: [{ color: '#383b42' }],
+    stylers: [{ color: '#242C38' }],
   },
   {
     featureType: 'road.highway',
     elementType: 'geometry.stroke',
-    stylers: [{ color: '#202227' }],
+    stylers: [{ color: '#0E1218' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#CBD5E1' }],
   },
   {
     featureType: 'transit',
     elementType: 'geometry',
-    stylers: [{ color: '#24282e' }],
+    stylers: [{ color: '#161B23' }],
   },
   {
     featureType: 'water',
     elementType: 'geometry',
-    stylers: [{ color: '#0e1f2f' }],
+    stylers: [{ color: '#050C14' }],
   },
   {
     featureType: 'water',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#73839b' }],
+    stylers: [{ color: '#64748B' }],
   },
 ];
 import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace, HomeAddress } from '../types';
@@ -76,27 +115,40 @@ import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { M3Pressable } from './M3MotionWrapper';
 
 // -------------------------------------------------------------
-// High Performance Memoized Markers (prevents re-rendering 500 views)
+// High Performance Memoized Teardrop Markers (Stealth & Neon UI)
 // -------------------------------------------------------------
 const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
   const status = place.pharmacyStatus || getPharmacyStatus(place);
+  const isOpen = status.isOpen;
+
   return (
     <Marker
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
       tracksViewChanges={false}
-      anchor={{ x: 0.5, y: 0.5 }}
+      anchor={{ x: 0.5, y: 0.92 }}
     >
-      <View style={styles.pharmacyCleanWrap}>
-        <Ionicons
-          name="medical"
-          size={24}
-          color={status.ringColor}
-          style={styles.cleanMarkerShadow}
+      <View style={styles.teardropMarkerWrap}>
+        {/* Teardrop Head: Solid Neon Green when Open, Outlined Neon Green when Closed */}
+        <View
+          style={[
+            styles.teardropHead,
+            isOpen ? styles.pharmacyHeadOpen : styles.pharmacyHeadClosed,
+          ]}
+        >
+          <MaterialCommunityIcons
+            name={isOpen ? 'plus-thick' : 'plus'}
+            size={isOpen ? 19 : 18}
+            color={isOpen ? '#06140E' : '#10B981'}
+          />
+        </View>
+        {/* Teardrop Bottom Pointer Tip */}
+        <View
+          style={[
+            styles.teardropTip,
+            isOpen ? styles.pharmacyTipOpen : styles.pharmacyTipClosed,
+          ]}
         />
-        {status.badgeText ? (
-          <View style={[styles.cleanStatusDot, { backgroundColor: status.ringColor }]} />
-        ) : null}
       </View>
     </Marker>
   );
@@ -104,25 +156,35 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
 
 const HospitalMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
   const status = place.pharmacyStatus || getPharmacyStatus(place);
-  const badgeColor = status.isOpen ? '#10B981' : '#EF4444';
+  const isOpen = status.isOpen;
+
   return (
     <Marker
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
       tracksViewChanges={false}
-      anchor={{ x: 0.5, y: 0.5 }}
+      anchor={{ x: 0.5, y: 0.92 }}
     >
-      <View style={styles.hospitalCleanWrap}>
-        <View style={[styles.hospitalSquareBadge, { borderColor: badgeColor }]}>
+      <View style={styles.teardropMarkerWrap}>
+        {/* Teardrop Head: Solid Cyan Neon when Open, Outlined Cyan Neon when Closed */}
+        <View
+          style={[
+            styles.teardropHead,
+            isOpen ? styles.hospitalHeadOpen : styles.hospitalHeadClosed,
+          ]}
+        >
           <MaterialCommunityIcons
             name="hospital-building"
-            size={16}
-            color={badgeColor}
+            size={17}
+            color={isOpen ? '#04131D' : '#0EA5E9'}
           />
         </View>
-        <View style={[styles.hospitalTagPill, { backgroundColor: badgeColor }]}>
-          <Text style={styles.hospitalTagText}>{status.isOpen ? 'HOSP' : 'FECH'}</Text>
-        </View>
+        <View
+          style={[
+            styles.teardropTip,
+            isOpen ? styles.hospitalTipOpen : styles.hospitalTipClosed,
+          ]}
+        />
       </View>
     </Marker>
   );
@@ -131,7 +193,6 @@ const HospitalMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
 const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
   const isPSP = place.type === 'psp';
   const isGNR = place.type === 'gnr';
-  const policeColor = isPSP ? '#38BDF8' : isGNR ? '#10B981' : '#818CF8';
   const policeTag = isPSP ? 'PSP' : isGNR ? 'GNR' : 'PJ';
 
   return (
@@ -139,17 +200,20 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
       tracksViewChanges={false}
-      anchor={{ x: 0.5, y: 0.5 }}
+      anchor={{ x: 0.5, y: 0.92 }}
     >
-      <View style={styles.policeCleanWrap}>
-        <Ionicons
-          name="business"
-          size={22}
-          color={policeColor}
-          style={styles.cleanMarkerShadow}
-        />
-        <View style={[styles.policeCleanTag, { backgroundColor: policeColor }]}>
-          <Text style={styles.policeCleanTagText}>{policeTag}</Text>
+      <View style={styles.teardropMarkerWrap}>
+        {/* Crisp White Teardrop Head with Dark Obsidian Police Officer Silhouette */}
+        <View style={[styles.teardropHead, styles.policeHead]}>
+          <MaterialCommunityIcons
+            name="police-badge"
+            size={18}
+            color="#080A0C"
+          />
+        </View>
+        <View style={[styles.teardropTip, styles.policeTip]} />
+        <View style={styles.policeMicroBadge}>
+          <Text style={styles.policeMicroBadgeText}>{policeTag}</Text>
         </View>
       </View>
     </Marker>
@@ -216,6 +280,7 @@ interface MapComponentProps {
   stalkingSession?: StalkingTrackingSession | null;
   isSimulating?: boolean;
   simulatedLocation?: RouteCoordinate | null;
+  recenterSignal?: number;
 }
 
 export const MapComponent: React.FC<MapComponentProps> = memo(({
@@ -249,13 +314,77 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   stalkingSession = null,
   isSimulating = false,
   simulatedLocation = null,
+  recenterSignal = 0,
 }) => {
   const mapRef = useRef<MapView | null>(null);
   const [is3DMode, setIs3DMode] = React.useState(false);
   const [followHeading, setFollowHeading] = React.useState(false);
   const [isUserInteracting, setIsUserInteracting] = React.useState(false);
   const [mapCenter, setMapCenter] = React.useState<{ latitude: number; longitude: number } | null>(null);
+  const [animatedRouteCoords, setAnimatedRouteCoords] = React.useState<RouteCoordinate[]>([]);
   const hasCenteredInitialRef = useRef(false);
+
+  // Progressive Neon Route Drawing Animation (max 2.5s <= 3s)
+  useEffect(() => {
+    const fullCoords = activeRoute?.coordinates;
+    if (!fullCoords || fullCoords.length < 2) {
+      setAnimatedRouteCoords([]);
+      return;
+    }
+
+    let animFrameId: number | null = null;
+    const durationMs = 2400; // 2.4 seconds (strictly <= 3s)
+    const startTime = Date.now();
+    const totalSegments = fullCoords.length - 1;
+
+    setAnimatedRouteCoords([fullCoords[0], fullCoords[0]]);
+
+    const step = () => {
+      const elapsed = Date.now() - startTime;
+      const rawT = Math.min(1, elapsed / durationMs);
+      // Cubic ease-out for smooth progressive drawing along the streets
+      const easedT = 1 - Math.pow(1 - rawT, 3);
+
+      const exactIndex = easedT * totalSegments;
+      const wholeIndex = Math.floor(exactIndex);
+      const frac = exactIndex - wholeIndex;
+
+      const sliced = fullCoords.slice(0, wholeIndex + 1);
+      if (wholeIndex < totalSegments && frac > 0) {
+        const p1 = fullCoords[wholeIndex];
+        const p2 = fullCoords[wholeIndex + 1];
+        sliced.push({
+          latitude: p1.latitude + (p2.latitude - p1.latitude) * frac,
+          longitude: p1.longitude + (p2.longitude - p1.longitude) * frac,
+        });
+      }
+
+      if (sliced.length >= 2) {
+        setAnimatedRouteCoords(sliced);
+      }
+
+      if (rawT < 1) {
+        animFrameId = requestAnimationFrame(step);
+      } else {
+        setAnimatedRouteCoords(fullCoords);
+      }
+    };
+
+    animFrameId = requestAnimationFrame(step);
+
+    return () => {
+      if (animFrameId !== null) {
+        cancelAnimationFrame(animFrameId);
+      }
+    };
+  }, [activeRoute?.id, activeRoute?.coordinates]);
+
+  // Listen to external recenterSignal from the bottom dock "Mapa" button
+  useEffect(() => {
+    if (recenterSignal > 0) {
+      handleRecenter();
+    }
+  }, [recenterSignal]);
 
   const handleRegionChange = (region: {
     latitude: number;
@@ -498,6 +627,8 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
         showsUserLocation={false}
         showsMyLocationButton={false}
         showsCompass={false}
+        showsBuildings={true}
+        showsIndoors={false}
         userInterfaceStyle="dark"
         customMapStyle={GOOGLE_MAPS_DARK_STYLE}
         onPanDrag={() => setIsUserInteracting(true)}
@@ -532,8 +663,8 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
               longitude: userLocation.longitude,
             }}
             radius={80}
-            strokeColor="rgba(56, 189, 248, 0.35)"
-            fillColor="rgba(56, 189, 248, 0.08)"
+            strokeColor="rgba(16, 185, 129, 0.35)"
+            fillColor="rgba(16, 185, 129, 0.08)"
           />
         )}
 
@@ -579,18 +710,40 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           </Marker>
         )}
 
-        {/* Active Pedestrian Route */}
-        {activeRoute && (
+        {/* Active Pedestrian / Driving Route with Progressive Neon Animation & 3D Street Illumination */}
+        {activeRoute && animatedRouteCoords.length >= 2 && (
           <>
+            {/* 1. Ambient Street & 3D Building Illumination Layer (Wide Translucent Neon Halo) */}
             <Polyline
-              coordinates={activeRoute.coordinates}
-              strokeColor="#0F172A"
-              strokeWidth={7}
+              coordinates={animatedRouteCoords}
+              strokeColor={
+                activeRoute.isSafe
+                  ? 'rgba(16, 185, 129, 0.16)'
+                  : 'rgba(245, 158, 11, 0.16)'
+              }
+              strokeWidth={18}
+              lineCap="round"
+              lineJoin="round"
             />
+            {/* 2. Mid Neon Glow Layer */}
             <Polyline
-              coordinates={activeRoute.coordinates}
-              strokeColor={activeRoute.isSafe ? '#10B981' : '#F59E0B'}
+              coordinates={animatedRouteCoords}
+              strokeColor={
+                activeRoute.isSafe
+                  ? 'rgba(16, 185, 129, 0.42)'
+                  : 'rgba(245, 158, 11, 0.42)'
+              }
+              strokeWidth={9.5}
+              lineCap="round"
+              lineJoin="round"
+            />
+            {/* 3. High-Intensity Neon Core Line */}
+            <Polyline
+              coordinates={animatedRouteCoords}
+              strokeColor={activeRoute.isSafe ? '#34D399' : '#FBBF24'}
               strokeWidth={4.5}
+              lineCap="round"
+              lineJoin="round"
             />
 
             {/* Custom Origin Point A Marker (Preview or Simulation) */}
@@ -905,7 +1058,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#080A0C',
   },
   map: {
     width: '100%',
@@ -914,7 +1067,7 @@ const styles = StyleSheet.create({
   floatingControlsStack: {
     position: 'absolute',
     right: 16,
-    bottom: 110,
+    bottom: 102,
     gap: 10,
     alignItems: 'center',
     zIndex: 100,
@@ -922,17 +1075,17 @@ const styles = StyleSheet.create({
   floatingControlBtn: {
     width: 46,
     height: 46,
-    borderRadius: M3Shapes.large,
-    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderRadius: 23,
+    backgroundColor: 'rgba(18, 22, 29, 0.94)',
     borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
-    ...M3Elevation.level2,
+    ...M3Elevation.level3,
   },
   floatingControlBtnActive: {
-    borderColor: M3Colors.secondary,
-    backgroundColor: M3Colors.secondaryContainer,
+    borderColor: '#10B981',
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
   },
   protestStrobeBtn: {
     backgroundColor: 'rgba(239, 68, 68, 0.18)',
@@ -952,21 +1105,21 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   floatingControlText: {
-    color: M3Colors.onSurfaceVariant,
+    color: '#CBD5E1',
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   floatingControlTextActive: {
-    color: M3Colors.onSecondaryContainer,
+    color: '#34D399',
   },
   recenterNavPill: {
     position: 'absolute',
-    bottom: 110,
+    bottom: 102,
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: M3Colors.primary,
+    backgroundColor: '#10B981',
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: M3Shapes.full,
@@ -974,7 +1127,7 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   recenterNavPillText: {
-    color: M3Colors.onPrimary,
+    color: '#06140E',
     fontSize: 13,
     fontWeight: '800',
   },
@@ -1003,7 +1156,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 56,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: 'rgba(56, 189, 248, 0.22)',
+    borderBottomColor: 'rgba(16, 185, 129, 0.16)',
     transform: [{ rotate: '180deg' }],
   },
   flashlightInnerBeam: {
@@ -1018,29 +1171,29 @@ const styles = StyleSheet.create({
     borderBottomWidth: 44,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: 'rgba(56, 189, 248, 0.45)',
+    borderBottomColor: 'rgba(16, 185, 129, 0.36)',
     transform: [{ rotate: '180deg' }],
   },
   userAvatarDisc: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(56, 189, 248, 0.35)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#080A0C',
     borderWidth: 2.5,
-    borderColor: '#FFFFFF',
+    borderColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#38BDF8',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9,
-    shadowRadius: 6,
-    elevation: 6,
+    shadowRadius: 8,
+    elevation: 8,
   },
   userAvatarCore: {
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#0284C7',
+    backgroundColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingTop: 1.5,
@@ -1055,15 +1208,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 6,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: '#FFFFFF',
+    borderBottomColor: '#06140E',
   },
   pickingBanner: {
     position: 'absolute',
     top: 14,
     alignSelf: 'center',
-    backgroundColor: '#1E2024',
+    backgroundColor: '#12161D',
     borderWidth: 1.5,
-    borderColor: '#38BDF8',
+    borderColor: '#10B981',
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: M3Shapes.full,
@@ -1073,7 +1226,7 @@ const styles = StyleSheet.create({
     ...M3Elevation.level3,
   },
   pickingBannerText: {
-    color: '#FFFFFF',
+    color: '#E2E8F0',
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.2,
@@ -1082,15 +1235,15 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#080A0C',
     borderWidth: 2.5,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.5,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 6,
   },
   markerIconWrap: {
     width: 26,
@@ -1111,12 +1264,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#0F172A',
+    borderColor: '#080A0C',
   },
   votesBadgeText: {
-    color: '#FFFFFF',
+    color: '#06140E',
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   sosMarkerContainer: {
     width: 52,
@@ -1156,80 +1309,115 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Distinct Hospital Building Pins
-  hospitalCleanWrap: {
+  // -------------------------------------------------------------
+  // Stealth Teardrop (Gota) Markers for Pharmacies, Police & Hospitals
+  // -------------------------------------------------------------
+  teardropMarkerWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 3,
+    paddingHorizontal: 4,
+    paddingTop: 2,
+    paddingBottom: 4,
   },
-  hospitalSquareBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
-    backgroundColor: '#0F172A',
-    borderWidth: 2,
+  teardropHead: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 3,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.65,
+    shadowRadius: 4,
+    elevation: 6,
   },
-  hospitalTagPill: {
-    marginTop: 1.5,
-    paddingHorizontal: 3.5,
-    paddingVertical: 0.8,
-    borderRadius: 4,
-    borderWidth: 0.8,
-    borderColor: '#0F172A',
-  },
-  hospitalTagText: {
-    color: '#0F172A',
-    fontSize: 7,
-    fontWeight: '900',
-    letterSpacing: 0.2,
+  teardropTip: {
+    width: 11,
+    height: 11,
+    marginTop: -6.5,
+    transform: [{ rotate: '45deg' }],
+    borderBottomRightRadius: 2,
+    zIndex: 1,
   },
 
-  // Clean Pharmacy Pins (no large circle)
-  pharmacyCleanWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 3,
+  // Pharmacy Teardrop: Solid Neon Emerald when Open, Outlined Neon Emerald when Closed
+  pharmacyHeadOpen: {
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#6EE7B7',
   },
-  cleanStatusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginTop: 1,
+  pharmacyTipOpen: {
+    backgroundColor: '#10B981',
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: '#6EE7B7',
+  },
+  pharmacyHeadClosed: {
+    backgroundColor: '#0A0D12',
+    borderWidth: 2,
+    borderColor: '#10B981',
+  },
+  pharmacyTipClosed: {
+    backgroundColor: '#0A0D12',
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: '#10B981',
+  },
+
+  // Hospital Teardrop: Solid Cyan Neon when Open, Outlined Cyan Neon when Closed
+  hospitalHeadOpen: {
+    backgroundColor: '#0EA5E9',
+    borderWidth: 2,
+    borderColor: '#7DD3FC',
+  },
+  hospitalTipOpen: {
+    backgroundColor: '#0EA5E9',
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: '#7DD3FC',
+  },
+  hospitalHeadClosed: {
+    backgroundColor: '#0A0D12',
+    borderWidth: 2,
+    borderColor: '#0EA5E9',
+  },
+  hospitalTipClosed: {
+    backgroundColor: '#0A0D12',
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: '#0EA5E9',
+  },
+
+  // Police (PSP / GNR / PJ) Teardrop: Crisp White with Obsidian Police Badge
+  policeHead: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+  },
+  policeTip: {
+    backgroundColor: '#F8FAFC',
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: '#CBD5E1',
+  },
+  policeMicroBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#080A0C',
     borderWidth: 1,
-    borderColor: '#0F172A',
+    borderColor: '#F8FAFC',
+    borderRadius: 5,
+    paddingHorizontal: 3.5,
+    paddingVertical: 0.5,
+    zIndex: 3,
   },
-
-  // Clean Police Pins (PSP, GNR, PJ - no large circle)
-  policeCleanWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 3,
-  },
-  policeCleanTag: {
-    marginTop: 1,
-    paddingHorizontal: 3,
-    paddingVertical: 1,
-    borderRadius: 4,
-    borderWidth: 0.8,
-    borderColor: '#0F172A',
-  },
-  policeCleanTagText: {
-    color: '#0F172A',
-    fontSize: 7.5,
+  policeMicroBadgeText: {
+    color: '#F8FAFC',
+    fontSize: 6.5,
     fontWeight: '900',
-    letterSpacing: 0.2,
-  },
-  cleanMarkerShadow: {
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1.5 },
-    textShadowRadius: 3,
+    letterSpacing: 0.3,
   },
 
   // Selected Map Point Pin (POI / Custom Point)

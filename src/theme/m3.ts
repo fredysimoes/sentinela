@@ -7,64 +7,64 @@ import { Easing } from 'react-native';
  */
 
 export const M3Colors = {
-  // Primary (Google Blue tonal family)
-  primary: '#A8C7FA',
-  onPrimary: '#062E6F',
-  primaryContainer: '#0842A0',
-  onPrimaryContainer: '#D3E3FD',
+  // Primary (Stealth Neon Emerald & Cyan accents)
+  primary: '#10B981',
+  onPrimary: '#06140E',
+  primaryContainer: '#0D3B2A',
+  onPrimaryContainer: '#A7F3D0',
 
-  // Secondary (Teal / Sky tonal family)
-  secondary: '#7FCFFF',
-  onSecondary: '#003548',
-  secondaryContainer: '#1E3A54',
-  onSecondaryContainer: '#C6E7FF',
+  // Secondary (Cyan / Sky Neon tonal family)
+  secondary: '#38BDF8',
+  onSecondary: '#072232',
+  secondaryContainer: '#112E42',
+  onSecondaryContainer: '#BAE6FD',
 
   // Tertiary (Safe haven purple / accent)
-  tertiary: '#D0BCFF',
-  onTertiary: '#381E72',
-  tertiaryContainer: '#4F378B',
-  onTertiaryContainer: '#EADDFF',
+  tertiary: '#A78BFA',
+  onTertiary: '#2E1065',
+  tertiaryContainer: '#3B1D7A',
+  onTertiaryContainer: '#EDE9FE',
 
   // Error (Red for hazards and emergency SOS)
-  error: '#F2B8B5',
-  onError: '#601410',
-  errorContainer: '#8C1D18',
-  onErrorContainer: '#F9DEDC',
+  error: '#F87171',
+  onError: '#450A0A',
+  errorContainer: '#7F1D1D',
+  onErrorContainer: '#FEE2E2',
   sosBright: '#DC2626',
   sosPressed: '#991B1B',
 
-  // Success (Green for safe havens & verified locations)
-  success: '#6DD58C',
-  onSuccess: '#003919',
-  successContainer: '#0F5132',
-  onSuccessContainer: '#A6F4C5',
+  // Success (Neon Emerald for safe havens & verified locations)
+  success: '#10B981',
+  onSuccess: '#052E16',
+  successContainer: '#0F4429',
+  onSuccessContainer: '#A7F3D0',
 
   // Warning (Amber / Yellow for caution)
-  warning: '#FFB951',
-  onWarning: '#452B00',
-  warningContainer: '#654100',
-  onWarningContainer: '#FFDDB4',
+  warning: '#FBBF24',
+  onWarning: '#451A03',
+  warningContainer: '#5C3404',
+  onWarningContainer: '#FDE68A',
 
-  // Surfaces & Containers (M3 Dark Surface Tonal Scale)
-  surface: '#111318',
-  surfaceDim: '#111318',
-  surfaceBright: '#37393E',
-  surfaceContainerLowest: '#0C0E13',
-  surfaceContainerLow: '#191C20',
-  surfaceContainer: '#1D2024',
-  surfaceContainerHigh: '#282A2F',
-  surfaceContainerHighest: '#33353A',
+  // Surfaces & Containers (Stealth Obsidian Tonal Scale)
+  surface: '#080A0C',
+  surfaceDim: '#080A0C',
+  surfaceBright: '#242A33',
+  surfaceContainerLowest: '#050709',
+  surfaceContainerLow: '#0E1217',
+  surfaceContainer: '#12161D',
+  surfaceContainerHigh: '#181D26',
+  surfaceContainerHighest: '#202632',
 
-  // On Surface & Text
-  onSurface: '#E2E2E6',
-  onSurfaceVariant: '#C4C6D0',
-  outline: '#8E9099',
-  outlineVariant: '#44474E',
+  // On Surface & Text (Soft light grey / silver, avoiding harsh pure white)
+  onSurface: '#E2E8F0',
+  onSurfaceVariant: '#CBD5E1',
+  outline: '#64748B',
+  outlineVariant: '#262E3B',
 
   // Inverses
-  inverseSurface: '#E2E2E6',
-  inverseOnSurface: '#2E3036',
-  inversePrimary: '#0B57D0',
+  inverseSurface: '#F8FAFC',
+  inverseOnSurface: '#090B0E',
+  inversePrimary: '#059669',
 
   // Scrim / Shadows
   scrim: '#000000',

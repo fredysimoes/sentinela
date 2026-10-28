@@ -161,7 +161,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       <View style={[styles.searchBox, isFocused && styles.searchBoxFocused]}>
         {/* Leading Sentinela Logo Badge */}
         <View style={styles.brandBadge}>
-          <Ionicons name="shield-half" size={19} color={M3Colors.primary} />
+          <Ionicons name="shield-half" size={18} color="#10B981" />
           <View style={styles.liveDot} />
         </View>
 
@@ -171,9 +171,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           placeholder={
             transportMode === 'driving'
               ? 'Destino de carro seguro...'
-              : 'Destino a pé em segurança...'
+              : 'Para onde vai em segurança?'
           }
-          placeholderTextColor={M3Colors.outline}
+          placeholderTextColor="#64748B"
           value={query}
           onChangeText={setQuery}
           onFocus={() => setIsFocused(true)}
@@ -190,7 +190,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
         {/* Loading Spinner */}
         {isLoading && (
-          <ActivityIndicator size="small" color={M3Colors.primary} style={styles.iconBtn} />
+          <ActivityIndicator size="small" color="#10B981" style={styles.iconBtn} />
         )}
 
         {/* Transport Mode Toggle Button (Walk vs Drive) */}
@@ -204,24 +204,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <Ionicons
             name={transportMode === 'driving' ? 'car-sport' : 'walk'}
             size={16}
-            color={transportMode === 'driving' ? M3Colors.onPrimaryContainer : M3Colors.primary}
+            color={transportMode === 'driving' ? '#06140E' : '#10B981'}
           />
         </M3Pressable>
-
-        {/* Sentinels Circle Access Button */}
-        {onOpenSentinels && (
-          <M3Pressable
-            style={styles.contactsActionBtn}
-            onPress={onOpenSentinels}
-          >
-            <Ionicons name="shield-checkmark" size={17} color="#38BDF8" />
-            {sentinelsCount > 0 && (
-              <View style={[styles.contactsCountBadge, { backgroundColor: '#38BDF8' }]}>
-                <Text style={[styles.contactsCountText, { color: '#0F172A' }]}>{sentinelsCount}</Text>
-              </View>
-            )}
-          </M3Pressable>
-        )}
 
         {/* SOS Emergency Contacts Access Button */}
         {onOpenSOSContacts && (
@@ -229,7 +214,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             style={styles.contactsActionBtn}
             onPress={onOpenSOSContacts}
           >
-            <Ionicons name="people" size={17} color={M3Colors.primary} />
+            <Ionicons name="call-outline" size={16} color="#CBD5E1" />
             {emergencyContactsCount > 0 && (
               <View style={styles.contactsCountBadge}>
                 <Text style={styles.contactsCountText}>{emergencyContactsCount}</Text>
@@ -241,10 +226,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         {/* Proximity & Settings Button */}
         {onOpenSettings && (
           <M3Pressable
-            style={[styles.contactsActionBtn, { marginLeft: 6 }]}
+            style={styles.contactsActionBtn}
             onPress={onOpenSettings}
           >
-            <Ionicons name="options-outline" size={17} color={M3Colors.primary} />
+            <Ionicons name="options-outline" size={17} color="#CBD5E1" />
           </M3Pressable>
         )}
       </View>
@@ -326,25 +311,27 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: M3Colors.surfaceContainerHigh,
-    borderRadius: M3Shapes.extraLarge,
+    backgroundColor: 'rgba(16, 20, 27, 0.96)',
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-    paddingLeft: 12,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    paddingLeft: 10,
     paddingRight: 8,
-    height: 52,
+    height: 50,
     ...M3Elevation.level3,
     gap: 8,
   },
   searchBoxFocused: {
-    borderColor: M3Colors.primary,
-    backgroundColor: M3Colors.surfaceContainerHighest,
+    borderColor: '#10B981',
+    backgroundColor: '#141922',
   },
   brandBadge: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: M3Colors.primaryContainer,
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.35)',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -356,11 +343,11 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: M3Colors.success,
+    backgroundColor: '#10B981',
   },
   input: {
     flex: 1,
-    color: M3Colors.onSurface,
+    color: '#E2E8F0',
     fontSize: 14,
     fontWeight: '500',
     paddingVertical: 0,
@@ -372,25 +359,25 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: M3Colors.surfaceContainerLow,
+    backgroundColor: '#0E1217',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   modeToggleBtnDriving: {
-    backgroundColor: M3Colors.primaryContainer,
-    borderColor: M3Colors.primary,
+    backgroundColor: '#10B981',
+    borderColor: '#34D399',
   },
   contactsActionBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: M3Colors.surfaceContainerLow,
+    backgroundColor: '#0E1217',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     position: 'relative',
   },
   contactsCountBadge: {

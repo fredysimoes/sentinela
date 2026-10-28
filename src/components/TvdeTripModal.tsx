@@ -206,7 +206,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.headerIconCircle}>
-            <Ionicons name="car-sport" size={20} color="#38BDF8" />
+            <Ionicons name="car-sport-outline" size={20} color="#10B981" />
           </View>
           <View>
             <Text style={styles.headerTitle}>Acompanhamento TVDE</Text>
@@ -477,11 +477,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    borderColor: 'rgba(16, 185, 129, 0.35)',
   },
   headerTitle: {
     fontSize: 18,
