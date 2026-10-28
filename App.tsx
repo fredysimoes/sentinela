@@ -70,6 +70,7 @@ import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
 import { FeedbackModal } from './src/components/FeedbackModal';
 import { AuthModal } from './src/components/AuthModal';
 import { SentinelsModal } from './src/components/SentinelsModal';
+import { FriendFinderModal, FriendFinderTarget } from './src/components/FriendFinderModal';
 import { StalkingActiveModal } from './src/components/StalkingActiveModal';
 import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
 import { TvdeTripModal } from './src/components/TvdeTripModal';
@@ -199,6 +200,7 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSentinelsModal, setShowSentinelsModal] = useState(false);
   const [showIncomingTrackerModal, setShowIncomingTrackerModal] = useState(false);
+  const [activeFriendFinderTarget, setActiveFriendFinderTarget] = useState<FriendFinderTarget | null>(null);
 
   // TVDE Ride Protection States (Uber / Bolt / Táxi)
   const [showTvdeModal, setShowTvdeModal] = useState(false);
@@ -1797,6 +1799,18 @@ export default function App() {
         onClose={() => setShowSentinelsModal(false)}
         currentUser={currentUserProfile}
         onOpenAuth={() => setShowAuthModal(true)}
+        onOpenFriendFinder={(friend) => {
+          setActiveFriendFinderTarget(friend);
+        }}
+      />
+
+      {/* "Estou Aqui" - Friend Finder BLE Radar Modal */}
+      <FriendFinderModal
+        visible={!!activeFriendFinderTarget}
+        onClose={() => setActiveFriendFinderTarget(null)}
+        friend={activeFriendFinderTarget}
+        userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : null}
+        userHeading={userHeading}
       />
 
       {/* Floating HUD for Active "Estou a ser seguido(a)" Session */}

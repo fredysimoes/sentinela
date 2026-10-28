@@ -11,7 +11,8 @@ class TorchPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
         return listOf(
             TorchModule(reactContext),
-            TvdeBridgeModule(reactContext)
+            TvdeBridgeModule(reactContext),
+            BleRadarModule(reactContext)
         )
     }
 

@@ -28,6 +28,7 @@ interface SentinelsModalProps {
   onClose: () => void;
   currentUser: UserProfile | null;
   onOpenAuth: () => void;
+  onOpenFriendFinder?: (friend: { id: string; name: string; code: string }) => void;
 }
 
 export const SentinelsModal: React.FC<SentinelsModalProps> = ({
@@ -35,6 +36,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
   onClose,
   currentUser,
   onOpenAuth,
+  onOpenFriendFinder,
 }) => {
   const [activeTab, setActiveTab] = useState<'my_sentinels' | 'protecting'>('my_sentinels');
   const [sentinels, setSentinels] = useState<SentinelContact[]>([]);
@@ -255,10 +257,24 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
                     <Text style={styles.sentinelName}>{sentinel.name}</Text>
                     <Text style={styles.sentinelCodeText}>Código: {sentinel.sentinelCode}</Text>
                   </View>
-                  <View style={styles.activeBadge}>
-                    <Ionicons name="checkmark-circle" size={14} color="#10B981" style={{ marginRight: 4 }} />
-                    <Text style={styles.activeBadgeText}>Ativo</Text>
-                  </View>
+                  {onOpenFriendFinder && (
+                    <TouchableOpacity
+                      style={styles.findFriendBtn}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        onClose();
+                        onOpenFriendFinder({
+                          id: sentinel.id,
+                          name: sentinel.name,
+                          code: sentinel.sentinelCode,
+                        });
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="radio" size={14} color="#10B981" />
+                      <Text style={styles.findFriendBtnText}>Estou Aqui</Text>
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity
                     style={styles.deleteBtn}
                     onPress={() => handleRemove(sentinel)}
@@ -529,6 +545,22 @@ const styles = StyleSheet.create({
     color: '#10B981',
     fontSize: 11,
     fontWeight: '700',
+  },
+  findFriendBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: M3Shapes.full,
+  },
+  findFriendBtnText: {
+    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '800',
   },
   deleteBtn: {
     padding: 6,
