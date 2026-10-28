@@ -36,10 +36,10 @@ export const ProtestLightModal: React.FC<ProtestLightModalProps> = ({
         }
       })();
 
-      // Rapid high-frequency strobe (~80ms alternating black and white)
+      // Ultra-fast high-frequency strobe (~45ms alternating black and white)
       intervalRef.current = setInterval(() => {
         setStrobeState((prev) => !prev);
-      }, 80);
+      }, 45);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);

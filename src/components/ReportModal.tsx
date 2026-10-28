@@ -92,16 +92,15 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
       if (selectedCategory === 'protest_infiltrator') {
         const nextTotal = nearbyInfiltratorSignals + 1;
-        if (nextTotal >= 3) {
+        if (nextTotal >= 2) {
           Alert.alert(
-            'Alerta Publicado no Mapa',
-            'Com a sua sinalização foi atingido o limiar de verificação comunitária (3 ou mais sinalizações num raio de 300m). O marcador de possíveis infiltrados está agora visível no mapa.'
+            'Alerta Triangular Confirmado no Mapa',
+            `Com a sua sinalização foi atingida a verificação comunitária (${nextTotal} sinalizações trianguladas num raio de 300m). O marcador de possíveis infiltrados está agora visível no mapa no epicentro mais aproximado.`
           );
         } else {
-          const remaining = Math.max(1, 3 - nextTotal);
           Alert.alert(
-            'Sinalização Registada',
-            `A sua sinalização foi registada (${nextTotal}/3 num raio de 300m). Por precaução e para evitar alarmismo, o marcador só ficará visível no mapa quando mais ${remaining === 1 ? '1 pessoa sinalizar' : `${remaining} pessoas sinalizarem`} nesta zona.`
+            'Sinalização Registada (Aguardar Verificação)',
+            `A sua sinalização foi registada (1 de 2 necessárias num raio de 300m). Por precaução e para evitar falso alarmismo, o marcador só ficará visível no mapa assim que mais 1 manifestante sinalizar nesta zona.`
           );
         }
       }
@@ -115,7 +114,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     if (selectedCategory === 'protest_infiltrator') {
       Alert.alert(
         'Aviso de Cautela e Visibilidade',
-        'A sinalização de possíveis infiltrados deve ser usada com máxima cautela. Este marcador só aparecerá visível no mapa depois de mais de 2 utilizadores (mínimo de 3 sinalizações num raio de 300m) reportarem a situação na mesma zona. Confirma que presenciou comportamentos de provocação deliberada?',
+        'A sinalização de possíveis infiltrados deve ser usada com máxima cautela. Este marcador só aparecerá visível no mapa após 2 ou mais pessoas reportarem na mesma zona (300m), triangulando a posição exata. Confirma que presenciou atitudes provocatórias?',
         [
           { text: 'Cancelar', style: 'cancel' },
           {
@@ -133,9 +132,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
   const meta = CATEGORIES[selectedCategory] || CATEGORIES.suspicious;
 
-  // Filter general categories grid: exclude protest_infiltrator so it is only triggered via the dedicated Protest Mode button
+  // Filter general categories grid: when Protest Mode is active, include protest_infiltrator in the grid as well
   const availableCategories = (Object.keys(CATEGORIES) as IncidentCategory[]).filter(
-    (catKey) => catKey !== 'protest_infiltrator'
+    (catKey) => catKey !== 'protest_infiltrator' || protestMode
   );
 
   return (
@@ -221,14 +220,14 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 </View>
               </View>
               <Text style={styles.infiltratorSub}>
-                Sinalizar provocadores na manifestação. Usar com cautela: o marcador só aparece no mapa quando mais pessoas sinalizarem (mín. 3 num raio de 300m).
+                Sinalizar provocadores na manifestação. Usar com cautela: o marcador só aparece no mapa após 2 ou 3 sinalizações trianguladas num raio de 300m.
               </Text>
               <View style={styles.infiltratorMetaRow}>
                 <Ionicons name="people" size={12} color="#FCA5A5" />
                 <Text style={styles.infiltratorMetaText}>
-                  {nearbyInfiltratorSignals >= 3
-                    ? `Visível no mapa (${nearbyInfiltratorSignals} sinalizações num raio de 300m)`
-                    : `${nearbyInfiltratorSignals} de 3 sinalizações num raio de 300m para aparecer no mapa`}
+                  {nearbyInfiltratorSignals >= 2
+                    ? `Visível e triangulado no mapa (${nearbyInfiltratorSignals} sinalizações)`
+                    : `${nearbyInfiltratorSignals} de 2 sinalizações (raio 300m) para aparecer no mapa`}
                 </Text>
               </View>
             </View>
@@ -246,7 +245,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           {availableCategories.map((catKey) => {
             const cat = CATEGORIES[catKey];
             const isSelected = selectedCategory === catKey;
-            const isFullWidthLast = catKey === 'safe_haven';
+            const isFullWidthLast = catKey === 'safe_haven' && !protestMode;
 
             const renderModernCategoryIcon = () => {
               const iconColor = isSelected ? '#FFFFFF' : cat.color;
@@ -264,6 +263,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                   return <MaterialCommunityIcons name="traffic-cone" size={size} color={iconColor} />;
                 case 'police_presence':
                   return <MaterialCommunityIcons name="police-badge" size={size} color={iconColor} />;
+                case 'protest_infiltrator':
+                  return <MaterialCommunityIcons name="account-alert" size={size} color={iconColor} />;
                 case 'safe_haven':
                   return <MaterialCommunityIcons name="shield-check" size={size} color={iconColor} />;
                 default:
@@ -327,9 +328,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           <View style={styles.cautionBanner}>
             <Ionicons name="warning" size={20} color="#F59E0B" style={{ marginTop: 1 }} />
             <View style={{ flex: 1, marginLeft: 8 }}>
-              <Text style={styles.cautionBannerTitle}>USO COM CAUTELA — VISIBILIDADE CONDICIONADA</Text>
+              <Text style={styles.cautionBannerTitle}>USO COM CAUTELA — TRIANGULAÇÃO COMUNITÁRIA</Text>
               <Text style={styles.cautionBannerText}>
-                Para evitar falso alarmismo, a sua sinalização ficará registada em espera e o marcador só aparecerá no mapa público quando mais de 2 utilizadores (mínimo de 3 sinalizações num raio de 300m) reportarem esta situação.
+                Para evitar falso alarmismo e posicionar o evento com precisão, a sinalização é guardada e só aparece no mapa após 2 ou mais pessoas reportarem na mesma zona (raio 300m). O sistema triangula as posições e coloca o marcador no epicentro mais aproximado.
               </Text>
             </View>
           </View>

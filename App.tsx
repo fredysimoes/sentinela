@@ -94,7 +94,7 @@ import {
 } from './src/services/stalkingService';
 import { syncPendingFeedback } from './src/services/feedbackService';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
-import { calculateDistanceMeters, formatDistance, isProtestInfiltratorVerified } from './src/utils/geo';
+import { calculateDistanceMeters, formatDistance, isProtestInfiltratorVerified, calculateTriangulatedCluster } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
 import { reverseGeocodeCoordinate } from './src/services/geocodingService';
 import {
@@ -1087,10 +1087,43 @@ export default function App() {
     });
   };
 
-  // Handle adding a new incident report
+  // Handle adding a new incident report with Triangulation for Infiltrators
   const handleAddIncident = (
     data: Omit<Incident, 'id' | 'createdAt' | 'confirmations' | 'dismissals'>
   ) => {
+    // If reporting protest infiltrators, triangulate with any existing sightings within 300m
+    if (data.category === 'protest_infiltrator') {
+      const triangulation = calculateTriangulatedCluster(
+        { latitude: data.latitude, longitude: data.longitude },
+        incidents,
+        'protest_infiltrator',
+        300
+      );
+
+      if (triangulation.clusterIds.length > 0) {
+        // Consolidate cluster: update the existing incidents in this cluster with the new triangulated centroid and increment confirmations
+        const updated = incidents.map((item) => {
+          if (triangulation.clusterIds.includes(item.id)) {
+            return {
+              ...item,
+              latitude: triangulation.triangulatedCoord.latitude,
+              longitude: triangulation.triangulatedCoord.longitude,
+              confirmations: (item.confirmations || 1) + 1,
+              title: 'Possíveis Infiltrados (Triangulado)',
+              description: `${item.description}\n• Nova sinalização triangulada próxima.`,
+            };
+          }
+          return item;
+        });
+
+        setIncidents(updated);
+        saveIncidents(updated);
+        triangulation.clusterIds.forEach((id) => confirmIncidentOnline(id));
+        setTargetCoordinate(null);
+        return;
+      }
+    }
+
     const newIncident: Incident = {
       ...data,
       id: `inc-${Date.now()}`,
@@ -1329,6 +1362,14 @@ export default function App() {
           isTorchActive={isTorchActive}
           onToggleTorch={handleToggleTorch}
           onOpenStrobe={handleOpenStrobe}
+          onExitProtestMode={() => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            handleSaveNotificationSettings({
+              ...notificationSettings,
+              protestMode: false,
+            });
+            Alert.alert('Modo Protesto Desativado', 'A aplicação regressou ao modo pedestre normal.');
+          }}
           stalkingSession={activeStalkingSession || incomingStalkingAlert}
           recenterSignal={mapRecenterSignal}
         />
@@ -1828,7 +1869,7 @@ export default function App() {
                 >
                   <Ionicons
                     name={isMapActive ? 'home' : 'home-outline'}
-                    size={16}
+                    size={17}
                     color={isMapActive ? '#080A0C' : '#CBD5E1'}
                   />
                   <Text
@@ -2119,8 +2160,8 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'rgba(14, 18, 25, 0.98)',
     borderRadius: 999,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.16)',
     shadowColor: '#000000',
@@ -2128,21 +2169,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 16,
     elevation: 28,
-    gap: 2,
   },
   dockPillItem: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    height: 44,
+    height: 48,
     borderRadius: 999,
-    paddingHorizontal: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+    gap: 2,
   },
   dockPillItemSelectedWhite: {
     backgroundColor: '#F8FAFC',
-    paddingHorizontal: 11,
+    borderRadius: 999,
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -2151,20 +2192,22 @@ const styles = StyleSheet.create({
   },
   dockPillItemText: {
     color: '#CBD5E1',
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '600',
-    letterSpacing: 0.1,
+    textAlign: 'center',
+    letterSpacing: -0.1,
   },
   dockPillItemTextSelectedDark: {
     color: '#080A0C',
-    fontSize: 11.5,
-    fontWeight: '800',
-    letterSpacing: 0.15,
+    fontSize: 9.5,
+    fontWeight: '900',
+    letterSpacing: -0.1,
   },
   dockIconWrap: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    height: 20,
   },
   dockLiveBadgeDotRed: {
     position: 'absolute',
@@ -2208,13 +2251,12 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   dockSosPill: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
     backgroundColor: '#DC2626',
-    paddingHorizontal: 13,
-    height: 44,
+    paddingHorizontal: 12,
+    height: 48,
     borderRadius: 999,
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.35)',
@@ -2223,11 +2265,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 6,
     elevation: 6,
+    gap: 1,
   },
   dockSosPillText: {
     color: '#FFFFFF',
-    fontSize: 12.5,
+    fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
 });

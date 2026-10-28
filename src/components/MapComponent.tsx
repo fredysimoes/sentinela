@@ -275,6 +275,7 @@ interface MapComponentProps {
   isTorchActive?: boolean;
   onToggleTorch?: () => void;
   onOpenStrobe?: () => void;
+  onExitProtestMode?: () => void;
   routeOrigin?: { name: string; coord: RouteCoordinate } | null;
   routeDestination?: { name: string; coord: RouteCoordinate } | null;
   stalkingSession?: StalkingTrackingSession | null;
@@ -309,6 +310,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   isTorchActive = false,
   onToggleTorch,
   onOpenStrobe,
+  onExitProtestMode,
   routeOrigin = null,
   routeDestination = null,
   stalkingSession = null,
@@ -959,9 +961,20 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
 
       {/* Floating Map Controls Column (Compass, 3D/2D, Recenter) */}
       <View style={styles.floatingControlsStack}>
-        {/* Protest Mode Flashlight & Strobe Buttons (placed directly above compass) */}
+        {/* Protest Mode Controls: Exit Button, Strobe and Flashlight */}
         {protestMode && (
           <>
+            {/* Quick Exit Protest Mode Button (placed directly above Strobe) */}
+            {onExitProtestMode && (
+              <M3Pressable
+                scaleOnPress={0.9}
+                style={[styles.floatingControlBtn, styles.protestExitBtn]}
+                onPress={onExitProtestMode}
+              >
+                <Ionicons name="close" size={22} color="#FFFFFF" />
+              </M3Pressable>
+            )}
+
             {/* Strobe Button */}
             <M3Pressable
               scaleOnPress={0.9}
@@ -1086,6 +1099,15 @@ const styles = StyleSheet.create({
   floatingControlBtnActive: {
     borderColor: '#10B981',
     backgroundColor: 'rgba(16, 185, 129, 0.18)',
+  },
+  protestExitBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.92)',
+    borderColor: '#EF4444',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 6,
   },
   protestStrobeBtn: {
     backgroundColor: 'rgba(239, 68, 68, 0.18)',

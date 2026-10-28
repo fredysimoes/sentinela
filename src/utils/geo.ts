@@ -90,14 +90,64 @@ export function countNearbyInfiltratorSignals(
 }
 
 /**
- * Checks if a protest infiltrator incident has reached the community verification threshold (>= 3 signals within 300m, i.e., more than 2 reporters)
+ * Calculates the triangulated centroid (weighted average coordinate) of nearby reports
+ * within a specified radius (e.g. 300m) to consolidate multiple scattered sightings into a unified epicenter.
+ */
+export function calculateTriangulatedCluster(
+  newCoord: { latitude: number; longitude: number },
+  existingIncidents: Array<{ id: string; category: string; latitude: number; longitude: number; confirmations?: number }>,
+  targetCategory: string = 'protest_infiltrator',
+  radiusMeters: number = 300
+): {
+  triangulatedCoord: { latitude: number; longitude: number };
+  clusterIds: string[];
+  totalReports: number;
+} {
+  const matchingCluster = existingIncidents.filter((inc) => {
+    if (inc.category !== targetCategory) return false;
+    const dist = calculateDistanceMeters(newCoord.latitude, newCoord.longitude, inc.latitude, inc.longitude);
+    return dist <= radiusMeters;
+  });
+
+  if (matchingCluster.length === 0) {
+    return {
+      triangulatedCoord: newCoord,
+      clusterIds: [],
+      totalReports: 1,
+    };
+  }
+
+  // Weight each coordinate by its confirmations (default 1)
+  let totalWeight = 1; // 1 for the new report
+  let sumLat = newCoord.latitude;
+  let sumLng = newCoord.longitude;
+
+  matchingCluster.forEach((inc) => {
+    const weight = Math.max(1, inc.confirmations || 1);
+    sumLat += inc.latitude * weight;
+    sumLng += inc.longitude * weight;
+    totalWeight += weight;
+  });
+
+  return {
+    triangulatedCoord: {
+      latitude: sumLat / totalWeight,
+      longitude: sumLng / totalWeight,
+    },
+    clusterIds: matchingCluster.map((m) => m.id),
+    totalReports: totalWeight,
+  };
+}
+
+/**
+ * Checks if a protest infiltrator incident has reached the community verification threshold (>= 2 or 3 signals within 300m)
  * to be displayed publicly on the map.
  */
 export function isProtestInfiltratorVerified(
   incident: { id: string; category: string; latitude: number; longitude: number; confirmations?: number },
   allIncidents: Array<{ id: string; category: string; latitude: number; longitude: number; confirmations?: number }>,
   radiusMeters: number = 300,
-  minSignalsThreshold: number = 3
+  minSignalsThreshold: number = 2
 ): boolean {
   if (incident.category !== 'protest_infiltrator') return true;
 
