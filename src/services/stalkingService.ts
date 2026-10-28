@@ -239,6 +239,9 @@ export function subscribeToStalkingAlertsForSentinel(
       (payload) => {
         if (payload.eventType === 'INSERT') {
           const row: any = payload.new;
+          // Never deliver alert to the user who created it
+          if (row.user_id === sentinelUserId) return;
+
           if (row.status === 'active') {
             onAlert({
               id: row.id,
@@ -257,6 +260,9 @@ export function subscribeToStalkingAlertsForSentinel(
           }
         } else if (payload.eventType === 'UPDATE') {
           const row: any = payload.new;
+          // Never deliver alert to the user who created it
+          if (row.user_id === sentinelUserId) return;
+
           if (row.status === 'resolved') {
             onResolved?.(row.id);
           } else if (row.status === 'active') {

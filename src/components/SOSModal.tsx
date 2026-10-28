@@ -29,6 +29,7 @@ interface SOSModalProps {
   onUpdateContacts?: (contacts: EmergencyContact[]) => void;
   onSOSResolved?: (alertId?: string) => void;
   activeTvdeTrip?: TvdeTripSession | null;
+  currentUserProfile?: { id?: string; fullName?: string; name?: string } | null;
 }
 
 export const SOSModal: React.FC<SOSModalProps> = ({
@@ -40,6 +41,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
   onUpdateContacts,
   onSOSResolved,
   activeTvdeTrip,
+  currentUserProfile,
 }) => {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isDispatched, setIsDispatched] = useState(false);
@@ -112,6 +114,8 @@ export const SOSModal: React.FC<SOSModalProps> = ({
     const lon = currentLocation?.longitude ?? -9.1393;
 
     const result = await createAndDispatchSOS({
+      userId: currentUserProfile?.id,
+      userName: currentUserProfile?.fullName || currentUserProfile?.name,
       latitude: lat,
       longitude: lon,
       message: activeTvdeTrip ? formatTvdeSOSContext(activeTvdeTrip) : undefined,

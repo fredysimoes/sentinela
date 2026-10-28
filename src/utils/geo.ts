@@ -28,6 +28,100 @@ export function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
+/**
+ * Calculates initial bearing (azimuth in degrees 0..360) from coord 1 to coord 2
+ */
+export function calculateBearing(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const phi1 = (lat1 * Math.PI) / 180;
+  const phi2 = (lat2 * Math.PI) / 180;
+  const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+
+  const y = Math.sin(deltaLambda) * Math.cos(phi2);
+  const x =
+    Math.cos(phi1) * Math.sin(phi2) -
+    Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+  const theta = Math.atan2(y, x);
+  const bearing = ((theta * 180) / Math.PI + 360) % 360;
+  return Math.round(bearing);
+}
+
+/**
+ * Calculates relative angle between phone compass heading and target bearing.
+ * 0 = directly in front, 90 = to the right, 180 = directly behind, 270 = to the left.
+ */
+export function calculateRelativeAngle(bearing: number, userHeading: number): number {
+  return ((bearing - userHeading + 360) % 360);
+}
+
+/**
+ * Human-readable directional orientation relative to the user's perspective
+ */
+export function getCompassDirectionLabel(relativeAngle: number): string {
+  if (relativeAngle >= 337.5 || relativeAngle < 22.5) {
+    return 'Em frente';
+  } else if (relativeAngle >= 22.5 && relativeAngle < 67.5) {
+    return 'À sua frente, à direita';
+  } else if (relativeAngle >= 67.5 && relativeAngle < 112.5) {
+    return 'À sua direita';
+  } else if (relativeAngle >= 112.5 && relativeAngle < 157.5) {
+    return 'Atrás de si, à direita';
+  } else if (relativeAngle >= 157.5 && relativeAngle < 202.5) {
+    return 'Atrás de si';
+  } else if (relativeAngle >= 202.5 && relativeAngle < 247.5) {
+    return 'Atrás de si, à esquerda';
+  } else if (relativeAngle >= 247.5 && relativeAngle < 292.5) {
+    return 'À sua esquerda';
+  } else {
+    return 'À sua frente, à esquerda';
+  }
+}
+
+/**
+ * Proximity classification for crowd radar finding
+ */
+export function getProximityStatus(distanceMeters: number): {
+  label: string;
+  color: string;
+  hapticIntervalMs: number | null;
+} {
+  if (distanceMeters <= 3) {
+    return {
+      label: 'Contacto Visual Iminente! (Ao seu lado)',
+      color: '#10B981',
+      hapticIntervalMs: 250, // Rapid Geiger pulse
+    };
+  } else if (distanceMeters <= 8) {
+    return {
+      label: 'Muito Perto (Levante o olhar)',
+      color: '#34D399',
+      hapticIntervalMs: 500,
+    };
+  } else if (distanceMeters <= 20) {
+    return {
+      label: 'Na mesma área',
+      color: '#06B6D4',
+      hapticIntervalMs: 900,
+    };
+  } else if (distanceMeters <= 60) {
+    return {
+      label: 'A aproximar-se',
+      color: '#38BDF8',
+      hapticIntervalMs: 1600,
+    };
+  } else {
+    return {
+      label: 'A caminho',
+      color: '#94A3B8',
+      hapticIntervalMs: null,
+    };
+  }
+}
+
 export function formatRelativeTime(timestamp: number): string {
   const diffSec = Math.floor((Date.now() - timestamp) / 1000);
   if (diffSec < 60) return 'Agora mesmo';

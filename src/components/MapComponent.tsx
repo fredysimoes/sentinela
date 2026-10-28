@@ -282,6 +282,7 @@ interface MapComponentProps {
   isSimulating?: boolean;
   simulatedLocation?: RouteCoordinate | null;
   recenterSignal?: number;
+  onOpenRadar?: () => void;
 }
 
 export const MapComponent: React.FC<MapComponentProps> = memo(({
@@ -317,6 +318,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   isSimulating = false,
   simulatedLocation = null,
   recenterSignal = 0,
+  onOpenRadar,
 }) => {
   const mapRef = useRef<MapView | null>(null);
   const [is3DMode, setIs3DMode] = React.useState(false);
@@ -1002,6 +1004,17 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           </>
         )}
 
+        {/* Crowd Radar "Estou Aqui" Button */}
+        {onOpenRadar && (
+          <M3Pressable
+            scaleOnPress={0.9}
+            style={[styles.floatingControlBtn, styles.radarFloatingBtn]}
+            onPress={onOpenRadar}
+          >
+            <Ionicons name="scan" size={22} color="#10B981" />
+          </M3Pressable>
+        )}
+
         {/* Gyroscope/Compass Heading Button */}
         <M3Pressable
           scaleOnPress={0.9}
@@ -1125,6 +1138,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 8,
     elevation: 8,
+  },
+  radarFloatingBtn: {
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
   },
   floatingControlText: {
     color: '#CBD5E1',

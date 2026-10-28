@@ -29,6 +29,7 @@ interface SentinelsModalProps {
   currentUser: UserProfile | null;
   onOpenAuth: () => void;
   onOpenFriendFinder?: (friend: { id: string; name: string; code: string }) => void;
+  onOpenRadar?: () => void;
 }
 
 export const SentinelsModal: React.FC<SentinelsModalProps> = ({
@@ -37,6 +38,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
   currentUser,
   onOpenAuth,
   onOpenFriendFinder,
+  onOpenRadar,
 }) => {
   const [activeTab, setActiveTab] = useState<'my_sentinels' | 'protecting'>('my_sentinels');
   const [sentinels, setSentinels] = useState<SentinelContact[]>([]);
@@ -257,7 +259,21 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
                     <Text style={styles.sentinelName}>{sentinel.name}</Text>
                     <Text style={styles.sentinelCodeText}>Código: {sentinel.sentinelCode}</Text>
                   </View>
-                  {onOpenFriendFinder && (
+                  {onOpenRadar && (
+                    <TouchableOpacity
+                      style={styles.findFriendBtn}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        onClose();
+                        onOpenRadar();
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="scan" size={14} color="#10B981" />
+                      <Text style={styles.findFriendBtnText}>Radar</Text>
+                    </TouchableOpacity>
+                  )}
+                  {onOpenFriendFinder && !onOpenRadar && (
                     <TouchableOpacity
                       style={styles.findFriendBtn}
                       onPress={() => {

@@ -1,7 +1,6 @@
 import { Linking, Platform } from 'react-native';
 import { EmergencyContact, SOSAlert } from '../types';
 import { getGoogleMapsUrl } from '../utils/geo';
-import { sendLocalSOSPushNotification } from './notifications';
 
 export interface DispatchSOSResult {
   alert: SOSAlert;
@@ -9,6 +8,7 @@ export interface DispatchSOSResult {
 }
 
 export async function createAndDispatchSOS(params: {
+  userId?: string;
   userName?: string;
   latitude: number;
   longitude: number;
@@ -24,7 +24,7 @@ export async function createAndDispatchSOS(params: {
 
   const alert: SOSAlert = {
     id: `sos-${now}`,
-    userId: 'current-user',
+    userId: params.userId || 'current-user',
     userName,
     latitude: params.latitude,
     longitude: params.longitude,
@@ -33,17 +33,8 @@ export async function createAndDispatchSOS(params: {
     message: params.message,
   };
 
-  // Simulate dispatching push notification to nearby users (e.g. 250m)
-  try {
-    await sendLocalSOSPushNotification({
-      userName,
-      distanceMeters: 280,
-      latitude: params.latitude,
-      longitude: params.longitude,
-    });
-  } catch (err) {
-    console.warn('Erro ao disparar push notification SOS:', err);
-  }
+  // Note: Local push notification to self is intentionally omitted.
+  // The SOS alert is broadcast to Sentinels and community members via Supabase Realtime.
 
   return {
     alert,

@@ -70,7 +70,7 @@ import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
 import { FeedbackModal } from './src/components/FeedbackModal';
 import { AuthModal } from './src/components/AuthModal';
 import { SentinelsModal } from './src/components/SentinelsModal';
-import { FriendFinderModal, FriendFinderTarget } from './src/components/FriendFinderModal';
+import { RadarModal } from './src/components/RadarModal';
 import { StalkingActiveModal } from './src/components/StalkingActiveModal';
 import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
 import { TvdeTripModal } from './src/components/TvdeTripModal';
@@ -200,7 +200,8 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSentinelsModal, setShowSentinelsModal] = useState(false);
   const [showIncomingTrackerModal, setShowIncomingTrackerModal] = useState(false);
-  const [activeFriendFinderTarget, setActiveFriendFinderTarget] = useState<FriendFinderTarget | null>(null);
+  const [showRadarModal, setShowRadarModal] = useState(false);
+  const myCreatedSOSIdsRef = useRef<Set<string>>(new Set());
 
   // TVDE Ride Protection States (Uber / Bolt / Táxi)
   const [showTvdeModal, setShowTvdeModal] = useState(false);
@@ -891,6 +892,14 @@ export default function App() {
 
         subscribeToOnlineSOS(
           (newSOS) => {
+            // Never alert self for own SOS
+            if (newSOS.userId && currentUserProfile?.id && newSOS.userId === currentUserProfile.id) {
+              return;
+            }
+            if (myCreatedSOSIdsRef.current.has(newSOS.id)) {
+              return;
+            }
+
             setActiveSOSAlerts((prev) => [newSOS, ...prev.filter((s) => s.id !== newSOS.id)]);
             setActiveBanner({
               title: '🚨 ALERTA SOS EM DIRETO',
@@ -958,6 +967,10 @@ export default function App() {
     const unsubscribeStalking = subscribeToStalkingAlertsForSentinel(
       currentUserProfile.id,
       (alertSession) => {
+        // Crucial: Only alert if the session is from another user, never self!
+        if (alertSession.userId === currentUserProfile.id) {
+          return;
+        }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         setIncomingStalkingAlert(alertSession);
         setShowIncomingTrackerModal(true);
@@ -1206,6 +1219,7 @@ export default function App() {
 
   // Handle SOS Creation
   const handleSOSCreated = (sos: SOSAlert) => {
+    myCreatedSOSIdsRef.current.add(sos.id);
     const updated = [sos, ...activeSOSAlerts];
     setActiveSOSAlerts(updated);
     saveActiveSOSAlerts(updated);
@@ -1374,6 +1388,7 @@ export default function App() {
           }}
           stalkingSession={activeStalkingSession || incomingStalkingAlert}
           recenterSignal={mapRecenterSignal}
+          onOpenRadar={() => setShowRadarModal(true)}
         />
       </View>
 
@@ -1727,6 +1742,7 @@ export default function App() {
         onUpdateContacts={handleSaveContacts}
         onSOSResolved={handleResolveSOS}
         activeTvdeTrip={activeTvdeTrip}
+        currentUserProfile={currentUserProfile}
       />
 
       {/* TVDE Ride Protection Modal (Uber / Bolt / Táxi) */}
@@ -1799,18 +1815,22 @@ export default function App() {
         onClose={() => setShowSentinelsModal(false)}
         currentUser={currentUserProfile}
         onOpenAuth={() => setShowAuthModal(true)}
-        onOpenFriendFinder={(friend) => {
-          setActiveFriendFinderTarget(friend);
+        onOpenRadar={() => {
+          setShowSentinelsModal(false);
+          setShowRadarModal(true);
         }}
       />
 
-      {/* "Estou Aqui" - Friend Finder BLE Radar Modal */}
-      <FriendFinderModal
-        visible={!!activeFriendFinderTarget}
-        onClose={() => setActiveFriendFinderTarget(null)}
-        friend={activeFriendFinderTarget}
+      {/* Crowd Radar "Estou Aqui" Finding Modal */}
+      <RadarModal
+        visible={showRadarModal}
+        onClose={() => setShowRadarModal(false)}
         userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : null}
         userHeading={userHeading}
+        onNavigateToFriend={(name, coord) => {
+          setShowRadarModal(false);
+          handleRequestNavigation(name, coord, 'walking');
+        }}
       />
 
       {/* Floating HUD for Active "Estou a ser seguido(a)" Session */}
