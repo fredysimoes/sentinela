@@ -102,6 +102,32 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
   );
 });
 
+const HospitalMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  const status = place.pharmacyStatus || getPharmacyStatus(place);
+  const badgeColor = status.isOpen ? '#10B981' : '#EF4444';
+  return (
+    <Marker
+      coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+      onPress={onSelect}
+      tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.5 }}
+    >
+      <View style={styles.hospitalCleanWrap}>
+        <View style={[styles.hospitalSquareBadge, { borderColor: badgeColor }]}>
+          <MaterialCommunityIcons
+            name="hospital-building"
+            size={16}
+            color={badgeColor}
+          />
+        </View>
+        <View style={[styles.hospitalTagPill, { backgroundColor: badgeColor }]}>
+          <Text style={styles.hospitalTagText}>{status.isOpen ? 'HOSP' : 'FECH'}</Text>
+        </View>
+      </View>
+    </Marker>
+  );
+});
+
 const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
   const isPSP = place.type === 'psp';
   const isGNR = place.type === 'gnr';
@@ -165,7 +191,10 @@ interface MapComponentProps {
   incidents: Incident[];
   activeSOSAlerts: SOSAlert[];
   safePlaces: SafePlaceWithDistance[];
-  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy';
+  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy' | 'hospital' | null;
+  showPoliceOnMap?: boolean;
+  showPharmaciesOnMap?: boolean;
+  showHospitalsOnMap?: boolean;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -196,6 +225,9 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   activeSOSAlerts,
   safePlaces,
   selectedCategoryFilter,
+  showPoliceOnMap = true,
+  showPharmaciesOnMap = true,
+  showHospitalsOnMap = true,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -403,35 +435,34 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
       });
     };
 
-    if (selectedCategoryFilter === 'police') {
+    const result: SafePlaceWithDistance[] = [];
+
+    if (showPoliceOnMap) {
       const police = safePlaces.filter((p) => p.type === 'psp' || p.type === 'gnr' || p.type === 'pj');
-      return sortByDistanceToCenter(police).slice(0, 50);
+      result.push(...sortByDistanceToCenter(police).slice(0, 50));
     }
 
-    if (selectedCategoryFilter === 'pharmacy') {
+    if (showPharmaciesOnMap) {
       const pharmacies = safePlaces.filter((p) => p.type === 'pharmacy');
-      return sortByDistanceToCenter(pharmacies).slice(0, 60);
+      result.push(...sortByDistanceToCenter(pharmacies).slice(0, 75));
     }
 
-    // 'all': Show nearest 30 police stations + nearest 40 pharmacies to visible map center
-    const police = safePlaces.filter((p) => p.type === 'psp' || p.type === 'gnr' || p.type === 'pj');
-    const pharmacies = safePlaces.filter((p) => p.type === 'pharmacy');
-    const nearestPolice = sortByDistanceToCenter(police).slice(0, 30);
-    const nearestPharmacies = sortByDistanceToCenter(pharmacies).slice(0, 40);
+    if (showHospitalsOnMap) {
+      const hospitals = safePlaces.filter((p) => p.type === 'hospital');
+      result.push(...sortByDistanceToCenter(hospitals).slice(0, 35));
+    }
 
-    return [...nearestPolice, ...nearestPharmacies];
-  }, [safePlaces, selectedCategoryFilter, mapCenter, userLocation]);
+    return result;
+  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, mapCenter, userLocation]);
 
   // Memoized filter of incidents
   const filteredIncidents = useMemo(() => {
-    const showIncidents =
-      selectedCategoryFilter === 'all' ||
-      (selectedCategoryFilter !== 'police' && selectedCategoryFilter !== 'pharmacy');
-
-    if (!showIncidents) return [];
-
     return incidents.filter((item) => {
-      if (selectedCategoryFilter !== 'all' && item.category !== selectedCategoryFilter) {
+      if (
+        selectedCategoryFilter &&
+        selectedCategoryFilter !== 'all' &&
+        item.category !== selectedCategoryFilter
+      ) {
         return false;
       }
 
@@ -674,11 +705,21 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           </>
         )}
 
-        {/* Safe Places (Police Stations & Pharmacies) */}
+        {/* Safe Places (Police Stations, Pharmacies & Hospitals) */}
         {filteredSafePlaces.map((place) => {
           if (place.type === 'pharmacy') {
             return (
               <PharmacyMarker
+                key={place.id}
+                place={place}
+                onSelect={() => onSelectSafePlace(place)}
+              />
+            );
+          }
+
+          if (place.type === 'hospital') {
+            return (
+              <HospitalMarker
                 key={place.id}
                 place={place}
                 onSelect={() => onSelectSafePlace(place)}
@@ -1099,6 +1140,41 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.5,
+  },
+
+  // Distinct Hospital Building Pins
+  hospitalCleanWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 3,
+  },
+  hospitalSquareBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    backgroundColor: '#0F172A',
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  hospitalTagPill: {
+    marginTop: 1.5,
+    paddingHorizontal: 3.5,
+    paddingVertical: 0.8,
+    borderRadius: 4,
+    borderWidth: 0.8,
+    borderColor: '#0F172A',
+  },
+  hospitalTagText: {
+    color: '#0F172A',
+    fontSize: 7,
+    fontWeight: '900',
+    letterSpacing: 0.2,
   },
 
   // Clean Pharmacy Pins (no large circle)

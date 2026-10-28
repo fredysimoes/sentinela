@@ -47,7 +47,7 @@ export interface UserLocation {
   accuracy?: number | null;
 }
 
-export type SafePlaceType = 'psp' | 'gnr' | 'pj' | 'pharmacy';
+export type SafePlaceType = 'psp' | 'gnr' | 'pj' | 'pharmacy' | 'hospital';
 
 export interface PharmacyHours {
   is24h?: boolean;

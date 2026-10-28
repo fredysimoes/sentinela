@@ -48,7 +48,7 @@ export function getSafePlaces(
         place.longitude
       );
     }
-    if (place.type === 'pharmacy') {
+    if (place.type === 'pharmacy' || place.type === 'hospital') {
       item.pharmacyStatus = getPharmacyStatus(place);
     }
     return item;
@@ -62,7 +62,7 @@ export function getSafePlaces(
 }
 
 /**
- * Dynamically fetches all local pharmacies and police stations in the visible map region
+ * Dynamically fetches all local pharmacies, hospitals, and police stations in the visible map region
  */
 export async function loadLiveOsmPlacesForRegion(region: {
   latitude: number;

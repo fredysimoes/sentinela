@@ -7,7 +7,7 @@ import {
   Linking,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafePlace, UserLocation } from '../types';
 import { calculateDistanceMeters, formatDistance, getGoogleMapsUrl } from '../utils/geo';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
@@ -61,7 +61,9 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
     : null;
 
   const isPharmacy = place.type === 'pharmacy';
-  const pharmacyStatus = isPharmacy ? getPharmacyStatus(place) : null;
+  const isHospital = place.type === 'hospital';
+  const hasScheduleStatus = isPharmacy || isHospital;
+  const placeStatus = hasScheduleStatus ? getPharmacyStatus(place) : null;
 
   const handleOpenMaps = () => {
     Linking.openURL(getGoogleMapsUrl(place.latitude, place.longitude));
@@ -84,6 +86,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           color: '#3B82F6',
           bg: 'rgba(59, 130, 246, 0.15)',
           icon: 'shield-sharp',
+          isMci: false,
           badgeText: 'ESQUADRA PSP',
         };
       case 'gnr':
@@ -92,6 +95,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           color: '#10B981',
           bg: 'rgba(16, 185, 129, 0.15)',
           icon: 'shield-checkmark',
+          isMci: false,
           badgeText: 'POSTO GNR',
         };
       case 'pj':
@@ -100,15 +104,26 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           color: '#6366F1',
           bg: 'rgba(99, 102, 241, 0.15)',
           icon: 'briefcase',
+          isMci: false,
           badgeText: 'DIRETORIA PJ',
+        };
+      case 'hospital':
+        return {
+          title: 'Hospital / Unidade de Urgência',
+          color: placeStatus?.statusColor || '#10B981',
+          bg: placeStatus?.isOpen ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          icon: 'hospital-building',
+          isMci: true,
+          badgeText: placeStatus?.isOpen ? 'HOSPITAL ABERTO' : 'HOSPITAL FECHADO',
         };
       case 'pharmacy':
         return {
           title: 'Farmácia de Atendimento',
-          color: pharmacyStatus?.statusColor || '#10B981',
-          bg: pharmacyStatus?.isOpen ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          color: placeStatus?.statusColor || '#10B981',
+          bg: placeStatus?.isOpen ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
           icon: 'medical',
-          badgeText: pharmacyStatus?.badgeText || 'FARMÁCIA',
+          isMci: false,
+          badgeText: placeStatus?.badgeText || 'FARMÁCIA',
         };
     }
   };
@@ -123,7 +138,11 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
       {/* Top row */}
       <View style={styles.topRow}>
         <View style={[styles.typeBadge, { backgroundColor: meta.bg, borderColor: meta.color }]}>
-          <Ionicons name={meta.icon as any} size={14} color={meta.color} />
+          {meta.isMci ? (
+            <MaterialCommunityIcons name={meta.icon as any} size={15} color={meta.color} />
+          ) : (
+            <Ionicons name={meta.icon as any} size={14} color={meta.color} />
+          )}
           <Text style={[styles.typeBadgeText, { color: meta.color }]}>{meta.badgeText}</Text>
         </View>
 
@@ -135,41 +154,51 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
       {/* Name */}
       <Text style={styles.name}>{place.name}</Text>
 
-      {/* Address & Distance */}
+      {/* Address */}
       <View style={styles.locationRow}>
-        <Ionicons name="location-sharp" size={15} color="#94A3B8" />
+        <Ionicons name="location-outline" size={16} color="#94A3B8" />
         <Text style={styles.addressText}>
           {place.address}, {place.city}
         </Text>
       </View>
 
+      {/* Distance */}
       {distanceMeters !== null && (
         <View style={styles.distanceRow}>
-          <Ionicons name="navigate-circle" size={16} color="#38BDF8" />
-          <Text style={styles.distanceText}>A {formatDistance(distanceMeters)} de si</Text>
+          <Ionicons name="walk-outline" size={16} color="#38BDF8" />
+          <Text style={styles.distanceText}>
+            A {formatDistance(distanceMeters)} da sua posição atual
+          </Text>
         </View>
       )}
 
-      {/* Status & Schedule Card */}
-      <View style={[styles.scheduleCard, isPharmacy && { borderLeftColor: pharmacyStatus?.ringColor }]}>
+      {/* Schedule / Open Status Card */}
+      <View
+        style={[
+          styles.scheduleCard,
+          hasScheduleStatus && {
+            borderLeftColor: placeStatus?.statusColor || '#10B981',
+          },
+        ]}
+      >
         <View style={styles.scheduleHeader}>
           <Ionicons
-            name={isPharmacy ? (pharmacyStatus?.isOpen ? 'time' : 'time-outline') : 'checkmark-circle'}
+            name={hasScheduleStatus && !placeStatus?.isOpen ? 'close-circle' : 'time'}
             size={18}
-            color={isPharmacy ? pharmacyStatus?.statusColor : '#10B981'}
+            color={hasScheduleStatus ? placeStatus?.statusColor : '#10B981'}
           />
           <Text
             style={[
               styles.scheduleTitle,
-              { color: isPharmacy ? pharmacyStatus?.statusColor : '#10B981' },
+              { color: hasScheduleStatus ? placeStatus?.statusColor : '#10B981' },
             ]}
           >
-            {isPharmacy ? pharmacyStatus?.statusLabel : 'Atendimento Permanente 24 Horas'}
+            {hasScheduleStatus ? placeStatus?.statusLabel : 'Atendimento Permanente 24 Horas'}
           </Text>
         </View>
 
         <Text style={styles.scheduleBody}>
-          {isPharmacy ? pharmacyStatus?.hoursDescription : place.hoursDescription}
+          {hasScheduleStatus ? placeStatus?.hoursDescription : place.hoursDescription}
         </Text>
       </View>
 

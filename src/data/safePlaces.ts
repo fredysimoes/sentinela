@@ -3,6 +3,7 @@ import { PSP_DISTRITO_PORTO } from './pspDistritoPorto';
 import { FARMACIAS_DISTRITO_PORTO } from './farmaciasDistritoPorto';
 import { PSP_DISTRITO_LISBOA } from './pspDistritoLisboa';
 import { FARMACIAS_DISTRITO_LISBOA } from './farmaciasDistritoLisboa';
+import { HOSPITAIS_PORTUGAL } from './hospitaisPortugal';
 
 export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
   // ==========================================
@@ -895,6 +896,7 @@ export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
   // CONCELHO DE LISBOA (TODAS AS 242 FARMÁCIAS OFICIAIS INFARMED)
   // ==========================================
   ...FARMACIAS_DISTRITO_LISBOA,
+  ...HOSPITAIS_PORTUGAL,
 
   // Coimbra
   {

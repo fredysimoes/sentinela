@@ -11,7 +11,7 @@ const OVERPASS_ENDPOINTS = [
 const CACHED_REGIONS: Map<string, SafePlace[]> = new Map();
 
 /**
- * Dynamically queries OpenStreetMap Overpass API for real police stations and pharmacies
+ * Dynamically queries OpenStreetMap Overpass API for real police stations, pharmacies, and hospitals
  * in the user's visible map region (bounding box).
  */
 export async function fetchOsmPlacesInBoundingBox(params: {
@@ -32,8 +32,10 @@ export async function fetchOsmPlacesInBoundingBox(params: {
 (
   node["amenity"="police"](${minLat},${minLon},${maxLat},${maxLon});
   node["amenity"="pharmacy"](${minLat},${minLon},${maxLat},${maxLon});
+  node["amenity"="hospital"](${minLat},${minLon},${maxLat},${maxLon});
+  way["amenity"="hospital"](${minLat},${minLon},${maxLat},${maxLon});
 );
-out center 60;`;
+out center 80;`;
 
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
@@ -74,6 +76,37 @@ out center 60;`;
           places.push({
             id: `osm-pharm-${el.id}`,
             type: 'pharmacy',
+            name: rawName,
+            address: street,
+            city: city || 'Local',
+            district: '',
+            phone,
+            latitude: lat,
+            longitude: lon,
+            hours,
+            hoursDescription,
+          });
+        } else if (tags.amenity === 'hospital') {
+          const rawName = tags.name || tags['name:pt'];
+          if (!rawName || rawName.toLowerCase().includes('veterin')) continue;
+
+          const isEmergency = tags.emergency === 'yes' || !tags.opening_hours;
+          const { hours, hoursDescription } = isEmergency
+            ? {
+                hours: { is24h: true },
+                hoursDescription: 'Atendimento e Urgência Hospitalar 24h',
+              }
+            : parseOsmOpeningHours(tags.opening_hours);
+
+          const street = tags['addr:street']
+            ? `${tags['addr:street']}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`
+            : 'Portugal';
+          const city = tags['addr:city'] || tags['addr:suburb'] || '';
+          const phone = tags.phone || tags['contact:phone'] || '112';
+
+          places.push({
+            id: `osm-hosp-${el.id}`,
+            type: 'hospital',
             name: rawName,
             address: street,
             city: city || 'Local',

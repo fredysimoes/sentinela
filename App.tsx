@@ -155,7 +155,10 @@ export default function App() {
   };
 
   // Filtering & Modal States
-  const [selectedFilter, setSelectedFilter] = useState<IncidentCategory | 'all' | 'police' | 'pharmacy'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<IncidentCategory | null>(null);
+  const [showPoliceOnMap, setShowPoliceOnMap] = useState(true);
+  const [showPharmaciesOnMap, setShowPharmaciesOnMap] = useState(true);
+  const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
   const [homeAddress, setHomeAddress] = useState<HomeAddress | null>(null);
@@ -1186,6 +1189,9 @@ export default function App() {
           activeSOSAlerts={activeSOSAlerts}
           safePlaces={safePlaces}
           selectedCategoryFilter={selectedFilter}
+          showPoliceOnMap={showPoliceOnMap}
+          showPharmaciesOnMap={showPharmaciesOnMap}
+          showHospitalsOnMap={showHospitalsOnMap}
           activeRoute={
             navState
               ? navState.route
@@ -1298,7 +1304,7 @@ export default function App() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.floatingChipsScroll}
             >
-              {/* Casa Quick Chip */}
+              {/* 1. Casa Quick Chip (First position) */}
               <M3Pressable
                 scaleOnPress={0.94}
                 style={[
@@ -1323,7 +1329,118 @@ export default function App() {
                 </Text>
               </M3Pressable>
 
-              {/* TVDE (Uber / Bolt) Quick Protection Chip */}
+              {/* 2. Todos Quick Chip (Immediately after Casa) */}
+              <M3Pressable
+                scaleOnPress={0.94}
+                style={[
+                  styles.filterChip,
+                  selectedFilter !== null && styles.filterChipActive,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setSelectedFilter(null);
+                  setShowPoliceOnMap(true);
+                  setShowPharmaciesOnMap(true);
+                  setShowHospitalsOnMap(true);
+                }}
+              >
+                <Ionicons
+                  name="layers-outline"
+                  size={14}
+                  color={selectedFilter !== null ? M3Colors.onSecondaryContainer : M3Colors.onSurfaceVariant}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selectedFilter !== null && styles.filterChipTextActive,
+                  ]}
+                >
+                  Todos {incidents.length > 0 ? `(${incidents.length})` : ''}
+                </Text>
+              </M3Pressable>
+
+              {/* 3. Police Quick Chip (Selected by default, toggles Police markers on/off) */}
+              <M3Pressable
+                scaleOnPress={0.94}
+                style={[
+                  styles.filterChip,
+                  showPoliceOnMap && styles.filterChipActivePolice,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setShowPoliceOnMap((prev) => !prev);
+                }}
+              >
+                <Ionicons
+                  name="shield-sharp"
+                  size={14}
+                  color={showPoliceOnMap ? '#FFFFFF' : '#3B82F6'}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    showPoliceOnMap && styles.filterChipTextActiveWhite,
+                  ]}
+                >
+                  Polícia (PSP/GNR)
+                </Text>
+              </M3Pressable>
+
+              {/* 4. Pharmacy Quick Chip (Selected by default, toggles Pharmacy markers on/off) */}
+              <M3Pressable
+                scaleOnPress={0.94}
+                style={[
+                  styles.filterChip,
+                  showPharmaciesOnMap && styles.filterChipActivePharmacy,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setShowPharmaciesOnMap((prev) => !prev);
+                }}
+              >
+                <Ionicons
+                  name="medical"
+                  size={14}
+                  color={showPharmaciesOnMap ? '#FFFFFF' : M3Colors.success}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    showPharmaciesOnMap && styles.filterChipTextActiveWhite,
+                  ]}
+                >
+                  Farmácias
+                </Text>
+              </M3Pressable>
+
+              {/* 5. Hospitals Quick Chip (Selected by default, toggles Hospital markers on/off) */}
+              <M3Pressable
+                scaleOnPress={0.94}
+                style={[
+                  styles.filterChip,
+                  showHospitalsOnMap && styles.filterChipActiveHospital,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setShowHospitalsOnMap((prev) => !prev);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="hospital-building"
+                  size={14}
+                  color={showHospitalsOnMap ? '#FFFFFF' : '#0EA5E9'}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    showHospitalsOnMap && styles.filterChipTextActiveWhite,
+                  ]}
+                >
+                  Hospitais
+                </Text>
+              </M3Pressable>
+
+              {/* 6. TVDE (Uber / Bolt) Quick Protection Chip */}
               <M3Pressable
                 scaleOnPress={0.94}
                 style={[
@@ -1352,88 +1469,7 @@ export default function App() {
                 </Text>
               </M3Pressable>
 
-              {/* Police Quick Chip */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  selectedFilter === 'police' && styles.filterChipActivePolice,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setSelectedFilter(selectedFilter === 'police' ? 'all' : 'police');
-                }}
-              >
-                <Ionicons
-                  name="shield-sharp"
-                  size={14}
-                  color={selectedFilter === 'police' ? '#FFFFFF' : '#3B82F6'}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    selectedFilter === 'police' && styles.filterChipTextActiveWhite,
-                  ]}
-                >
-                  Polícia (PSP/GNR)
-                </Text>
-              </M3Pressable>
-
-              {/* Pharmacy Quick Chip */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  selectedFilter === 'pharmacy' && styles.filterChipActivePharmacy,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setSelectedFilter(selectedFilter === 'pharmacy' ? 'all' : 'pharmacy');
-                }}
-              >
-                <Ionicons
-                  name="medical"
-                  size={14}
-                  color={selectedFilter === 'pharmacy' ? '#FFFFFF' : M3Colors.success}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    selectedFilter === 'pharmacy' && styles.filterChipTextActiveWhite,
-                  ]}
-                >
-                  Farmácias
-                </Text>
-              </M3Pressable>
-
-              {/* All Incidents Chip */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  selectedFilter === 'all' && styles.filterChipActive,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setSelectedFilter('all');
-                }}
-              >
-                <Ionicons
-                  name="layers-outline"
-                  size={14}
-                  color={selectedFilter === 'all' ? M3Colors.onSecondaryContainer : M3Colors.onSurfaceVariant}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    selectedFilter === 'all' && styles.filterChipTextActive,
-                  ]}
-                >
-                  Todos {incidents.length > 0 ? `(${incidents.length})` : ''}
-                </Text>
-              </M3Pressable>
-
-              {/* Hazard Category Chips */}
+              {/* 7. Hazard Category Chips (Unselected by default) */}
               {(Object.keys(CATEGORIES) as IncidentCategory[])
                 .filter(
                   (catKey) =>
@@ -1455,7 +1491,7 @@ export default function App() {
                     ]}
                     onPress={() => {
                       Haptics.selectionAsync();
-                      setSelectedFilter(isSelected ? 'all' : catKey);
+                      setSelectedFilter(isSelected ? null : catKey);
                     }}
                   >
                     {cat.icon === 'shield-account' ? (
@@ -1894,6 +1930,10 @@ const styles = StyleSheet.create({
   filterChipActivePharmacy: {
     backgroundColor: '#0F5132',
     borderColor: M3Colors.success,
+  },
+  filterChipActiveHospital: {
+    backgroundColor: '#0369A1',
+    borderColor: '#38BDF8',
   },
   filterChipActive: {
     backgroundColor: M3Colors.secondaryContainer,
