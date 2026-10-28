@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Incident, EmergencyContact, SOSAlert, HomeAddress, NotificationSettings } from '../types';
 import { NavigationState } from '../types/navigation';
+import { filterExpiredIncidents } from '../utils/geo';
 
 const STORAGE_KEYS = {
   INCIDENTS: '@sentinela_incidents_v1',
@@ -10,6 +11,7 @@ const STORAGE_KEYS = {
   HOME_ADDRESS: '@sentinela_home_address_v1',
   NOTIFICATION_SETTINGS: '@sentinela_notification_settings_v1',
   ACTIVE_NAVIGATION: '@sentinela_active_navigation_v1',
+  ACCESSIBILITY_ROUTE_PREFERENCE: '@sentinela_accessibility_route_v1',
 };
 
 /**
@@ -21,12 +23,14 @@ export async function loadIncidents(_userLat?: number, _userLon?: number): Promi
     const raw = await AsyncStorage.getItem(STORAGE_KEYS.INCIDENTS);
     if (raw) {
       const parsed: Incident[] = JSON.parse(raw);
-      // Clean out demo/seed data and any incident with dismissals >= confirmations or marked defunct
-      const valid = parsed.filter(
-        (item) =>
-          !item.id.startsWith('seed-') &&
-          (item.dismissals || 0) < (item.confirmations || 1) &&
-          (item.dismissals || 0) < 5
+      // Clean out demo/seed data, any incident with dismissals >= confirmations, and 12h expired non-accessibility reports
+      const valid = filterExpiredIncidents(
+        parsed.filter(
+          (item) =>
+            !item.id.startsWith('seed-') &&
+            (item.dismissals || 0) < (item.confirmations || 1) &&
+            (item.dismissals || 0) < 5
+        )
       );
       // Save cleaned array back to storage
       await saveIncidents(valid);
@@ -41,12 +45,14 @@ export async function loadIncidents(_userLat?: number, _userLon?: number): Promi
 
 export async function saveIncidents(incidents: Incident[]): Promise<void> {
   try {
-    // Only persist valid real incidents where confirmations > dismissals
-    const validOnly = incidents.filter(
-      (item) =>
-        !item.id.startsWith('seed-') &&
-        (item.dismissals || 0) < (item.confirmations || 1) &&
-        (item.dismissals || 0) < 5
+    // Only persist valid real incidents where confirmations > dismissals and non-expired
+    const validOnly = filterExpiredIncidents(
+      incidents.filter(
+        (item) =>
+          !item.id.startsWith('seed-') &&
+          (item.dismissals || 0) < (item.confirmations || 1) &&
+          (item.dismissals || 0) < 5
+      )
     );
     await AsyncStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(validOnly));
   } catch (error) {
@@ -136,7 +142,7 @@ export async function saveHomeAddress(home: HomeAddress | null): Promise<void> {
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: true,
   radiusMeters: 300,
-  backgroundTracking: false,
+  backgroundTracking: true,
   protestMode: false,
   categories: {
     theft_risk: true,
@@ -147,6 +153,10 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     police_presence: true,
     protest_infiltrator: true,
     safe_haven: false,
+    no_ramp_barrier: true,
+    blocked_sidewalk: true,
+    broken_elevator: true,
+    rough_surface: true,
   },
 };
 
@@ -198,5 +208,26 @@ export async function saveActiveNavigation(navState: NavigationState | null): Pr
     }
   } catch (error) {
     console.error('Erro ao guardar estado de navegação:', error);
+  }
+}
+
+export async function loadAccessibilityRoutePreference(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.ACCESSIBILITY_ROUTE_PREFERENCE);
+    if (raw !== null) {
+      return JSON.parse(raw);
+    }
+    return false;
+  } catch (error) {
+    console.error('Erro ao ler preferência de rota acessível:', error);
+    return false;
+  }
+}
+
+export async function saveAccessibilityRoutePreference(enabled: boolean): Promise<void> {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.ACCESSIBILITY_ROUTE_PREFERENCE, JSON.stringify(enabled));
+  } catch (error) {
+    console.error('Erro ao guardar preferência de rota acessível:', error);
   }
 }

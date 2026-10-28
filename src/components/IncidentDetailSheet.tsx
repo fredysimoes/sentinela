@@ -12,8 +12,13 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { Incident, UserLocation } from '../types';
-import { CATEGORIES } from '../constants/categories';
-import { calculateDistanceMeters, formatDistance, formatRelativeTime, getGoogleMapsUrl } from '../utils/geo';
+import { CATEGORIES, isAccessibilityCategory } from '../constants/categories';
+import {
+  calculateDistanceMeters,
+  formatDistance,
+  formatReportDateTime,
+  getGoogleMapsUrl,
+} from '../utils/geo';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography, M3Motion } from '../theme/m3';
 
 interface IncidentDetailSheetProps {
@@ -35,19 +40,21 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
   onDelete,
   onNavigate,
 }) => {
-  if (!incident) return null;
-
   // Material Design 3 Motion: Shared Axis Y Sheet Slide
   const translateY = useRef(new Animated.Value(350)).current;
 
   useEffect(() => {
-    Animated.timing(translateY, {
-      toValue: 0,
-      duration: M3Motion.durations.long2,
-      easing: M3Motion.easings.emphasizedDecelerate,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+    if (incident) {
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: M3Motion.durations.long2,
+        easing: M3Motion.easings.emphasizedDecelerate,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [incident]);
+
+  if (!incident) return null;
 
   const handleAnimatedClose = () => {
     Animated.timing(translateY, {
@@ -61,6 +68,8 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
   };
 
   const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
+  const isAccess = isAccessibilityCategory(incident.category);
+  const reportDateTime = formatReportDateTime(incident.createdAt);
 
   const distanceMeters = userLocation
     ? calculateDistanceMeters(
@@ -114,13 +123,22 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
 
       {/* Top row */}
       <View style={styles.topRow}>
-        <View style={[styles.categoryBadge, { backgroundColor: meta.badgeBg, borderColor: meta.color }]}>
-          <MaterialCommunityIcons
-            name={(meta.mciIcon || 'alert-circle') as any}
-            size={14}
-            color={meta.color}
-          />
-          <Text style={[styles.categoryBadgeText, { color: meta.color }]}>{meta.label}</Text>
+        <View style={styles.badgesWrapper}>
+          <View style={[styles.categoryBadge, { backgroundColor: meta.badgeBg, borderColor: meta.color }]}>
+            <MaterialCommunityIcons
+              name={(meta.mciIcon || 'alert-circle') as any}
+              size={14}
+              color={meta.color}
+            />
+            <Text style={[styles.categoryBadgeText, { color: meta.color }]}>{meta.label}</Text>
+          </View>
+
+          {isAccess && (
+            <View style={styles.accessBadge}>
+              <MaterialCommunityIcons name="wheelchair" size={12} color="#06B6D4" />
+              <Text style={styles.accessBadgeText}>Acessibilidade</Text>
+            </View>
+          )}
         </View>
 
         <TouchableOpacity onPress={handleAnimatedClose} style={styles.closeBtn}>
@@ -131,17 +149,19 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
       {/* Title */}
       <Text style={styles.title}>{incident.title}</Text>
 
-      {/* Time & Distance meta */}
-      <View style={styles.metaRow}>
+      {/* Date, Time & Distance meta */}
+      <View style={styles.dateMetaContainer}>
         <View style={styles.metaItem}>
-          <Ionicons name="time-outline" size={14} color="#94A3B8" />
-          <Text style={styles.metaText}>{formatRelativeTime(incident.createdAt)}</Text>
+          <Ionicons name="calendar-outline" size={14} color="#38BDF8" />
+          <Text style={styles.dateMetaHighlight}>
+            Reportado em <Text style={styles.dateMetaValue}>{reportDateTime.fullFormatted}</Text>
+          </Text>
         </View>
 
         {distanceMeters !== null && (
           <View style={styles.metaItem}>
-            <Ionicons name="navigate-outline" size={14} color="#38BDF8" />
-            <Text style={[styles.metaText, { color: '#38BDF8', fontWeight: '600' }]}>
+            <Ionicons name="navigate-outline" size={14} color="#10B981" />
+            <Text style={[styles.metaText, { color: '#10B981', fontWeight: '600' }]}>
               A {formatDistance(distanceMeters)} de si
             </Text>
           </View>
@@ -244,6 +264,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  badgesWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+    flex: 1,
+  },
+  accessBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: M3Shapes.small,
+    backgroundColor: 'rgba(6, 182, 212, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.35)',
+  },
+  accessBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#06B6D4',
+  },
   categoryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -265,6 +308,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: M3Colors.onSurface,
     marginBottom: 6,
+  },
+  dateMetaContainer: {
+    gap: 6,
+    marginBottom: 12,
+  },
+  dateMetaHighlight: {
+    fontSize: 12,
+    color: M3Colors.onSurfaceVariant,
+  },
+  dateMetaValue: {
+    color: '#CBD5E1',
+    fontWeight: '600',
   },
   metaRow: {
     flexDirection: 'row',

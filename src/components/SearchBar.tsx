@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { searchAddressSuggestions, AddressSuggestion } from '../services/geocodingService';
 import { RouteCoordinate, TransportMode } from '../types/navigation';
@@ -29,6 +29,7 @@ interface SearchBarProps {
   onOpenSettings?: () => void;
   emergencyContactsCount?: number;
   sentinelsCount?: number;
+  accessibleRouteOnly?: boolean;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -41,6 +42,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onOpenSettings,
   emergencyContactsCount = 0,
   sentinelsCount = 0,
+  accessibleRouteOnly = false,
 }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
@@ -193,19 +195,25 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <ActivityIndicator size="small" color="#10B981" style={styles.iconBtn} />
         )}
 
-        {/* Transport Mode Toggle Button (Walk vs Drive) */}
+        {/* Transport Mode Toggle Button (Walk vs Drive vs Accessible Walk) */}
         <M3Pressable
-          style={[styles.modeToggleBtn, transportMode === 'driving' && styles.modeToggleBtnDriving]}
+          style={[
+            styles.modeToggleBtn,
+            transportMode === 'driving' && styles.modeToggleBtnDriving,
+            transportMode === 'walking' && accessibleRouteOnly && styles.modeToggleBtnAccessible,
+          ]}
           onPress={() => {
             Haptics.selectionAsync();
             onTransportModeChange(transportMode === 'walking' ? 'driving' : 'walking');
           }}
         >
-          <Ionicons
-            name={transportMode === 'driving' ? 'car-sport' : 'walk'}
-            size={16}
-            color={transportMode === 'driving' ? '#06140E' : '#10B981'}
-          />
+          {transportMode === 'driving' ? (
+            <Ionicons name="car-sport" size={16} color="#06140E" />
+          ) : accessibleRouteOnly ? (
+            <MaterialCommunityIcons name="wheelchair" size={17} color="#06B6D4" />
+          ) : (
+            <Ionicons name="walk" size={16} color="#10B981" />
+          )}
         </M3Pressable>
 
         {/* SOS Emergency Contacts Access Button */}
@@ -368,6 +376,10 @@ const styles = StyleSheet.create({
   modeToggleBtnDriving: {
     backgroundColor: '#10B981',
     borderColor: '#34D399',
+  },
+  modeToggleBtnAccessible: {
+    backgroundColor: 'rgba(6, 182, 212, 0.16)',
+    borderColor: '#06B6D4',
   },
   contactsActionBtn: {
     width: 34,

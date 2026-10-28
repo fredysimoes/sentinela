@@ -1,6 +1,6 @@
 {
   "name": "sentinela",
-  "version": "1.8.5",
+  "version": "1.8.6",
   "main": "index.ts",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

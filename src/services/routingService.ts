@@ -1,6 +1,7 @@
 import { Incident } from '../types';
 import { PedestrianRoute, RouteCoordinate, RouteStep, TransportMode } from '../types/navigation';
 import { calculateDistanceMeters } from '../utils/geo';
+import { isAccessibilityCategory } from '../constants/categories';
 
 export function formatDuration(minutes: number): string {
   if (minutes < 1) return '1 min';
@@ -70,7 +71,8 @@ function decodeValhallaPolyline(str: string, precision: number = 6): RouteCoordi
 async function fetchValhallaRoute(
   coords: RouteCoordinate[],
   mode: TransportMode = 'walking',
-  avoidLocations?: RouteCoordinate[]
+  avoidLocations?: RouteCoordinate[],
+  avoidAccessibilityBarriers: boolean = false
 ): Promise<{
   coordinates: RouteCoordinate[];
   distance: number;
@@ -80,6 +82,17 @@ async function fetchValhallaRoute(
   const valhallaUrl = 'https://valhalla1.openstreetmap.de/route';
   const costing = mode === 'driving' ? 'auto' : 'pedestrian';
 
+  const pedestrianOptions: any = {
+    walking_speed: avoidAccessibilityBarriers && mode !== 'driving' ? 3.6 : 4.5,
+  };
+
+  // If accessibility mode is active for pedestrians, enforce native wheelchair routing and avoid stairs
+  if (avoidAccessibilityBarriers && mode !== 'driving') {
+    pedestrianOptions.wheelchair = true;
+    pedestrianOptions.use_stairs = 0.0;
+    pedestrianOptions.step_penalty = 5000;
+  }
+
   const body: any = {
     locations: coords.map((c) => ({
       lat: c.latitude,
@@ -87,9 +100,7 @@ async function fetchValhallaRoute(
     })),
     costing,
     costing_options: {
-      pedestrian: {
-        walking_speed: 4.5,
-      },
+      pedestrian: pedestrianOptions,
       auto: {
         country_crossing_penalty: 2000,
       },
@@ -101,10 +112,18 @@ async function fetchValhallaRoute(
   };
 
   if (avoidLocations && avoidLocations.length > 0) {
-    body.avoid_locations = avoidLocations.map((a) => ({
-      lat: a.latitude,
-      lon: a.longitude,
-    }));
+    // Generate cluster per hazard (exact point + cardinal offsets ~18m)
+    // to reliably block the entire street segment in Valhalla's edge graph
+    const expandedAvoids: { lat: number; lon: number }[] = [];
+    const delta = 0.00018; // ~18-20m delta
+    for (const a of avoidLocations) {
+      expandedAvoids.push({ lat: a.latitude, lon: a.longitude });
+      expandedAvoids.push({ lat: a.latitude + delta, lon: a.longitude });
+      expandedAvoids.push({ lat: a.latitude - delta, lon: a.longitude });
+      expandedAvoids.push({ lat: a.latitude, lon: a.longitude + delta });
+      expandedAvoids.push({ lat: a.latitude, lon: a.longitude - delta });
+    }
+    body.avoid_locations = expandedAvoids;
   }
 
   try {
@@ -266,9 +285,16 @@ async function fetchOsrmRoute(
  */
 async function fetchRouteMultiEngine(
   coords: RouteCoordinate[],
-  mode: TransportMode = 'walking'
+  mode: TransportMode = 'walking',
+  avoidLocations?: RouteCoordinate[],
+  avoidAccessibilityBarriers: boolean = false
 ) {
-  const valhallaResult = await fetchValhallaRoute(coords, mode);
+  const valhallaResult = await fetchValhallaRoute(
+    coords,
+    mode,
+    avoidLocations,
+    avoidAccessibilityBarriers
+  );
   if (valhallaResult) return valhallaResult;
   return await fetchOsrmRoute(coords, mode);
 }
@@ -280,15 +306,25 @@ function findHazardsNearRoute(
   routeCoords: RouteCoordinate[],
   incidents: Incident[],
   thresholdMeters: number = 65,
-  mode: TransportMode = 'walking'
+  mode: TransportMode = 'walking',
+  avoidAccessibilityBarriers: boolean = false
 ): Incident[] {
   const dangerousIncidents: Incident[] = [];
 
   for (const inc of incidents) {
     if (inc.category === 'safe_haven') continue;
 
-    if (mode === 'driving' && inc.category === 'dark_area') {
-      continue;
+    // Driving mode: cars ignore dark areas and sidewalk accessibility barriers
+    if (mode === 'driving') {
+      if (inc.category === 'dark_area' || isAccessibilityCategory(inc.category)) {
+        continue;
+      }
+    } else {
+      // Walking mode: if accessibility mode is OFF, general pedestrians do not treat
+      // architectural accessibility barriers (e.g. stairs) as danger zones.
+      if (isAccessibilityCategory(inc.category) && !avoidAccessibilityBarriers) {
+        continue;
+      }
     }
 
     const isNear = routeCoords.some(
@@ -306,6 +342,44 @@ function findHazardsNearRoute(
 }
 
 /**
+ * Helper to calculate minimum distance from any point of a route to a specific hazard.
+ */
+function getRouteMinDistanceToHazard(
+  routeCoords: RouteCoordinate[],
+  hazard: RouteCoordinate
+): number {
+  let min = Infinity;
+  for (const pt of routeCoords) {
+    const d = calculateDistanceMeters(pt.latitude, pt.longitude, hazard.latitude, hazard.longitude);
+    if (d < min) min = d;
+  }
+  return min;
+}
+
+/**
+ * Checks if a hazard has been successfully bypassed by a detour.
+ * A hazard is considered avoided if:
+ * 1. The detour route never passes within thresholdMeters of it, OR
+ * 2. If the direct route collided right through it (< 12m) and the detour maintains safe clearance (>= 18m), OR
+ * 3. The detour increases clearance from the hazard by at least 15m.
+ */
+function isHazardAvoidedByRoute(
+  hazard: Incident,
+  directCoords: RouteCoordinate[],
+  detourCoords: RouteCoordinate[],
+  thresholdMeters: number
+): boolean {
+  const detourMin = getRouteMinDistanceToHazard(detourCoords, hazard);
+  if (detourMin > thresholdMeters) return true;
+
+  const directMin = getRouteMinDistanceToHazard(directCoords, hazard);
+  if (directMin < 12 && detourMin >= 18) return true;
+  if (detourMin - directMin >= 15) return true;
+
+  return false;
+}
+
+/**
  * Calculates both the Direct Route and the Safe Route (avoiding known danger zones)
  * with the Valhalla routing engine and accurate time calculations.
  */
@@ -314,14 +388,29 @@ export async function calculateSafeNavigationRoutes(params: {
   destination: RouteCoordinate;
   incidents: Incident[];
   mode?: TransportMode;
+  avoidAccessibilityBarriers?: boolean;
 }): Promise<{
   safeRoute: PedestrianRoute;
   directRoute?: PedestrianRoute;
 }> {
-  const { origin, destination, incidents, mode = 'walking' } = params;
+  const {
+    origin,
+    destination,
+    incidents,
+    mode = 'walking',
+    avoidAccessibilityBarriers = false,
+  } = params;
+
+  // Accessibility avoidance strictly applies to pedestrian mode, never to driving mode
+  const effectiveAccessibilityAvoidance = mode !== 'driving' && Boolean(avoidAccessibilityBarriers);
 
   // 1. Fetch direct route via Valhalla (fallback OSRM)
-  const directData = await fetchRouteMultiEngine([origin, destination], mode);
+  const directData = await fetchRouteMultiEngine(
+    [origin, destination],
+    mode,
+    undefined,
+    effectiveAccessibilityAvoidance
+  );
 
   // Fallback if offline
   if (!directData) {
@@ -336,8 +425,13 @@ export async function calculateSafeNavigationRoutes(params: {
     const durationMins = Math.max(1, Math.round(straightDist / speedMetersPerMin));
 
     const fallbackRoute: PedestrianRoute = {
-      id: 'fallback-direct',
-      name: mode === 'driving' ? 'Percurso Automóvel' : 'Percurso Pedestre',
+      id: `fallback-direct-${Date.now()}`,
+      name:
+        mode === 'driving'
+          ? 'Percurso Automóvel'
+          : effectiveAccessibilityAvoidance
+          ? 'Percurso Acessível'
+          : 'Percurso Pedestre',
       mode,
       distanceMeters: straightDist,
       durationMinutes: durationMins,
@@ -350,6 +444,8 @@ export async function calculateSafeNavigationRoutes(params: {
           instruction:
             mode === 'driving'
               ? 'Siga de carro em direção ao destino'
+              : effectiveAccessibilityAvoidance
+              ? 'Siga no caminho acessível em direção ao seu destino'
               : 'Siga a pé em direção ao seu destino',
           distanceMeters: straightDist,
           durationSeconds: durationMins * 60,
@@ -359,22 +455,43 @@ export async function calculateSafeNavigationRoutes(params: {
       isSafe: true,
       hazardsAvoided: [],
       hazardsOnRoute: [],
-      summary: mode === 'driving' ? 'Percurso automóvel estimado' : 'Percurso pedestre estimado',
+      summary:
+        mode === 'driving'
+          ? 'Percurso automóvel estimado'
+          : effectiveAccessibilityAvoidance
+          ? '♿ Percurso com acessibilidade estimado'
+          : 'Percurso pedestre estimado',
     };
     return { safeRoute: ensureStepCoordinates(fallbackRoute) };
   }
 
-  const hazardThreshold = mode === 'driving' ? 50 : 65;
+  // Threshold for proximity to hazard:
+  // - For driving: 30m (vehicles on roads)
+  // - For walking with accessibility barriers: 20m (sidewalk obstacles are localized; parallel street 30-40m away is safe)
+  // - For standard walking safety hazards: 25m
+  const hazardThreshold =
+    mode === 'driving'
+      ? 30
+      : effectiveAccessibilityAvoidance
+      ? 20
+      : 25;
+
   const hazardsOnDirect = findHazardsNearRoute(
     directData.coordinates,
     incidents,
     hazardThreshold,
-    mode
+    mode,
+    effectiveAccessibilityAvoidance
   );
 
   const directRoute: PedestrianRoute = {
-    id: 'route-direct',
-    name: mode === 'driving' ? 'Caminho Mais Rápido (Valhalla)' : 'Caminho Mais Curto (Valhalla)',
+    id: `route-direct-${Date.now()}`,
+    name:
+      mode === 'driving'
+        ? 'Caminho Mais Rápido (Valhalla)'
+        : effectiveAccessibilityAvoidance
+        ? 'Caminho Direto (Com Barreiras/Degraus)'
+        : 'Caminho Mais Curto (Valhalla)',
     mode,
     distanceMeters: Math.round(directData.distance),
     durationMinutes: directData.durationMinutes,
@@ -388,17 +505,26 @@ export async function calculateSafeNavigationRoutes(params: {
     hazardsOnRoute: hazardsOnDirect,
     summary:
       hazardsOnDirect.length > 0
-        ? `⚠️ Alerta: Passa próximo de ${hazardsOnDirect.length} reporte(s) de perigo`
+        ? effectiveAccessibilityAvoidance
+          ? `⚠️ Contém ${hazardsOnDirect.length} barreira(s) de acessibilidade/degraus`
+          : `⚠️ Alerta: Passa próximo de ${hazardsOnDirect.length} reporte(s) de perigo`
+        : effectiveAccessibilityAvoidance
+        ? '♿ Caminho plano sem degraus nem barreiras registadas'
         : 'Caminho seguro e desimpedido',
   };
 
-  // If clean of hazards, direct route is the safe route
+  // If clean of hazards/barriers, direct route is the safe/accessible route
   if (hazardsOnDirect.length === 0) {
     return {
       safeRoute: ensureStepCoordinates({
         ...directRoute,
-        name: 'Rota Segura (Valhalla)',
+        name: effectiveAccessibilityAvoidance
+          ? 'Percurso Seguro & Acessível'
+          : 'Rota Segura (Valhalla)',
         isSafe: true,
+        summary: effectiveAccessibilityAvoidance
+          ? '♿ Caminho plano sem degraus nem barreiras registadas'
+          : 'Caminho seguro e desimpedido',
       }),
     };
   }
@@ -410,25 +536,38 @@ export async function calculateSafeNavigationRoutes(params: {
     longitude: h.longitude,
   }));
 
-  const valhallaBypass = await fetchValhallaRoute([origin, destination], mode, avoidCoords);
+  const valhallaBypass = await fetchValhallaRoute(
+    [origin, destination],
+    mode,
+    avoidCoords,
+    effectiveAccessibilityAvoidance
+  );
+
   if (valhallaBypass) {
     const hazardsOnValhallaBypass = findHazardsNearRoute(
       valhallaBypass.coordinates,
       incidents,
       hazardThreshold,
-      mode
+      mode,
+      effectiveAccessibilityAvoidance
     );
 
-    // If Valhalla avoided the hazard or reduced hazard exposure without excessive detour
+    const avoided = hazardsOnDirect.filter((h) =>
+      isHazardAvoidedByRoute(h, directData.coordinates, valhallaBypass.coordinates, hazardThreshold)
+    );
+
     const isReasonableDistance = valhallaBypass.distance <= directData.distance * 2.5;
-    if (hazardsOnValhallaBypass.length < hazardsOnDirect.length && isReasonableDistance) {
-      const avoided = hazardsOnDirect.filter(
-        (h) => !hazardsOnValhallaBypass.some((hb) => hb.id === h.id)
+
+    if (avoided.length > 0 && isReasonableDistance) {
+      const remainingHazards = hazardsOnValhallaBypass.filter(
+        (h) => !avoided.some((av) => av.id === h.id)
       );
 
       const safeDetourRoute: PedestrianRoute = {
-        id: 'route-safe-valhalla',
-        name: 'Rota Segura (Desvio Inteligente Valhalla)',
+        id: `route-safe-valhalla-${Date.now()}`,
+        name: effectiveAccessibilityAvoidance
+          ? 'Percurso Seguro & Acessível (Sem Degraus)'
+          : 'Rota Segura (Desvio Inteligente Valhalla)',
         mode,
         distanceMeters: Math.round(valhallaBypass.distance),
         durationMinutes: valhallaBypass.durationMinutes,
@@ -437,10 +576,12 @@ export async function calculateSafeNavigationRoutes(params: {
         estimatedArrival: calculateEstimatedArrival(valhallaBypass.durationMinutes),
         coordinates: valhallaBypass.coordinates,
         steps: valhallaBypass.steps,
-        isSafe: hazardsOnValhallaBypass.length === 0,
+        isSafe: remainingHazards.length === 0,
         hazardsAvoided: avoided,
-        hazardsOnRoute: hazardsOnValhallaBypass,
-        summary: `🛡️ Evita ${avoided.length} zona(s) de perigo identificada(s)`,
+        hazardsOnRoute: remainingHazards,
+        summary: effectiveAccessibilityAvoidance
+          ? `♿ Rota Acessível: contorna ${avoided.length} barreira(s) de mobilidade`
+          : `🛡️ Evita ${avoided.length} zona(s) de perigo identificada(s)`,
       };
 
       return {
@@ -450,44 +591,62 @@ export async function calculateSafeNavigationRoutes(params: {
     }
   }
 
-  // Strategy B: Lateral waypoint detour (tests both right and left offsets around the hazard)
+  // Strategy B: Lateral waypoint detour (tests multiple perpendicular offsets around the primary hazard)
   const primaryHazard = hazardsOnDirect[0];
   const dLat = destination.latitude - origin.latitude;
   const dLon = destination.longitude - origin.longitude;
   const len = Math.sqrt(dLat * dLat + dLon * dLon) || 1;
+  const cosLat = Math.cos((primaryHazard.latitude * Math.PI) / 180);
 
-  // Realistic city block offsets (~80m for pedestrians, ~140m for vehicles)
-  const offset = mode === 'driving' ? 0.0016 : 0.0009;
-  const candidates: RouteCoordinate[] = [
-    {
-      latitude: primaryHazard.latitude - (dLon / len) * offset,
-      longitude: primaryHazard.longitude + (dLat / len) * offset,
-    },
-    {
-      latitude: primaryHazard.latitude + (dLon / len) * offset,
-      longitude: primaryHazard.longitude - (dLat / len) * offset,
-    },
-  ];
+  // Perpendicular unit vector normalized with cosine latitude
+  const perpLat = -dLon / len;
+  const perpLon = (dLat / len) / Math.max(0.1, cosLat);
+
+  // Test realistic street block offsets (~70m, ~110m, ~160m)
+  const offsets = mode === 'driving' ? [0.0015, 0.0025] : [0.0008, 0.0013, 0.0018];
+  const candidates: RouteCoordinate[] = [];
+  for (const off of offsets) {
+    candidates.push({
+      latitude: primaryHazard.latitude + perpLat * off,
+      longitude: primaryHazard.longitude + perpLon * off,
+    });
+    candidates.push({
+      latitude: primaryHazard.latitude - perpLat * off,
+      longitude: primaryHazard.longitude - perpLon * off,
+    });
+  }
 
   for (const evasionCoord of candidates) {
-    const safeData = await fetchRouteMultiEngine([origin, evasionCoord, destination], mode);
+    const safeData = await fetchRouteMultiEngine(
+      [origin, evasionCoord, destination],
+      mode,
+      undefined,
+      effectiveAccessibilityAvoidance
+    );
 
     if (safeData && safeData.distance <= directData.distance * 2.5) {
       const hazardsOnDetour = findHazardsNearRoute(
         safeData.coordinates,
         incidents,
         hazardThreshold,
-        mode
+        mode,
+        effectiveAccessibilityAvoidance
       );
 
-      if (hazardsOnDetour.length < hazardsOnDirect.length) {
-        const avoided = hazardsOnDirect.filter(
-          (h) => !hazardsOnDetour.some((hd) => hd.id === h.id)
+      const avoided = hazardsOnDirect.filter((h) =>
+        isHazardAvoidedByRoute(h, directData.coordinates, safeData.coordinates, hazardThreshold)
+      );
+
+      if (avoided.length > 0) {
+        const remainingHazards = hazardsOnDetour.filter(
+          (h) => !avoided.some((av) => av.id === h.id)
         );
 
         const safeDetourRoute: PedestrianRoute = {
-          id: 'route-safe-detour',
-          name: 'Rota Segura (Desvio de Proteção)',
+          id: `route-safe-detour-${Date.now()}`,
+          name: effectiveAccessibilityAvoidance
+            ? 'Percurso Seguro & Acessível (Desvio)'
+            : 'Rota Segura (Desvio de Proteção)',
           mode,
           distanceMeters: Math.round(safeData.distance),
           durationMinutes: safeData.durationMinutes,
@@ -496,10 +655,12 @@ export async function calculateSafeNavigationRoutes(params: {
           estimatedArrival: calculateEstimatedArrival(safeData.durationMinutes),
           coordinates: safeData.coordinates,
           steps: safeData.steps,
-          isSafe: hazardsOnDetour.length === 0,
+          isSafe: remainingHazards.length === 0,
           hazardsAvoided: avoided,
-          hazardsOnRoute: hazardsOnDetour,
-          summary: `🛡️ Evita ${avoided.length} zona(s) de perigo identificada(s)`,
+          hazardsOnRoute: remainingHazards,
+          summary: effectiveAccessibilityAvoidance
+            ? `♿ Rota Acessível: contorna ${avoided.length} barreira(s) de mobilidade`
+            : `🛡️ Evita ${avoided.length} zona(s) de perigo identificada(s)`,
         };
 
         return {

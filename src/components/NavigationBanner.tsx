@@ -90,7 +90,11 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
         />
         <Text style={styles.statusTagText}>
           {isSafe
-            ? `ROTA SEGURA · ${navState.route.hazardsAvoided.length > 0 ? `Evita ${navState.route.hazardsAvoided.length} perigo(s)` : '0 Ocorrências'}`
+            ? navState.route.name.includes('Acessível')
+              ? `ROTA ACESSÍVEL · ${navState.route.hazardsAvoided.length > 0 ? `Contorna ${navState.route.hazardsAvoided.length} barreira(s)` : 'Sem Degraus / Desimpedida'}`
+              : `ROTA SEGURA · ${navState.route.hazardsAvoided.length > 0 ? `Evita ${navState.route.hazardsAvoided.length} perigo(s)` : '0 Ocorrências'}`
+            : navState.route.name.includes('Barreiras') || navState.route.name.includes('Acessível')
+            ? 'ROTA COM BARREIRAS · Atenção a degraus'
             : 'ROTA DIRETA · Cuidado com ocorrências'}
         </Text>
       </View>

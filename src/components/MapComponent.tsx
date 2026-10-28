@@ -106,7 +106,7 @@ const GOOGLE_MAPS_DARK_STYLE = [
 ];
 import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace, HomeAddress } from '../types';
 import { PedestrianRoute, RouteCoordinate } from '../types/navigation';
-import { CATEGORIES } from '../constants/categories';
+import { CATEGORIES, isAccessibilityCategory } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
 import { isProtestInfiltratorVerified } from '../utils/geo';
@@ -222,7 +222,7 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
 
 const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSelect: () => void }) => {
   const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
-  const isPolicePresence = incident.category === 'police_presence';
+  const isAccess = isAccessibilityCategory(incident.category);
 
   return (
     <Marker
@@ -239,7 +239,12 @@ const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSel
             color="#FFFFFF"
           />
         </View>
-        {incident.confirmations > 0 && (
+        {isAccess && (
+          <View style={styles.accessMicroTag}>
+            <MaterialCommunityIcons name="wheelchair" size={10} color="#FFFFFF" />
+          </View>
+        )}
+        {incident.confirmations > 0 && !isAccess && (
           <View style={styles.votesBadge}>
             <Text style={styles.votesBadgeText}>{incident.confirmations}</Text>
           </View>
@@ -1304,6 +1309,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#080A0C',
+  },
+  accessMicroTag: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#06B6D4',
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#080A0C',
+    shadowColor: '#06B6D4',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 4,
   },
   votesBadgeText: {
     color: '#06140E',

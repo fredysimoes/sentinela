@@ -6,7 +6,11 @@ export type IncidentCategory =
   | 'hazard'               // Passeio cortado / cão solto / perigo na via
   | 'safe_haven'           // Ponto seguro (farmácia 24h, esquadra, posto aberto)
   | 'police_presence'      // Presença policial / cordão / piquete de controlo
-  | 'protest_infiltrator'; // Possíveis infiltrados na manifestação (modo protesto verificado)
+  | 'protest_infiltrator'  // Possíveis infiltrados na manifestação (modo protesto verificado)
+  | 'no_ramp_barrier'      // Degraus sem Rampa (acessibilidade)
+  | 'blocked_sidewalk'     // Passeio Obstruído / Obras (acessibilidade)
+  | 'broken_elevator'      // Elevador Avariado (acessibilidade)
+  | 'rough_surface';       // Calçada Danificada / Buraco (acessibilidade)
 
 export interface Incident {
   id: string;

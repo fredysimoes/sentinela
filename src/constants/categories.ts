@@ -92,4 +92,71 @@ export const CATEGORIES: Record<IncidentCategory, CategoryMeta> = {
     badgeBg: 'rgba(16, 185, 129, 0.15)',
     severity: 'safe',
   },
+  // Categorias de Acessibilidade & Mobilidade Reduzida
+  no_ramp_barrier: {
+    id: 'no_ramp_barrier',
+    label: 'Degraus sem Rampa',
+    description: 'Escadaria ou desnível acentuado sem rampa acessível para cadeira de rodas ou carrinhos',
+    icon: 'trending-up',
+    mciIcon: 'stairs',
+    color: '#06B6D4', // Cyan
+    badgeBg: 'rgba(6, 182, 212, 0.15)',
+    severity: 'medium',
+  },
+  blocked_sidewalk: {
+    id: 'blocked_sidewalk',
+    label: 'Passeio Obstruído / Obras',
+    description: 'Passeio cortado por obras, andaimes, tapumes ou viaturas impedindo passagem de cadeiras',
+    icon: 'construct',
+    mciIcon: 'fence',
+    color: '#F97316', // Orange
+    badgeBg: 'rgba(249, 115, 22, 0.15)',
+    severity: 'medium',
+  },
+  broken_elevator: {
+    id: 'broken_elevator',
+    label: 'Elevador Avariado',
+    description: 'Elevador de metro, estação de comboios, viaduto ou túnel fora de serviço',
+    icon: 'alert-circle',
+    mciIcon: 'elevator-down',
+    color: '#EF4444', // Red
+    badgeBg: 'rgba(239, 68, 68, 0.15)',
+    severity: 'high',
+  },
+  rough_surface: {
+    id: 'rough_surface',
+    label: 'Calçada Danificada / Buraco',
+    description: 'Calçada levantada, pedras soltas, buraco profundo ou piso perigoso para mobilidade',
+    icon: 'warning',
+    mciIcon: 'texture-box',
+    color: '#EAB308', // Yellow
+    badgeBg: 'rgba(234, 179, 8, 0.15)',
+    severity: 'low',
+  },
 };
+
+export const ACCESSIBILITY_CATEGORIES: IncidentCategory[] = [
+  'no_ramp_barrier',
+  'blocked_sidewalk',
+  'broken_elevator',
+  'rough_surface',
+];
+
+export const GENERAL_REPORT_CATEGORIES: IncidentCategory[] = [
+  'dark_area',
+  'suspicious',
+  'harassment',
+  'theft_risk',
+  'hazard',
+  'police_presence',
+  'safe_haven',
+];
+
+export function isAccessibilityCategory(category: IncidentCategory | string): boolean {
+  return (
+    category === 'no_ramp_barrier' ||
+    category === 'blocked_sidewalk' ||
+    category === 'broken_elevator' ||
+    category === 'rough_surface'
+  );
+}

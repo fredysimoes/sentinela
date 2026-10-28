@@ -12,7 +12,12 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { Incident, IncidentCategory, UserLocation } from '../types';
-import { CATEGORIES } from '../constants/categories';
+import {
+  CATEGORIES,
+  ACCESSIBILITY_CATEGORIES,
+  GENERAL_REPORT_CATEGORIES,
+  isAccessibilityCategory,
+} from '../constants/categories';
 import { countNearbyInfiltratorSignals } from '../utils/geo';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
 import { M3BottomSheetWrapper } from './M3MotionWrapper';
@@ -40,6 +45,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   protestMode = false,
   incidents = [],
 }) => {
+  const [submenuMode, setSubmenuMode] = useState<'main' | 'accessibility'>('main');
   const [selectedCategory, setSelectedCategory] = useState<IncidentCategory>(initialCategory);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -56,11 +62,19 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
   useEffect(() => {
     if (visible && initialCategory) {
-      if (initialCategory === 'protest_infiltrator' && !protestMode) {
+      if (isAccessibilityCategory(initialCategory)) {
+        setSubmenuMode('accessibility');
+        setSelectedCategory(initialCategory);
+      } else if (initialCategory === 'protest_infiltrator' && !protestMode) {
+        setSubmenuMode('main');
         setSelectedCategory('dark_area');
       } else {
+        setSubmenuMode('main');
         setSelectedCategory(initialCategory);
       }
+    } else if (visible) {
+      setSubmenuMode('main');
+      setSelectedCategory('dark_area');
     }
   }, [visible, initialCategory, protestMode]);
 
@@ -73,6 +87,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const handleSelectCategory = (cat: IncidentCategory) => {
     Haptics.selectionAsync();
     setSelectedCategory(cat);
+  };
+
+  const handleClose = () => {
+    setSubmenuMode('main');
+    onClose();
   };
 
   const handleSubmit = () => {
@@ -107,6 +126,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
       setTitle('');
       setDescription('');
+      setSubmenuMode('main');
       onClose();
     };
 
@@ -131,39 +151,100 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   };
 
   const meta = CATEGORIES[selectedCategory] || CATEGORIES.suspicious;
+  const isAccessibility = submenuMode === 'accessibility';
 
-  // Filter general categories grid: when Protest Mode is active, include protest_infiltrator in the grid as well
-  const availableCategories = (Object.keys(CATEGORIES) as IncidentCategory[]).filter(
-    (catKey) => catKey !== 'protest_infiltrator' || protestMode
-  );
+  // Categories displayed in the current view
+  const currentCategories = isAccessibility
+    ? ACCESSIBILITY_CATEGORIES
+    : GENERAL_REPORT_CATEGORIES.concat(protestMode ? ['protest_infiltrator'] : []);
+
+  const renderModernCategoryIcon = (catKey: IncidentCategory, isSelected: boolean) => {
+    const cat = CATEGORIES[catKey] || CATEGORIES.suspicious;
+    const iconColor = isSelected ? '#FFFFFF' : cat.color;
+    const size = 20;
+    switch (catKey) {
+      case 'dark_area':
+        return <MaterialCommunityIcons name="weather-night" size={size} color={iconColor} />;
+      case 'suspicious':
+        return <MaterialCommunityIcons name="incognito" size={size} color={iconColor} />;
+      case 'harassment':
+        return <MaterialCommunityIcons name="hand-back-left-off" size={size} color={iconColor} />;
+      case 'theft_risk':
+        return <MaterialCommunityIcons name="shield-alert" size={size} color={iconColor} />;
+      case 'hazard':
+        return <MaterialCommunityIcons name="traffic-cone" size={size} color={iconColor} />;
+      case 'police_presence':
+        return <MaterialCommunityIcons name="police-badge" size={size} color={iconColor} />;
+      case 'protest_infiltrator':
+        return <MaterialCommunityIcons name="account-alert" size={size} color={iconColor} />;
+      case 'safe_haven':
+        return <MaterialCommunityIcons name="shield-check" size={size} color={iconColor} />;
+      case 'no_ramp_barrier':
+        return <MaterialCommunityIcons name="stairs" size={size} color={iconColor} />;
+      case 'blocked_sidewalk':
+        return <MaterialCommunityIcons name="fence" size={size} color={iconColor} />;
+      case 'broken_elevator':
+        return <MaterialCommunityIcons name="elevator-down" size={size} color={iconColor} />;
+      case 'rough_surface':
+        return <MaterialCommunityIcons name="texture-box" size={size} color={iconColor} />;
+      default:
+        return <Ionicons name={(cat.icon as any) || 'alert-circle'} size={18} color={iconColor} />;
+    }
+  };
 
   return (
     <M3BottomSheetWrapper
       visible={visible}
-      onClose={onClose}
+      onClose={handleClose}
       style={styles.sheetContainer}
     >
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeftRow}>
-          <View style={styles.headerIconBadge}>
-            <Ionicons name="warning-outline" size={20} color="#FBBF24" />
+        {isAccessibility ? (
+          <View style={styles.headerLeftRow}>
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.selectionAsync();
+                setSubmenuMode('main');
+                setSelectedCategory('dark_area');
+              }}
+              style={styles.backBtn}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={18} color="#06B6D4" />
+              <Text style={styles.backBtnText}>Geral</Text>
+            </TouchableOpacity>
+            <View style={[styles.headerIconBadge, styles.accessibilityHeaderBadge]}>
+              <MaterialCommunityIcons name="wheelchair" size={20} color="#06B6D4" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.headerTitle}>Acessibilidade</Text>
+              <Text style={styles.headerSubtitle} numberOfLines={1}>
+                Mobilidade reduzida e barreiras arquitetónicas
+              </Text>
+            </View>
           </View>
-          <View>
-            <Text style={styles.headerTitle}>Sinalizar no Mapa</Text>
-            <Text style={styles.headerSubtitle}>
-              Ajude outros pedestres a caminhar em segurança
-            </Text>
+        ) : (
+          <View style={styles.headerLeftRow}>
+            <View style={styles.headerIconBadge}>
+              <Ionicons name="warning-outline" size={20} color="#FBBF24" />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>Sinalizar no Mapa</Text>
+              <Text style={styles.headerSubtitle}>
+                Ajude outros pedestres a caminhar em segurança
+              </Text>
+            </View>
           </View>
-        </View>
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+        )}
+        <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
           <Ionicons name="close" size={22} color="#94A3B8" />
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Dedicated Private Stalking Alert Action */}
-        {onStartStalking && (
+        {/* Dedicated Private Stalking Alert Action (Only on main menu) */}
+        {!isAccessibility && onStartStalking && (
           <TouchableOpacity
             style={styles.stalkingAlertCard}
             onPress={() => {
@@ -192,8 +273,50 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </TouchableOpacity>
         )}
 
-        {/* Protest Mode - Infiltrator Danger Action Button (Always available when Protest Mode is active) */}
-        {protestMode && (
+        {/* Dedicated Accessibility Submenu Button (Fast and Distinct on main menu) */}
+        {!isAccessibility && (
+          <TouchableOpacity
+            style={styles.accessibilityEntryCard}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setSubmenuMode('accessibility');
+              setSelectedCategory('no_ramp_barrier');
+            }}
+            activeOpacity={0.82}
+          >
+            <View style={styles.accessIconCircle}>
+              <MaterialCommunityIcons name="wheelchair" size={24} color="#06B6D4" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.accessTitleRow}>
+                <Text style={styles.accessTitle}>Acessibilidade e Mobilidade</Text>
+                <View style={styles.accessBadge}>
+                  <Text style={styles.accessBadgeText}>♿ SUBMENU</Text>
+                </View>
+              </View>
+              <Text style={styles.accessSub}>
+                Degraus sem rampa, elevadores avariados, passeio cortado e calçada perigosa.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#06B6D4" />
+          </TouchableOpacity>
+        )}
+
+        {/* Accessibility Notice Banner (When inside Accessibility Submenu) */}
+        {isAccessibility && (
+          <View style={styles.accessNoticeBanner}>
+            <MaterialCommunityIcons name="shield-check" size={22} color="#06B6D4" style={{ marginTop: 1 }} />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.accessNoticeTitle}>REGISTO PERMANENTE DE ACESSIBILIDADE</Text>
+              <Text style={styles.accessNoticeText}>
+                Estes alertas não expiram ao fim de 12h. Ficam disponíveis no mapa para proteger pessoas de cadeira de rodas, idosos e carrinhos de bebé até serem resolvidos.
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Protest Mode - Infiltrator Danger Action Button (Always available on main menu when Protest Mode is active) */}
+        {!isAccessibility && protestMode && (
           <TouchableOpacity
             style={[
               styles.infiltratorAlertCard,
@@ -239,38 +362,15 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </TouchableOpacity>
         )}
 
-        {/* Category selection - Square White Cards Grid */}
-        <Text style={styles.sectionLabel}>TIPO DE OCORRÊNCIA</Text>
+        {/* Category selection Grid */}
+        <Text style={styles.sectionLabel}>
+          {isAccessibility ? 'SELECIONE A BARREIRA ENCONTRADA' : 'TIPO DE OCORRÊNCIA'}
+        </Text>
         <View style={styles.categoriesGrid}>
-          {availableCategories.map((catKey) => {
+          {currentCategories.map((catKey) => {
             const cat = CATEGORIES[catKey];
             const isSelected = selectedCategory === catKey;
-            const isFullWidthLast = catKey === 'safe_haven' && !protestMode;
-
-            const renderModernCategoryIcon = () => {
-              const iconColor = isSelected ? '#FFFFFF' : cat.color;
-              const size = 20;
-              switch (catKey) {
-                case 'dark_area':
-                  return <MaterialCommunityIcons name="weather-night" size={size} color={iconColor} />;
-                case 'suspicious':
-                  return <MaterialCommunityIcons name="incognito" size={size} color={iconColor} />;
-                case 'harassment':
-                  return <MaterialCommunityIcons name="hand-back-left-off" size={size} color={iconColor} />;
-                case 'theft_risk':
-                  return <MaterialCommunityIcons name="shield-alert" size={size} color={iconColor} />;
-                case 'hazard':
-                  return <MaterialCommunityIcons name="traffic-cone" size={size} color={iconColor} />;
-                case 'police_presence':
-                  return <MaterialCommunityIcons name="police-badge" size={size} color={iconColor} />;
-                case 'protest_infiltrator':
-                  return <MaterialCommunityIcons name="account-alert" size={size} color={iconColor} />;
-                case 'safe_haven':
-                  return <MaterialCommunityIcons name="shield-check" size={size} color={iconColor} />;
-                default:
-                  return <Ionicons name={cat.icon as any} size={18} color={iconColor} />;
-              }
-            };
+            const isFullWidthLast = !isAccessibility && catKey === 'safe_haven' && !protestMode;
 
             return (
               <TouchableOpacity
@@ -292,7 +392,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                   </View>
                 )}
 
-                {/* Stealth Teardrop-inspired Squircle Badge inside the Square White Card */}
+                {/* Modern Teardrop Squircle Badge */}
                 <View
                   style={[
                     styles.catIconSquircle,
@@ -301,7 +401,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                       : { backgroundColor: '#0E1217', borderColor: cat.color },
                   ]}
                 >
-                  {renderModernCategoryIcon()}
+                  {renderModernCategoryIcon(catKey, isSelected)}
                 </View>
 
                 <Text
@@ -352,7 +452,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder={
-            selectedCategory === 'protest_infiltrator'
+            isAccessibility
+              ? 'Ex: Escadaria com cerca de 10 degraus sem rampa ou elevador alternativo...'
+              : selectedCategory === 'protest_infiltrator'
               ? 'Ex: Grupo vestido de preto a arremessar garrafas contra montras...'
               : 'Ex: Evitar passar pelo lado esquerdo da rua, muito escuro e sem saída...'
           }
@@ -374,19 +476,35 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </Text>
         </View>
 
+        {/* Expiration disclaimer for general hazard reports */}
+        {!isAccessibility && (
+          <View style={styles.expirationNoticeRow}>
+            <Ionicons name="time-outline" size={13} color="#94A3B8" />
+            <Text style={styles.expirationNoticeText}>
+              Este alerta expira ao final de 12h, exceto se renovado por novos reports num raio de 50m.
+            </Text>
+          </View>
+        )}
+
         {/* Submit Button */}
         <TouchableOpacity
           style={[styles.submitButton, { backgroundColor: meta.color }]}
           onPress={handleSubmit}
           activeOpacity={0.8}
         >
-          <Ionicons
-            name={selectedCategory === 'protest_infiltrator' ? 'alert-circle' : 'checkmark-circle'}
-            size={20}
-            color="#FFFFFF"
-          />
+          {isAccessibility ? (
+            <MaterialCommunityIcons name="wheelchair" size={20} color="#FFFFFF" />
+          ) : (
+            <Ionicons
+              name={selectedCategory === 'protest_infiltrator' ? 'alert-circle' : 'checkmark-circle'}
+              size={20}
+              color="#FFFFFF"
+            />
+          )}
           <Text style={styles.submitButtonText}>
-            {selectedCategory === 'protest_infiltrator'
+            {isAccessibility
+              ? 'Publicar Barreira de Acessibilidade'
+              : selectedCategory === 'protest_infiltrator'
               ? 'Sinalizar Possíveis Infiltrados'
               : 'Publicar Alerta Comunitário'}
           </Text>
@@ -432,6 +550,27 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(251, 191, 36, 0.35)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  accessibilityHeaderBadge: {
+    backgroundColor: 'rgba(6, 182, 212, 0.14)',
+    borderColor: 'rgba(6, 182, 212, 0.35)',
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(6, 182, 212, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.3)',
+    marginRight: 2,
+    gap: 2,
+  },
+  backBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#06B6D4',
   },
   headerTitle: {
     fontSize: 19,
@@ -500,6 +639,94 @@ const styles = StyleSheet.create({
   stalkingSub: {
     color: '#CBD5E1',
     fontSize: 11,
+    lineHeight: 15,
+  },
+  accessibilityEntryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(6, 182, 212, 0.08)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(6, 182, 212, 0.45)',
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 14,
+    gap: 12,
+  },
+  accessIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(6, 182, 212, 0.16)',
+    borderWidth: 1,
+    borderColor: '#06B6D4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accessTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  accessTitle: {
+    color: '#F8FAFC',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  accessBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(6, 182, 212, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: M3Shapes.full,
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.4)',
+  },
+  accessBadgeText: {
+    color: '#06B6D4',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  accessSub: {
+    color: '#CBD5E1',
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  accessNoticeBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.35)',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  accessNoticeTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#06B6D4',
+    marginBottom: 3,
+    letterSpacing: 0.5,
+  },
+  accessNoticeText: {
+    fontSize: 12,
+    color: '#E2E8F0',
+    lineHeight: 16,
+  },
+  expirationNoticeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  expirationNoticeText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    flex: 1,
     lineHeight: 15,
   },
   infiltratorAlertCard: {

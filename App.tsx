@@ -31,6 +31,8 @@ import {
   loadNotificationSettings,
   saveNotificationSettings,
   DEFAULT_NOTIFICATION_SETTINGS,
+  loadAccessibilityRoutePreference,
+  saveAccessibilityRoutePreference,
 } from './src/services/storage';
 import {
   requestNotificationPermissions,
@@ -96,7 +98,14 @@ import {
 } from './src/services/stalkingService';
 import { syncPendingFeedback } from './src/services/feedbackService';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from './src/theme/m3';
-import { calculateDistanceMeters, formatDistance, isProtestInfiltratorVerified, calculateTriangulatedCluster } from './src/utils/geo';
+import {
+  calculateDistanceMeters,
+  formatDistance,
+  isProtestInfiltratorVerified,
+  calculateTriangulatedCluster,
+  filterExpiredIncidents,
+  REPORT_RENEWAL_RADIUS_METERS,
+} from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
 import { reverseGeocodeCoordinate } from './src/services/geocodingService';
 import {
@@ -389,6 +398,7 @@ export default function App() {
   const [previewOriginCoord, setPreviewOriginCoord] = useState<RouteCoordinate | null>(null);
   const [previewDestName, setPreviewDestName] = useState('');
   const [previewDestCoord, setPreviewDestCoord] = useState<RouteCoordinate | null>(null);
+  const [accessibilityRouteOnly, setAccessibilityRouteOnly] = useState<boolean>(false);
   const routeAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ensure screen stays awake during navigation, driving, simulation, or TVDE protection
@@ -435,6 +445,7 @@ export default function App() {
       destination: destCoord,
       incidents,
       mode,
+      avoidAccessibilityBarriers: accessibilityRouteOnly,
     });
 
     // 2. Render route on the map and let the progressive neon route animation play out in full view (2.4s)
@@ -469,9 +480,32 @@ export default function App() {
       destination: previewDestCoord,
       incidents,
       mode: newMode,
+      avoidAccessibilityBarriers: accessibilityRouteOnly,
     });
     setPreviewSafeRoute(routes.safeRoute);
     setPreviewDirectRoute(routes.directRoute);
+  };
+
+  const handleToggleAccessibilityRoute = async (enabled: boolean) => {
+    Haptics.selectionAsync();
+    setAccessibilityRouteOnly(enabled);
+    await saveAccessibilityRoutePreference(enabled);
+
+    if (previewDestCoord) {
+      const origin: RouteCoordinate = previewOriginCoord || {
+        latitude: userLocation?.latitude ?? 41.1501,
+        longitude: userLocation?.longitude ?? -8.6112,
+      };
+      const routes = await calculateSafeNavigationRoutes({
+        origin,
+        destination: previewDestCoord,
+        incidents,
+        mode: transportMode,
+        avoidAccessibilityBarriers: enabled,
+      });
+      setPreviewSafeRoute(routes.safeRoute);
+      setPreviewDirectRoute(routes.directRoute);
+    }
   };
 
   const startRealNavigation = async (chosenRoute: PedestrianRoute) => {
@@ -560,6 +594,21 @@ export default function App() {
 
     return () => clearInterval(timer);
   }, [simulationState?.isPlaying, simulationState?.route?.steps?.length]);
+
+  // Periodic cleanup of 12h expired reports (except accessibility reports)
+  useEffect(() => {
+    const cleanupTimer = setInterval(() => {
+      setIncidents((prev) => {
+        const filtered = filterExpiredIncidents(prev);
+        if (filtered.length !== prev.length) {
+          saveIncidents(filtered);
+        }
+        return filtered;
+      });
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
+    return () => clearInterval(cleanupTimer);
+  }, []);
 
   const handleStartNavigation = async (chosenRoute: PedestrianRoute) => {
     if (!previewDestCoord) return;
@@ -765,13 +814,15 @@ export default function App() {
         console.warn('Erro ao obter localização inicial:', e);
       }
 
-      // 4. Load persisted real community incidents (clean of all demo seeds and resolved/dismissed items)
+      // 4. Load persisted real community incidents (clean of all demo seeds, resolved items, and 12h expired reports)
       const storedIncidents = await loadIncidents(initialLat, initialLon);
-      const cleanStored = storedIncidents.filter(
-        (i) =>
-          !i.id.startsWith('seed-') &&
-          (i.dismissals || 0) < (i.confirmations || 1) &&
-          (i.dismissals || 0) < 5
+      const cleanStored = filterExpiredIncidents(
+        storedIncidents.filter(
+          (i) =>
+            !i.id.startsWith('seed-') &&
+            (i.dismissals || 0) < (i.confirmations || 1) &&
+            (i.dismissals || 0) < 5
+        )
       );
       setIncidents(cleanStored);
 
@@ -780,11 +831,13 @@ export default function App() {
       if (isSupabaseConfigured()) {
         try {
           const online = await fetchOnlineIncidents();
-          cleanOnline = online.filter(
-            (i) =>
-              !i.id.startsWith('seed-') &&
-              (i.dismissals || 0) < (i.confirmations || 1) &&
-              (i.dismissals || 0) < 5
+          cleanOnline = filterExpiredIncidents(
+            online.filter(
+              (i) =>
+                !i.id.startsWith('seed-') &&
+                (i.dismissals || 0) < (i.confirmations || 1) &&
+                (i.dismissals || 0) < 5
+            )
           );
           setIncidents(cleanOnline);
           await saveIncidents(cleanOnline);
@@ -801,6 +854,9 @@ export default function App() {
 
       const savedHome = await loadHomeAddress();
       setHomeAddress(savedHome);
+
+      const savedAccessibilityRoute = await loadAccessibilityRoutePreference();
+      setAccessibilityRouteOnly(savedAccessibilityRoute);
 
       // Load user proximity notification settings and start background tracking ONLY if background permission is already granted
       const savedSettings = await loadNotificationSettings();
@@ -882,11 +938,13 @@ export default function App() {
       if (isSupabaseConfigured()) {
         subscribeToOnlineIncidents(async () => {
           const fresh = await fetchOnlineIncidents();
-          const cleanFresh = fresh.filter(
-            (i) =>
-              !i.id.startsWith('seed-') &&
-              (i.dismissals || 0) < (i.confirmations || 1) &&
-              (i.dismissals || 0) < 5
+          const cleanFresh = filterExpiredIncidents(
+            fresh.filter(
+              (i) =>
+                !i.id.startsWith('seed-') &&
+                (i.dismissals || 0) < (i.confirmations || 1) &&
+                (i.dismissals || 0) < 5
+            )
           );
           setIncidents(cleanFresh);
           await saveIncidents(cleanFresh);
@@ -1119,10 +1177,12 @@ export default function App() {
     });
   };
 
-  // Handle adding a new incident report with Triangulation for Infiltrators
+  // Handle adding a new incident report with Triangulation for Infiltrators & 50m Renewal for Hazard Reports
   const handleAddIncident = (
     data: Omit<Incident, 'id' | 'createdAt' | 'confirmations' | 'dismissals'>
   ) => {
+    const now = Date.now();
+
     // If reporting protest infiltrators, triangulate with any existing sightings within 300m
     if (data.category === 'protest_infiltrator') {
       const triangulation = calculateTriangulatedCluster(
@@ -1140,6 +1200,7 @@ export default function App() {
               ...item,
               latitude: triangulation.triangulatedCoord.latitude,
               longitude: triangulation.triangulatedCoord.longitude,
+              createdAt: now, // Refreshes lifetime
               confirmations: (item.confirmations || 1) + 1,
               title: 'Possíveis Infiltrados (Triangulado)',
               description: `${item.description}\n• Nova sinalização triangulada próxima.`,
@@ -1148,33 +1209,56 @@ export default function App() {
           return item;
         });
 
-        setIncidents(updated);
-        saveIncidents(updated);
+        const filtered = filterExpiredIncidents(updated);
+        setIncidents(filtered);
+        saveIncidents(filtered);
         triangulation.clusterIds.forEach((id) => confirmIncidentOnline(id));
         setTargetCoordinate(null);
         return;
       }
     }
 
+    // 50-meter cluster renewal rule:
+    // Any existing hazard reports in the same location within 50m get their timestamp refreshed to now!
+    const renewedExisting = incidents.map((item) => {
+      const dist = calculateDistanceMeters(
+        data.latitude,
+        data.longitude,
+        item.latitude,
+        item.longitude
+      );
+      if (dist <= REPORT_RENEWAL_RADIUS_METERS) {
+        return {
+          ...item,
+          createdAt: now, // Renewed: 12-hour expiration window starts anew!
+          confirmations: item.confirmations + (item.category === data.category ? 1 : 0),
+        };
+      }
+      return item;
+    });
+
     const newIncident: Incident = {
       ...data,
-      id: `inc-${Date.now()}`,
-      createdAt: Date.now(),
+      id: `inc-${now}`,
+      createdAt: now,
       confirmations: 1,
       dismissals: 0,
     };
 
-    const updated = [newIncident, ...incidents];
+    const updated = filterExpiredIncidents([newIncident, ...renewedExisting]);
     setIncidents(updated);
     saveIncidents(updated);
     createOnlineIncident(newIncident);
     setTargetCoordinate(null);
   };
 
-  // Handle upvoting/confirming an incident
+  // Handle upvoting/confirming an incident (also renews its 12h lifetime)
   const handleConfirmIncident = (id: string) => {
+    const now = Date.now();
     const updated = incidents.map((item) =>
-      item.id === id ? { ...item, confirmations: item.confirmations + 1 } : item
+      item.id === id
+        ? { ...item, confirmations: item.confirmations + 1, createdAt: now }
+        : item
     );
     setIncidents(updated);
     saveIncidents(updated);
@@ -1183,6 +1267,7 @@ export default function App() {
       setSelectedIncident({
         ...selectedIncident,
         confirmations: selectedIncident.confirmations + 1,
+        createdAt: now,
       });
     }
   };
@@ -1420,6 +1505,7 @@ export default function App() {
             onOpenSOSContacts={() => setShowContactsModal(true)}
             onOpenSettings={() => setShowSettingsModal(true)}
             emergencyContactsCount={emergencyContacts.filter((c) => c.phone !== '112').length}
+            accessibleRouteOnly={accessibilityRouteOnly}
           />
 
           {/* Floating Categories Filter Chips Strip (Over the Map) */}
@@ -1688,6 +1774,8 @@ export default function App() {
           place={selectedMapPoint}
           userLocation={userLocation}
           transportMode={transportMode}
+          accessibleRouteOnly={accessibilityRouteOnly}
+          onToggleAccessibilityRoute={handleToggleAccessibilityRoute}
           onClose={() => setSelectedMapPoint(null)}
           onNavigate={(name, coord, mode) => {
             setSelectedMapPoint(null);
@@ -1722,6 +1810,8 @@ export default function App() {
         currentMode={transportMode}
         userLocation={userLocation}
         homeAddress={homeAddress ? { latitude: homeAddress.latitude, longitude: homeAddress.longitude, label: 'Casa' } : null}
+        accessibleRouteOnly={accessibilityRouteOnly}
+        onToggleAccessibilityRoute={handleToggleAccessibilityRoute}
         onToggleMode={handleTogglePreviewMode}
         onClose={() => {
           setShowRoutePreview(false);

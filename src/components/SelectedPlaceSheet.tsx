@@ -8,7 +8,7 @@ import {
   Platform,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
 import { UserLocation } from '../types';
 import { RouteCoordinate, TransportMode } from '../types/navigation';
@@ -27,6 +27,8 @@ interface SelectedPlaceSheetProps {
   place: SelectedMapPoint | null;
   userLocation: UserLocation | null;
   transportMode: TransportMode;
+  accessibleRouteOnly?: boolean;
+  onToggleAccessibilityRoute?: (enabled: boolean) => void;
   onClose: () => void;
   onNavigate: (name: string, coord: RouteCoordinate, mode: TransportMode) => void;
   onReportHere: (coord: RouteCoordinate) => void;
@@ -37,24 +39,28 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
   place,
   userLocation,
   transportMode,
+  accessibleRouteOnly = false,
+  onToggleAccessibilityRoute,
   onClose,
   onNavigate,
   onReportHere,
   onSetAsOrigin,
 }) => {
-  if (!place) return null;
-
   // Material Design 3 Motion: Shared Axis Y Sheet Slide
   const translateY = useRef(new Animated.Value(350)).current;
 
   useEffect(() => {
-    Animated.timing(translateY, {
-      toValue: 0,
-      duration: M3Motion.durations.long2,
-      easing: M3Motion.easings.emphasizedDecelerate,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+    if (place) {
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: M3Motion.durations.long2,
+        easing: M3Motion.easings.emphasizedDecelerate,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [place]);
+
+  if (!place) return null;
 
   const handleAnimatedClose = () => {
     Animated.timing(translateY, {
@@ -145,9 +151,15 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           </View>
 
           {walkMins !== null && (
-            <View style={styles.estimatePill}>
-              <Ionicons name="walk" size={15} color="#10B981" />
-              <Text style={styles.estimateValue}>~{formatDuration(walkMins)}</Text>
+            <View style={[styles.estimatePill, accessibleRouteOnly && styles.estimatePillAccessible]}>
+              {accessibleRouteOnly ? (
+                <MaterialCommunityIcons name="wheelchair" size={15} color="#06B6D4" />
+              ) : (
+                <Ionicons name="walk" size={15} color="#10B981" />
+              )}
+              <Text style={[styles.estimateValue, accessibleRouteOnly && { color: '#06B6D4' }]}>
+                ~{formatDuration(walkMins)}
+              </Text>
             </View>
           )}
 
@@ -160,16 +172,92 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
         </View>
       )}
 
+      {/* Quick Accessibility Mode Switcher (Before computing route) */}
+      {onToggleAccessibilityRoute && (
+        <TouchableOpacity
+          style={[
+            styles.accessToggleCard,
+            accessibleRouteOnly && styles.accessToggleCardActive,
+          ]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            onToggleAccessibilityRoute(!accessibleRouteOnly);
+          }}
+          activeOpacity={0.82}
+        >
+          <View
+            style={[
+              styles.accessIconWrap,
+              accessibleRouteOnly && styles.accessIconWrapActive,
+            ]}
+          >
+            <MaterialCommunityIcons
+              name="wheelchair"
+              size={18}
+              color={accessibleRouteOnly ? '#FFFFFF' : '#06B6D4'}
+            />
+          </View>
+
+          <View style={{ flex: 1 }}>
+            <View style={styles.accessTitleRow}>
+              <Text
+                style={[
+                  styles.accessTitle,
+                  accessibleRouteOnly && styles.accessTitleActive,
+                ]}
+              >
+                Caminho com Acessibilidade
+              </Text>
+              <View
+                style={[
+                  styles.accessBadge,
+                  accessibleRouteOnly && styles.accessBadgeActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.accessBadgeText,
+                    accessibleRouteOnly && styles.accessBadgeTextActive,
+                  ]}
+                >
+                  {accessibleRouteOnly ? 'ATIVADO' : 'DESLIGADO'}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.accessSub} numberOfLines={1}>
+              {accessibleRouteOnly
+                ? 'Evita degraus, obras intransitáveis e calçada estragada'
+                : 'Ativar para calcular rota adaptada a mobilidade reduzida'}
+            </Text>
+          </View>
+
+          <Ionicons
+            name={accessibleRouteOnly ? 'checkmark-circle' : 'ellipse-outline'}
+            size={22}
+            color={accessibleRouteOnly ? '#06B6D4' : '#64748B'}
+          />
+        </TouchableOpacity>
+      )}
+
       {/* Main Action Buttons */}
       <View style={styles.actionButtonsRow}>
         {/* Navigate Walking */}
         <TouchableOpacity
-          style={[styles.navBtn, styles.navBtnWalking]}
+          style={[
+            styles.navBtn,
+            accessibleRouteOnly ? styles.navBtnAccessible : styles.navBtnWalking,
+          ]}
           onPress={handleStartWalkRoute}
           activeOpacity={0.85}
         >
-          <Ionicons name="walk" size={18} color="#0F172A" />
-          <Text style={styles.navBtnTextDark}>A Pé em Segurança</Text>
+          {accessibleRouteOnly ? (
+            <MaterialCommunityIcons name="wheelchair" size={19} color="#080A0C" />
+          ) : (
+            <Ionicons name="walk" size={18} color="#0F172A" />
+          )}
+          <Text style={styles.navBtnTextDark}>
+            {accessibleRouteOnly ? 'A Pé (Sem Barreiras)' : 'A Pé em Segurança'}
+          </Text>
         </TouchableOpacity>
 
         {/* Navigate Driving */}
@@ -293,7 +381,7 @@ const styles = StyleSheet.create({
   estimatesRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   estimatePill: {
     flexDirection: 'row',
@@ -306,10 +394,84 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: M3Colors.outlineVariant,
   },
+  estimatePillAccessible: {
+    borderColor: 'rgba(6, 182, 212, 0.45)',
+    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+  },
   estimateValue: {
     fontSize: 12,
     fontWeight: '600',
     color: M3Colors.onSurface,
+  },
+  accessToggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(6, 182, 212, 0.08)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(6, 182, 212, 0.35)',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    gap: 10,
+  },
+  accessToggleCardActive: {
+    backgroundColor: 'rgba(6, 182, 212, 0.16)',
+    borderColor: '#06B6D4',
+  },
+  accessIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(6, 182, 212, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accessIconWrapActive: {
+    backgroundColor: '#06B6D4',
+    borderColor: '#38BDF8',
+  },
+  accessTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  accessTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#E2E8F0',
+  },
+  accessTitleActive: {
+    color: '#FFFFFF',
+  },
+  accessBadge: {
+    backgroundColor: 'rgba(148, 163, 184, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+  },
+  accessBadgeActive: {
+    backgroundColor: 'rgba(6, 182, 212, 0.25)',
+    borderColor: '#06B6D4',
+  },
+  accessBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.5,
+  },
+  accessBadgeTextActive: {
+    color: '#06B6D4',
+  },
+  accessSub: {
+    fontSize: 11,
+    color: '#94A3B8',
+    lineHeight: 14,
   },
   actionButtonsRow: {
     flexDirection: 'row',
@@ -328,6 +490,10 @@ const styles = StyleSheet.create({
   },
   navBtnWalking: {
     backgroundColor: M3Colors.primaryContainer,
+    ...M3Elevation.level2,
+  },
+  navBtnAccessible: {
+    backgroundColor: '#06B6D4',
     ...M3Elevation.level2,
   },
   navBtnDriving: {

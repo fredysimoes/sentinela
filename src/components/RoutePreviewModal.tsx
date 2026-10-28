@@ -11,7 +11,7 @@ import {
   Keyboard,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics, { ImpactFeedbackStyle } from '../utils/haptics';
 import { PedestrianRoute, RouteCoordinate, TransportMode } from '../types/navigation';
 import { formatDistance } from '../utils/geo';
@@ -35,6 +35,8 @@ interface RoutePreviewModalProps {
   currentMode?: TransportMode;
   userLocation?: { latitude: number; longitude: number } | null;
   homeAddress?: { latitude: number; longitude: number; label?: string } | null;
+  accessibleRouteOnly?: boolean;
+  onToggleAccessibilityRoute?: (enabled: boolean) => void;
   onToggleMode?: (mode: TransportMode) => void;
   onClose: () => void;
   onStartNavigation: (chosenRoute: PedestrianRoute) => void;
@@ -53,15 +55,15 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   currentMode = 'walking',
   userLocation,
   homeAddress,
+  accessibleRouteOnly = false,
+  onToggleAccessibilityRoute,
   onToggleMode,
   onClose,
   onStartNavigation,
   onSimulateRoute,
   onUpdateEndpoints,
 }) => {
-  if (!safeRoute) return null;
-
-  const [selectedRouteId, setSelectedRouteId] = useState<string>(safeRoute.id);
+  const [selectedRouteId, setSelectedRouteId] = useState<string>(safeRoute?.id || '');
   const [showDetailedSteps, setShowDetailedSteps] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [activeInput, setActiveInput] = useState<'origin' | 'destination' | null>(null);
@@ -78,8 +80,10 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
 
   // Synchronize internal text inputs with external props
   useEffect(() => {
-    setSelectedRouteId(safeRoute.id);
-  }, [safeRoute.id]);
+    if (safeRoute?.id) {
+      setSelectedRouteId(safeRoute.id);
+    }
+  }, [safeRoute?.id]);
 
   useEffect(() => {
     setOriginText(originName);
@@ -124,6 +128,8 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
     };
   }, [activeQuery, activeInput]);
 
+  if (!safeRoute) return null;
+
   const selectedRoute =
     directRoute && selectedRouteId === directRoute.id ? directRoute : safeRoute;
 
@@ -133,11 +139,13 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   };
 
   const handleStart = () => {
+    if (!selectedRoute) return;
     Haptics.impactAsync(ImpactFeedbackStyle.Heavy);
     onStartNavigation(selectedRoute);
   };
 
   const handleSimulate = () => {
+    if (!selectedRoute) return;
     Haptics.impactAsync(ImpactFeedbackStyle.Medium);
     if (onSimulateRoute) {
       onSimulateRoute(selectedRoute);
@@ -685,6 +693,71 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                 </View>
               )}
 
+              {/* Accessibility / Reduced Mobility Route Toggle */}
+              {onToggleAccessibilityRoute && !isDriving && (
+                <TouchableOpacity
+                  style={[
+                    styles.accessibilityRouteToggleBtn,
+                    accessibleRouteOnly && styles.accessibilityRouteToggleBtnActive,
+                  ]}
+                  onPress={() => {
+                    Haptics.impactAsync(ImpactFeedbackStyle.Medium);
+                    onToggleAccessibilityRoute(!accessibleRouteOnly);
+                  }}
+                  activeOpacity={0.82}
+                >
+                  <View
+                    style={[
+                      styles.accessToggleIconCircle,
+                      accessibleRouteOnly && styles.accessToggleIconCircleActive,
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name="wheelchair"
+                      size={18}
+                      color={accessibleRouteOnly ? '#FFFFFF' : '#06B6D4'}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.accessToggleTitleRow}>
+                      <Text
+                        style={[
+                          styles.accessToggleTitle,
+                          accessibleRouteOnly && styles.accessToggleTitleActive,
+                        ]}
+                      >
+                        Percurso com Acessibilidade
+                      </Text>
+                      <View
+                        style={[
+                          styles.accessToggleBadge,
+                          accessibleRouteOnly && styles.accessToggleBadgeActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.accessToggleBadgeText,
+                            accessibleRouteOnly && styles.accessToggleBadgeTextActive,
+                          ]}
+                        >
+                          {accessibleRouteOnly ? 'ATIVO' : 'DESLIGADO'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.accessToggleSub}>
+                      {accessibleRouteOnly
+                        ? 'A contornar escadas, calçadas danificadas e obras registadas.'
+                        : 'Toque para evitar degraus e obstáculos para mobilidade reduzida.'}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={accessibleRouteOnly ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={22}
+                    color={accessibleRouteOnly ? '#06B6D4' : '#64748B'}
+                  />
+                </TouchableOpacity>
+              )}
+
               <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* SAFE ROUTE CARD */}
                 <TouchableOpacity
@@ -697,8 +770,16 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                 >
                   <View style={styles.cardHeader}>
                     <View style={styles.safeBadge}>
-                      <Ionicons name="shield-checkmark" size={14} color="#10B981" />
-                      <Text style={styles.safeBadgeText}>RECOMENDADA · ROTA SEGURA</Text>
+                      <Ionicons
+                        name={safeRoute.name.includes('Acessível') ? 'shield-checkmark' : 'shield-checkmark'}
+                        size={14}
+                        color="#10B981"
+                      />
+                      <Text style={styles.safeBadgeText}>
+                        {safeRoute.name.includes('Acessível')
+                          ? 'RECOMENDADA · ROTA ACESSÍVEL'
+                          : 'RECOMENDADA · ROTA SEGURA'}
+                      </Text>
                     </View>
 
                     {selectedRouteId === safeRoute.id && (
@@ -728,7 +809,9 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     <View style={styles.avoidedBox}>
                       <Ionicons name="checkmark-circle" size={14} color="#10B981" />
                       <Text style={styles.avoidedText}>
-                        Desvio protetor ativado: evita {safeRoute.hazardsAvoided.length} zona(s) de perigo
+                        {safeRoute.name.includes('Acessível')
+                          ? `Desvio acessível ativado: contorna ${safeRoute.hazardsAvoided.length} barreira(s) de mobilidade`
+                          : `Desvio protetor ativado: evita ${safeRoute.hazardsAvoided.length} zona(s) de perigo`}
                       </Text>
                     </View>
                   )}
@@ -747,7 +830,11 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     <View style={styles.cardHeader}>
                       <View style={styles.warnBadge}>
                         <Ionicons name="warning" size={14} color="#F59E0B" />
-                        <Text style={styles.warnBadgeText}>MAIS RÁPIDA (COM AVISOS)</Text>
+                        <Text style={styles.warnBadgeText}>
+                          {directRoute.name.includes('Barreiras') || safeRoute.name.includes('Acessível')
+                            ? 'DIRETA (COM DEGRAUS/BARREIRAS)'
+                            : 'MAIS RÁPIDA (COM AVISOS)'}
+                        </Text>
                       </View>
 
                       {selectedRouteId === directRoute.id && (
@@ -777,7 +864,9 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                       <View style={styles.warningBox}>
                         <Ionicons name="alert-circle" size={14} color="#EF4444" />
                         <Text style={styles.warningText}>
-                          Passa por zonas com reporte ativo de ocorrências
+                          {safeRoute.name.includes('Acessível')
+                            ? `Contém ${directRoute.hazardsOnRoute.length} barreira(s) ou degraus reportados nesta via`
+                            : 'Passa por zonas com reporte ativo de ocorrências'}
                         </Text>
                       </View>
                     )}
@@ -1231,6 +1320,77 @@ const styles = StyleSheet.create({
   modeSwitchTextActive: {
     color: M3Colors.onSecondaryContainer,
     fontWeight: '700',
+  },
+  accessibilityRouteToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(6, 182, 212, 0.06)',
+    marginHorizontal: 16,
+    marginBottom: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(6, 182, 212, 0.25)',
+    gap: 10,
+  },
+  accessibilityRouteToggleBtnActive: {
+    backgroundColor: 'rgba(6, 182, 212, 0.14)',
+    borderColor: '#06B6D4',
+  },
+  accessToggleIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accessToggleIconCircleActive: {
+    backgroundColor: '#06B6D4',
+    borderColor: '#38BDF8',
+  },
+  accessToggleTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  accessToggleTitle: {
+    color: '#E2E8F0',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  accessToggleTitleActive: {
+    color: '#FFFFFF',
+  },
+  accessToggleBadge: {
+    backgroundColor: 'rgba(148, 163, 184, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+  },
+  accessToggleBadgeActive: {
+    backgroundColor: 'rgba(6, 182, 212, 0.25)',
+    borderColor: '#06B6D4',
+  },
+  accessToggleBadgeText: {
+    color: '#94A3B8',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  accessToggleBadgeTextActive: {
+    color: '#06B6D4',
+  },
+  accessToggleSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    lineHeight: 14,
   },
   arrivalBadge: {
     backgroundColor: 'rgba(109, 213, 140, 0.15)',

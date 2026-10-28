@@ -1,3 +1,5 @@
+import { isAccessibilityCategory } from '../constants/categories';
+
 /**
  * Calculates distance between two coordinates in meters using the Haversine formula
  */
@@ -137,6 +139,101 @@ export function formatRelativeTime(timestamp: number): string {
   if (diffHours < 24) return `Há ${diffHours}h`;
   const diffDays = Math.floor(diffHours / 24);
   return `Há ${diffDays}d`;
+}
+
+/**
+ * Formats report timestamp with exact date and time (e.g. "Hoje, 28/10 às 17:42")
+ */
+export function formatReportDateTime(timestamp: number): {
+  dateStr: string;
+  timeStr: string;
+  fullFormatted: string;
+  relative: string;
+} {
+  const date = new Date(timestamp);
+  const now = new Date();
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const timeStr = `${hours}:${minutes}`;
+
+  const isToday =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear();
+
+  let prefix = `${day}/${month}`;
+  if (isToday) {
+    prefix = `Hoje, ${day}/${month}`;
+  } else if (isYesterday) {
+    prefix = `Ontem, ${day}/${month}`;
+  }
+
+  const relative = formatRelativeTime(timestamp);
+  const fullFormatted = `${prefix} às ${timeStr} (${relative.toLowerCase()})`;
+
+  return {
+    dateStr: `${day}/${month}/${year}`,
+    timeStr,
+    fullFormatted,
+    relative,
+  };
+}
+
+export const REPORT_EXPIRATION_MS = 12 * 60 * 60 * 1000; // 12 Hours
+export const REPORT_RENEWAL_RADIUS_METERS = 50; // 50m renewal radius
+
+/**
+ * Rule: All community hazard reports expire after 12 hours UNLESS:
+ * 1. It is an accessibility report (semi-permanent physical barrier, no 12h expiration).
+ * 2. It has been renewed by another recent report within 50 meters in the last 12 hours.
+ */
+export function filterExpiredIncidents<T extends { id: string; category: string; createdAt: number; latitude: number; longitude: number }>(
+  incidents: T[],
+  expirationMs: number = REPORT_EXPIRATION_MS,
+  renewalRadiusMeters: number = REPORT_RENEWAL_RADIUS_METERS
+): T[] {
+  const now = Date.now();
+
+  return incidents.filter((incident) => {
+    // 1. Accessibility reports do NOT expire after 12h
+    if (isAccessibilityCategory(incident.category)) {
+      return true;
+    }
+
+    // 2. Fresh reports (< 12h old) are active
+    const age = now - incident.createdAt;
+    if (age < expirationMs) {
+      return true;
+    }
+
+    // 3. If older than 12h, check if renewed by an active report within 50m
+    const hasRenewalInRadius = incidents.some((other) => {
+      if (other.id === incident.id) return false;
+      const otherAge = now - other.createdAt;
+      if (otherAge >= expirationMs) return false;
+
+      const dist = calculateDistanceMeters(
+        incident.latitude,
+        incident.longitude,
+        other.latitude,
+        other.longitude
+      );
+      return dist <= renewalRadiusMeters;
+    });
+
+    return hasRenewalInRadius;
+  });
 }
 
 export function getGoogleMapsUrl(latitude: number, longitude: number): string {
