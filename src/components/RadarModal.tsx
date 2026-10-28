@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Brightness from 'expo-brightness';
+import * as Location from 'expo-location';
 import Haptics, { ImpactFeedbackStyle } from '../utils/haptics';
 import { M3Colors, M3Shapes } from '../theme/m3';
 import { M3Pressable } from './M3MotionWrapper';
@@ -35,7 +36,15 @@ import {
   broadcastRadarLocation,
   sendRadarStrobeSignal,
   leaveRadarRoom,
+  shareRadarWhatsApp,
+  shareRadarSMS,
+  createRadarShareMessage,
 } from '../services/radarService';
+import {
+  startHeartbeatStrobe,
+  stopHeartbeatStrobe,
+  isHeartbeatStrobeActive,
+} from '../services/torch';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const RADAR_SIZE = Math.min(SCREEN_WIDTH - 64, 290);
@@ -43,8 +52,9 @@ const RADAR_SIZE = Math.min(SCREEN_WIDTH - 64, 290);
 interface RadarModalProps {
   visible: boolean;
   onClose: () => void;
-  userLocation: { latitude: number; longitude: number } | null;
+  userLocation: { latitude: number; longitude: number; accuracy?: number | null } | null;
   userHeading?: number;
+  initialPin?: string | null;
   onNavigateToFriend?: (name: string, coord: { latitude: number; longitude: number }) => void;
 }
 
@@ -53,6 +63,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
   onClose,
   userLocation,
   userHeading = 0,
+  initialPin,
   onNavigateToFriend,
 }) => {
   // Session State
@@ -60,17 +71,101 @@ export const RadarModal: React.FC<RadarModalProps> = ({
   const [pinInput, setPinInput] = useState('');
   const [targetPeer, setTargetPeer] = useState<RadarPeer | null>(null);
   const [myRole, setMyRole] = useState<'beacon' | 'seeker' | null>(null);
-  const [isVisualBeaconActive, setIsVisualBeaconActive] = useState(false);
+
+  // Heartbeat Flashlight & Strobe States
+  const [isHeartbeatActive, setIsHeartbeatActive] = useState(false);
+  const [strobeScreenState, setStrobeScreenState] = useState(false);
   const [strobeAlertMessage, setStrobeAlertMessage] = useState<string | null>(null);
+
+  // High-accuracy live position & compass states
+  const [liveLocation, setLiveLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number | null;
+  } | null>(userLocation);
+  const [liveHeading, setLiveHeading] = useState<number>(userHeading);
+
+  const smoothedHeadingX = useRef(Math.cos((userHeading * Math.PI) / 180));
+  const smoothedHeadingY = useRef(Math.sin((userHeading * Math.PI) / 180));
+  const filteredBearingRef = useRef<number>(0);
 
   // Animations
   const pulseAnim = useRef(new Animated.Value(0.95)).current;
   const rippleAnim = useRef(new Animated.Value(0)).current;
   const geigerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const locBroadcastTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const strobeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Smooth Sonar Pulsing
+  // Sync incoming userLocation prop
+  useEffect(() => {
+    if (userLocation) {
+      setLiveLocation(userLocation);
+    }
+  }, [userLocation?.latitude, userLocation?.longitude, userLocation?.accuracy]);
+
+  // Dedicated High-Accuracy Location & Compass Watchers while Radar is active
+  useEffect(() => {
+    if (!visible) return;
+
+    let headingSub: Location.LocationSubscription | null = null;
+    let posSub: Location.LocationSubscription | null = null;
+
+    // 1. High-frequency compass with smooth circular low-pass filter
+    (async () => {
+      try {
+        headingSub = await Location.watchHeadingAsync((h) => {
+          const heading = h.trueHeading >= 0 ? h.trueHeading : h.magHeading;
+          if (typeof heading === 'number' && !isNaN(heading)) {
+            const rad = (heading * Math.PI) / 180;
+            smoothedHeadingX.current = smoothedHeadingX.current * 0.7 + Math.cos(rad) * 0.3;
+            smoothedHeadingY.current = smoothedHeadingY.current * 0.7 + Math.sin(rad) * 0.3;
+            const smoothedDeg =
+              ((Math.atan2(smoothedHeadingY.current, smoothedHeadingX.current) * 180) / Math.PI + 360) % 360;
+            setLiveHeading(Math.round(smoothedDeg));
+          }
+        });
+      } catch (err) {
+        console.warn('Radar watchHeadingAsync error:', err);
+      }
+    })();
+
+    // 2. High-precision GPS watcher (1Hz, BestForNavigation)
+    (async () => {
+      try {
+        posSub = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.BestForNavigation,
+            timeInterval: 1000,
+            distanceInterval: 1,
+          },
+          (loc) => {
+            setLiveLocation({
+              latitude: loc.coords.latitude,
+              longitude: loc.coords.longitude,
+              accuracy: loc.coords.accuracy ?? undefined,
+            });
+          }
+        );
+      } catch (err) {
+        console.warn('Radar watchPositionAsync error:', err);
+      }
+    })();
+
+    return () => {
+      if (headingSub) headingSub.remove();
+      if (posSub) posSub.remove();
+    };
+  }, [visible]);
+
+  // Auto-join if opened via deep link with PIN
+  useEffect(() => {
+    if (!visible) return;
+    if (initialPin && initialPin.trim().length === 4 && !sessionHandle) {
+      setPinInput(initialPin.trim());
+      handleJoinSeeker(initialPin.trim());
+    }
+  }, [visible, initialPin]);
+
+  // Smooth Sonar Pulsing Animations
   useEffect(() => {
     if (!visible) return;
 
@@ -106,26 +201,22 @@ export const RadarModal: React.FC<RadarModalProps> = ({
     };
   }, [visible]);
 
-  // Periodic GPS Broadcast to room peers (every 1.5s)
+  // Periodic GPS Broadcast to room peers (every 1s)
   useEffect(() => {
-    if (!sessionHandle || !userLocation) return;
+    if (!sessionHandle || !liveLocation) return;
 
-    // Immediate initial broadcast
-    broadcastRadarLocation(sessionHandle, {
-      latitude: userLocation.latitude,
-      longitude: userLocation.longitude,
-      heading: userHeading,
-      displayName: myRole === 'beacon' ? 'Amigo (Farol)' : 'Amigo (A caminho)',
-    });
-
-    locBroadcastTimerRef.current = setInterval(() => {
+    const sendUpdate = () => {
       broadcastRadarLocation(sessionHandle, {
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        heading: userHeading,
+        latitude: liveLocation.latitude,
+        longitude: liveLocation.longitude,
+        accuracy: liveLocation.accuracy ?? undefined,
+        heading: liveHeading,
         displayName: myRole === 'beacon' ? 'Amigo (Farol)' : 'Amigo (A caminho)',
       });
-    }, 1500);
+    };
+
+    sendUpdate();
+    locBroadcastTimerRef.current = setInterval(sendUpdate, 1000);
 
     return () => {
       if (locBroadcastTimerRef.current) {
@@ -133,32 +224,47 @@ export const RadarModal: React.FC<RadarModalProps> = ({
         locBroadcastTimerRef.current = null;
       }
     };
-  }, [sessionHandle, userLocation?.latitude, userLocation?.longitude, userHeading, myRole]);
+  }, [sessionHandle, liveLocation?.latitude, liveLocation?.longitude, liveHeading, myRole]);
 
-  // Distance & Angle Computations
-  const distance =
-    userLocation && targetPeer
+  // Distance & Proximity Computations
+  const rawDistance =
+    liveLocation && targetPeer
       ? calculateDistanceMeters(
-          userLocation.latitude,
-          userLocation.longitude,
+          liveLocation.latitude,
+          liveLocation.longitude,
           targetPeer.latitude,
           targetPeer.longitude
         )
       : null;
 
-  const bearing =
-    userLocation && targetPeer
+  const rawBearing =
+    liveLocation && targetPeer
       ? calculateBearing(
-          userLocation.latitude,
-          userLocation.longitude,
+          liveLocation.latitude,
+          liveLocation.longitude,
           targetPeer.latitude,
           targetPeer.longitude
         )
       : 0;
 
-  const relativeAngle = calculateRelativeAngle(bearing, userHeading);
-  const directionText = getCompassDirectionLabel(relativeAngle);
-  const proximity = distance !== null ? getProximityStatus(distance) : null;
+  // Angular filter on bearing to eliminate 180-degree GPS jitter at close range
+  useEffect(() => {
+    if (rawBearing !== null && rawBearing !== undefined) {
+      const diff = ((rawBearing - filteredBearingRef.current + 540) % 360) - 180;
+      filteredBearingRef.current = ((filteredBearingRef.current + diff * 0.35 + 360) % 360);
+    }
+  }, [rawBearing]);
+
+  const proximity = rawDistance !== null ? getProximityStatus(rawDistance) : null;
+  const isImmediate = proximity?.isImmediateProximity || (rawDistance !== null && rawDistance <= 5);
+
+  const relativeAngle = calculateRelativeAngle(
+    Math.round(filteredBearingRef.current),
+    liveHeading
+  );
+  const directionText = isImmediate
+    ? 'Vocês estão lado a lado! Olhe em redor ou ative as lanternas.'
+    : getCompassDirectionLabel(relativeAngle);
 
   // Haptic "Geiger Counter" cadence when in proximity
   useEffect(() => {
@@ -170,7 +276,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
     if (visible && proximity && proximity.hapticIntervalMs !== null) {
       geigerTimerRef.current = setInterval(() => {
         Haptics.impactAsync(
-          distance !== null && distance <= 3
+          isImmediate
             ? ImpactFeedbackStyle.Heavy
             : ImpactFeedbackStyle.Medium
         );
@@ -183,24 +289,74 @@ export const RadarModal: React.FC<RadarModalProps> = ({
         geigerTimerRef.current = null;
       }
     };
-  }, [visible, proximity?.hapticIntervalMs, distance]);
+  }, [visible, proximity?.hapticIntervalMs, isImmediate]);
 
   // Handle incoming remote strobe trigger signal
   const handleIncomingStrobe = (fromName: string) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    setStrobeAlertMessage(`${fromName} está a sinalizar a sua localização!`);
-    setIsVisualBeaconActive(true);
+    setStrobeAlertMessage(`${fromName} ativou o sinalizador de lanterna!`);
+    setIsHeartbeatActive(true);
 
-    if (strobeTimeoutRef.current) clearTimeout(strobeTimeoutRef.current);
-    strobeTimeoutRef.current = setTimeout(() => {
-      setIsVisualBeaconActive(false);
-      setStrobeAlertMessage(null);
-    }, 6000);
+    startHeartbeatStrobe(
+      7000,
+      (isOn, pulseNumber) => {
+        setStrobeScreenState(isOn);
+        if (isOn) {
+          Haptics.impactAsync(
+            pulseNumber === 1 ? ImpactFeedbackStyle.Heavy : ImpactFeedbackStyle.Medium
+          );
+        }
+      },
+      () => {
+        setIsHeartbeatActive(false);
+        setStrobeAlertMessage(null);
+        setStrobeScreenState(false);
+      }
+    );
   };
 
-  // Fullscreen Visual Screen Beacon (100% Brightness High-Visibility Pulse)
+  // Toggle Heartbeat Flashlight: triggers remote phone AND local phone in alternating double pulses
+  const handleToggleHeartbeatStrobe = async () => {
+    if (isHeartbeatActive) {
+      stopHeartbeatStrobe();
+      setIsHeartbeatActive(false);
+      setStrobeScreenState(false);
+      setStrobeAlertMessage(null);
+      return;
+    }
+
+    Haptics.impactAsync(ImpactFeedbackStyle.Heavy);
+
+    // 1. Broadcast signal to friend's phone over Realtime
+    if (sessionHandle) {
+      await sendRadarStrobeSignal(sessionHandle, 'O seu amigo');
+    }
+
+    // 2. Start hardware flashlight heartbeat pulse on this phone
+    setIsHeartbeatActive(true);
+    setStrobeAlertMessage('Sinalizador Heartbeat ativo na lanterna (2 em 2 pulsos)');
+
+    startHeartbeatStrobe(
+      7000,
+      (isOn, pulseNumber) => {
+        setStrobeScreenState(isOn);
+        if (isOn) {
+          Haptics.impactAsync(
+            pulseNumber === 1 ? ImpactFeedbackStyle.Heavy : ImpactFeedbackStyle.Medium
+          );
+        }
+      },
+      () => {
+        setIsHeartbeatActive(false);
+        setStrobeAlertMessage(null);
+        setStrobeScreenState(false);
+      }
+    );
+  };
+
+  // Fullscreen Visual Screen Brightness when heartbeat screen flash is active
   useEffect(() => {
-    if (isVisualBeaconActive) {
+    if (strobeScreenState) {
       (async () => {
         try {
           await Brightness.setBrightnessAsync(1.0);
@@ -213,7 +369,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
         } catch {}
       })();
     }
-  }, [isVisualBeaconActive]);
+  }, [strobeScreenState]);
 
   // Join Room as Beacon ("Criar Farol")
   const handleStartBeacon = () => {
@@ -241,8 +397,8 @@ export const RadarModal: React.FC<RadarModalProps> = ({
   };
 
   // Join Room as Seeker ("Seguir Amigo via PIN")
-  const handleJoinSeeker = () => {
-    const cleanPin = pinInput.trim();
+  const handleJoinSeeker = (targetPin?: string) => {
+    const cleanPin = (targetPin || pinInput).trim();
     if (cleanPin.length !== 4) {
       Alert.alert('PIN Inválido', 'Por favor insira um código PIN de 4 dígitos.');
       return;
@@ -269,25 +425,39 @@ export const RadarModal: React.FC<RadarModalProps> = ({
     setSessionHandle(handle);
   };
 
-  const handleSharePin = async () => {
+  const handleSharePinWhatsApp = async () => {
+    if (!sessionHandle) return;
+    Haptics.selectionAsync();
+    try {
+      await shareRadarWhatsApp(sessionHandle.pin);
+    } catch (err) {
+      Alert.alert('Partilha', 'Não foi possível abrir o WhatsApp diretamente.');
+    }
+  };
+
+  const handleSharePinSMS = async () => {
+    if (!sessionHandle) return;
+    Haptics.selectionAsync();
+    try {
+      await shareRadarSMS(sessionHandle.pin);
+    } catch (err) {
+      Alert.alert('Partilha', 'Não foi possível abrir o cliente de SMS.');
+    }
+  };
+
+  const handleSharePinGeneral = async () => {
     if (!sessionHandle) return;
     Haptics.selectionAsync();
     try {
       await Share.share({
-        message: `Estou no meio da multidão! Abre a app Sentinela e insere o código do radar: ${sessionHandle.pin}`,
+        message: createRadarShareMessage(sessionHandle.pin),
       });
     } catch {}
   };
 
-  const handleTriggerFriendStrobe = async () => {
-    if (!sessionHandle) return;
-    Haptics.impactAsync(ImpactFeedbackStyle.Heavy);
-    await sendRadarStrobeSignal(sessionHandle, 'O seu amigo');
-    Alert.alert('Sinalizador Enviado', 'O ecrã do seu amigo está agora a piscar em néon de alta intensidade.');
-  };
-
   const handleLeaveSession = async () => {
     Haptics.selectionAsync();
+    stopHeartbeatStrobe();
     if (sessionHandle) {
       await leaveRadarRoom(sessionHandle);
     }
@@ -295,7 +465,8 @@ export const RadarModal: React.FC<RadarModalProps> = ({
     setTargetPeer(null);
     setMyRole(null);
     setPinInput('');
-    setIsVisualBeaconActive(false);
+    setIsHeartbeatActive(false);
+    setStrobeScreenState(false);
   };
 
   const handleOpenOnMap = () => {
@@ -318,7 +489,12 @@ export const RadarModal: React.FC<RadarModalProps> = ({
       onRequestClose={onClose}
     >
       <StatusBar barStyle="light-content" />
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          strobeScreenState && styles.containerFlashWhite,
+        ]}
+      >
         {/* Top Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -359,7 +535,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               </View>
               <Text style={styles.introTitle}>Encontrar Amigo na Multidão</Text>
               <Text style={styles.introDesc}>
-                Orientação direcional em tempo real combinando bússola vetorial, giroscópio e sinalizadores visuais para concertos, shoppings e manifestações.
+                Orientação direcional em tempo real combinando bússola vetorial, giroscópio e sinalizador ótico heartbeat para concertos, shoppings e manifestações.
               </Text>
             </View>
 
@@ -375,7 +551,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               <View style={styles.actionCardContent}>
                 <Text style={styles.actionCardTitle}>Partilhar a Minha Posição</Text>
                 <Text style={styles.actionCardSubtitle}>
-                  Gera um PIN de 4 dígitos para quem está à sua procura
+                  Gera um PIN e link de acesso direto via SMS / WhatsApp
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#64748B" />
@@ -410,7 +586,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                     styles.joinBtn,
                     pinInput.trim().length === 4 && styles.joinBtnActive,
                   ]}
-                  onPress={handleJoinSeeker}
+                  onPress={() => handleJoinSeeker()}
                   disabled={pinInput.trim().length !== 4}
                 >
                   <Text style={styles.joinBtnText}>Ligar</Text>
@@ -422,16 +598,34 @@ export const RadarModal: React.FC<RadarModalProps> = ({
         ) : (
           /* Screen 2: Active Sonar Radar Experience */
           <View style={styles.activeRadarSection}>
-            {/* PIN Pill Card */}
+            {/* PIN Pill Card & Quick Share Row */}
             <View style={styles.pinDisplayCard}>
               <View style={styles.pinPill}>
                 <Text style={styles.pinPillLabel}>PIN DA SESSÃO:</Text>
                 <Text style={styles.pinPillCode}>{sessionHandle.pin}</Text>
               </View>
-              <TouchableOpacity style={styles.shareBtn} onPress={handleSharePin}>
-                <Ionicons name="share-outline" size={18} color="#38BDF8" />
-                <Text style={styles.shareBtnText}>Partilhar</Text>
-              </TouchableOpacity>
+              <View style={styles.shareButtonsGroup}>
+                <TouchableOpacity
+                  style={[styles.sharePillBtn, styles.sharePillWhatsApp]}
+                  onPress={handleSharePinWhatsApp}
+                >
+                  <Ionicons name="logo-whatsapp" size={15} color="#FFFFFF" />
+                  <Text style={styles.sharePillText}>WhatsApp</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.sharePillBtn, styles.sharePillSMS]}
+                  onPress={handleSharePinSMS}
+                >
+                  <Ionicons name="chatbubble-ellipses" size={15} color="#FFFFFF" />
+                  <Text style={styles.sharePillText}>SMS</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.sharePillBtn, styles.sharePillGeneral]}
+                  onPress={handleSharePinGeneral}
+                >
+                  <Ionicons name="share-social-outline" size={15} color="#38BDF8" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Status Peer Connection Pill */}
@@ -481,8 +675,14 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               <View style={styles.crosshairVertical} />
               <View style={styles.crosshairHorizontal} />
 
-              {/* Animated Compass Bearing Directional Arrow */}
-              {targetPeer && (
+              {/* Immediate Proximity Target Lock Ring OR Directional Arrow */}
+              {targetPeer && isImmediate ? (
+                <View style={styles.targetLockContainer}>
+                  <View style={styles.targetLockPulseOuter} />
+                  <View style={styles.targetLockPulseInner} />
+                  <Ionicons name="checkmark-circle" size={32} color="#10B981" />
+                </View>
+              ) : targetPeer ? (
                 <View
                   style={[
                     styles.arrowTrack,
@@ -496,7 +696,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                     <View style={styles.arrowShaft} />
                   </View>
                 </View>
-              )}
+              ) : null}
 
               {/* Central Target Display */}
               <Animated.View
@@ -508,13 +708,13 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                   },
                 ]}
               >
-                {distance !== null ? (
+                {rawDistance !== null ? (
                   <>
                     <Text style={styles.distanceNumber}>
-                      {distance < 1000 ? distance : (distance / 1000).toFixed(1)}
+                      {rawDistance <= 5 ? '< 5' : (rawDistance < 1000 ? rawDistance : (rawDistance / 1000).toFixed(1))}
                     </Text>
                     <Text style={styles.distanceUnit}>
-                      {distance < 1000 ? 'METROS' : 'KM'}
+                      {rawDistance <= 5 ? 'METROS (AO LADO)' : (rawDistance < 1000 ? 'METROS' : 'KM')}
                     </Text>
                   </>
                 ) : (
@@ -534,46 +734,36 @@ export const RadarModal: React.FC<RadarModalProps> = ({
             ) : (
               <View style={styles.feedbackCard}>
                 <Text style={styles.searchingNotice}>
-                  Partilhe o PIN com o seu amigo para ativar o radar direcional.
+                  Partilhe o PIN ou o link direto para ativar o radar de proximidade.
                 </Text>
               </View>
             )}
 
             {/* Action Buttons Footer */}
             <View style={styles.footerActions}>
-              {/* Trigger Friend Strobe Button */}
-              {targetPeer && (
-                <M3Pressable
-                  style={[styles.footerBtn, styles.strobeBtn]}
-                  scaleOnPress={0.96}
-                  onPress={handleTriggerFriendStrobe}
-                >
-                  <Ionicons name="flash" size={20} color="#000000" />
-                  <Text style={styles.strobeBtnText}>Piscar Lanterna do Amigo</Text>
-                </M3Pressable>
-              )}
-
-              {/* Local Visual Screen Beacon Toggle */}
+              {/* Trigger Heartbeat Flashlight Button (operates local + remote hardware torch in double-pulse cadence) */}
               <M3Pressable
                 style={[
                   styles.footerBtn,
-                  isVisualBeaconActive ? styles.beaconBtnActive : styles.beaconBtn,
+                  isHeartbeatActive ? styles.heartbeatBtnActive : styles.heartbeatBtn,
                 ]}
                 scaleOnPress={0.96}
-                onPress={() => setIsVisualBeaconActive((prev) => !prev)}
+                onPress={handleToggleHeartbeatStrobe}
               >
                 <Ionicons
-                  name={isVisualBeaconActive ? 'sunny' : 'sunny-outline'}
+                  name={isHeartbeatActive ? 'stop-circle' : 'flash'}
                   size={20}
-                  color={isVisualBeaconActive ? '#000000' : '#F59E0B'}
+                  color={isHeartbeatActive ? '#FFFFFF' : '#000000'}
                 />
                 <Text
                   style={[
-                    styles.beaconBtnText,
-                    isVisualBeaconActive && styles.beaconBtnTextActive,
+                    styles.heartbeatBtnText,
+                    isHeartbeatActive && styles.heartbeatBtnTextActive,
                   ]}
                 >
-                  {isVisualBeaconActive ? 'Farol de Ecrã Ativo' : 'Erguer Farol de Ecrã'}
+                  {isHeartbeatActive
+                    ? 'Parar Lanterna Heartbeat (A piscar...)'
+                    : 'Piscar Lanterna (Heartbeat 2 em 2)'}
                 </Text>
               </M3Pressable>
 
@@ -600,15 +790,19 @@ export const RadarModal: React.FC<RadarModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#070A0F',
-    paddingTop: Platform.OS === 'ios' ? 54 : 32,
+    backgroundColor: '#080A0C',
     paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 54 : 32,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+  },
+  containerFlashWhite: {
+    backgroundColor: '#1E293B',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 16,
+    marginBottom: 16,
   },
   closeBtn: {
     width: 40,
@@ -780,20 +974,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pinDisplayCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     width: '100%',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    borderRadius: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    marginBottom: 8,
+    marginBottom: 10,
+    gap: 8,
   },
   pinPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
   },
   pinPillLabel: {
     fontSize: 11,
@@ -802,25 +995,47 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   pinPillCode: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '900',
     color: '#38BDF8',
     letterSpacing: 2,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
-  shareBtn: {
+  shareButtonsGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    paddingTop: 8,
   },
-  shareBtnText: {
+  sharePillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  sharePillWhatsApp: {
+    backgroundColor: '#25D366',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  sharePillSMS: {
+    backgroundColor: '#0284C7',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  sharePillGeneral: {
+    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+  },
+  sharePillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#38BDF8',
+    color: '#FFFFFF',
   },
   peerStatusPill: {
     flexDirection: 'row',
@@ -830,7 +1045,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 10,
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   peerStatusDot: {
     width: 7,
@@ -854,7 +1069,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    marginVertical: 12,
+    marginVertical: 8,
   },
   sonarRipple: {
     position: 'absolute',
@@ -895,6 +1110,30 @@ const styles = StyleSheet.create({
     height: 1,
     width: RADAR_SIZE,
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  targetLockContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: RADAR_SIZE,
+    height: RADAR_SIZE,
+  },
+  targetLockPulseOuter: {
+    position: 'absolute',
+    width: RADAR_SIZE * 0.55,
+    height: RADAR_SIZE * 0.55,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderStyle: 'dashed',
+  },
+  targetLockPulseInner: {
+    position: 'absolute',
+    width: RADAR_SIZE * 0.46,
+    height: RADAR_SIZE * 0.46,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#10B981',
   },
   arrowTrack: {
     position: 'absolute',
@@ -939,95 +1178,107 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   distanceNumber: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
     color: '#FFFFFF',
-    lineHeight: 32,
+    lineHeight: 30,
   },
   distanceUnit: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: '800',
     color: '#94A3B8',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    marginTop: 2,
+    textAlign: 'center',
   },
   feedbackCard: {
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    width: '100%',
+    marginBottom: 12,
   },
   feedbackBadge: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '900',
     letterSpacing: 1,
     marginBottom: 4,
+    textAlign: 'center',
   },
   directionInstruction: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     color: '#F8FAFC',
+    textAlign: 'center',
   },
   searchingNotice: {
     fontSize: 13,
     color: '#94A3B8',
     textAlign: 'center',
-    maxWidth: 260,
   },
   footerActions: {
     width: '100%',
     gap: 10,
+    marginTop: 'auto',
   },
   footerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
+    height: 50,
     borderRadius: 14,
     gap: 8,
   },
-  strobeBtn: {
+  heartbeatBtn: {
     backgroundColor: '#F59E0B',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  strobeBtnText: {
+  heartbeatBtnActive: {
+    backgroundColor: '#DC2626',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  heartbeatBtnText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#000000',
   },
-  beaconBtn: {
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-  },
-  beaconBtnActive: {
-    backgroundColor: '#10B981',
-  },
-  beaconBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#F59E0B',
-  },
-  beaconBtnTextActive: {
-    color: '#000000',
+  heartbeatBtnTextActive: {
+    color: '#FFFFFF',
   },
   viewOnMapBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
     gap: 6,
   },
   viewOnMapText: {
     fontSize: 13,
+    fontWeight: '700',
     color: '#94A3B8',
-    fontWeight: '600',
   },
   leaveSessionBtn: {
-    marginTop: 'auto',
-    marginBottom: 20,
+    alignItems: 'center',
     paddingVertical: 10,
+    marginTop: 4,
   },
   leaveSessionText: {
-    fontSize: 13,
-    color: '#EF4444',
+    fontSize: 12,
+    color: '#64748B',
     fontWeight: '600',
   },
 });

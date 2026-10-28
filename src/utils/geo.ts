@@ -88,36 +88,42 @@ export function getProximityStatus(distanceMeters: number): {
   label: string;
   color: string;
   hapticIntervalMs: number | null;
+  isImmediateProximity: boolean;
 } {
-  if (distanceMeters <= 3) {
+  if (distanceMeters <= 5) {
     return {
       label: 'Contacto Visual Iminente! (Ao seu lado)',
       color: '#10B981',
-      hapticIntervalMs: 250, // Rapid Geiger pulse
+      hapticIntervalMs: 200, // Rapid Geiger pulse
+      isImmediateProximity: true,
     };
-  } else if (distanceMeters <= 8) {
+  } else if (distanceMeters <= 12) {
     return {
       label: 'Muito Perto (Levante o olhar)',
       color: '#34D399',
-      hapticIntervalMs: 500,
+      hapticIntervalMs: 400,
+      isImmediateProximity: false,
     };
-  } else if (distanceMeters <= 20) {
+  } else if (distanceMeters <= 28) {
     return {
-      label: 'Na mesma área',
+      label: 'Na mesma área (A aproximar-se)',
       color: '#06B6D4',
-      hapticIntervalMs: 900,
+      hapticIntervalMs: 750,
+      isImmediateProximity: false,
     };
-  } else if (distanceMeters <= 60) {
+  } else if (distanceMeters <= 65) {
     return {
-      label: 'A aproximar-se',
+      label: 'Na mesma multidão',
       color: '#38BDF8',
-      hapticIntervalMs: 1600,
+      hapticIntervalMs: 1300,
+      isImmediateProximity: false,
     };
   } else {
     return {
       label: 'A caminho',
       color: '#94A3B8',
       hapticIntervalMs: null,
+      isImmediateProximity: false,
     };
   }
 }

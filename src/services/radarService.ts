@@ -1,3 +1,4 @@
+import { Linking, Platform } from 'react-native';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -191,5 +192,53 @@ export async function leaveRadarRoom(handle: RadarSessionHandle): Promise<void> 
     await handle.channel.unsubscribe();
   } catch (err) {
     console.warn('[RadarService] Erro ao sair da sala radar:', err);
+  }
+}
+
+/**
+ * Creates standardized share message with deep link for SMS/WhatsApp
+ */
+export function createRadarShareMessage(pin: string): string {
+  const deepLink = `sentinela://radar?pin=${pin}`;
+  return `🚨 *SENTINELA - ESTOU AQUI* 🚨\nEstou no meio da multidão e preciso que me encontres!\n\n📲 Toca neste link para abrir o radar na app:\n${deepLink}\n\n🔑 Ou insere manualmente o PIN no radar: *${pin}*`;
+}
+
+/**
+ * Shares Radar PIN directly to WhatsApp with app deep link
+ */
+export async function shareRadarWhatsApp(pin: string, phone: string = ''): Promise<void> {
+  const message = createRadarShareMessage(pin);
+  const cleanPhone = phone.replace(/[^\d+]/g, '');
+  const encodedMsg = encodeURIComponent(message);
+  const url = cleanPhone
+    ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`
+    : `https://api.whatsapp.com/send?text=${encodedMsg}`;
+
+  const canOpen = await Linking.canOpenURL(url);
+  if (canOpen) {
+    await Linking.openURL(url);
+  } else {
+    const fallback = `https://wa.me/?text=${encodedMsg}`;
+    await Linking.openURL(fallback);
+  }
+}
+
+/**
+ * Shares Radar PIN directly via SMS with app deep link
+ */
+export async function shareRadarSMS(pin: string, phone: string = ''): Promise<void> {
+  const message = createRadarShareMessage(pin);
+  const cleanPhone = phone.replace(/[^\d+]/g, '');
+  const separator = Platform.OS === 'ios' ? '&' : '?';
+  const encodedMsg = encodeURIComponent(message);
+  const url = cleanPhone
+    ? `sms:${cleanPhone}${separator}body=${encodedMsg}`
+    : `sms:${separator}body=${encodedMsg}`;
+
+  const canOpen = await Linking.canOpenURL(url);
+  if (canOpen) {
+    await Linking.openURL(url);
+  } else {
+    await Linking.openURL(`sms:${separator}body=${encodedMsg}`);
   }
 }

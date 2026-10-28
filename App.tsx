@@ -10,6 +10,7 @@ import {
   Platform,
   AppState,
   StatusBar as RNStatusBar,
+  Linking,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
@@ -201,6 +202,7 @@ export default function App() {
   const [showSentinelsModal, setShowSentinelsModal] = useState(false);
   const [showIncomingTrackerModal, setShowIncomingTrackerModal] = useState(false);
   const [showRadarModal, setShowRadarModal] = useState(false);
+  const [radarAutoJoinPin, setRadarAutoJoinPin] = useState<string | null>(null);
   const myCreatedSOSIdsRef = useRef<Set<string>>(new Set());
 
   // TVDE Ride Protection States (Uber / Bolt / Táxi)
@@ -947,16 +949,31 @@ export default function App() {
       }
     });
 
-    // 3. Deep link listener for OAuth redirect (sentinela://)
+    // 3. Deep link listener for OAuth redirect (sentinela://) & Radar invites
     const unsubscribeDeepLink = initAuthDeepLinkListener((profile) => {
       setCurrentUserProfile(profile);
       setShowAuthModal(false);
       fetchMySentinels(profile.id).then(setMySentinels);
     });
 
+    const handleRadarDeepLink = (url?: string | null) => {
+      if (!url) return;
+      if (url.includes('radar')) {
+        const pinMatch = url.match(/[?&]pin=([0-9]{4})/) || url.match(/radar[/:]([0-9]{4})/);
+        if (pinMatch && pinMatch[1]) {
+          setRadarAutoJoinPin(pinMatch[1]);
+        }
+        setShowRadarModal(true);
+      }
+    };
+
+    Linking.getInitialURL().then(handleRadarDeepLink);
+    const linkingSub = Linking.addEventListener('url', ({ url }: { url: string }) => handleRadarDeepLink(url));
+
     return () => {
       unsubscribeAuth();
       unsubscribeDeepLink();
+      linkingSub.remove();
     };
   }, []);
 
@@ -1824,11 +1841,16 @@ export default function App() {
       {/* Crowd Radar "Estou Aqui" Finding Modal */}
       <RadarModal
         visible={showRadarModal}
-        onClose={() => setShowRadarModal(false)}
-        userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : null}
+        onClose={() => {
+          setShowRadarModal(false);
+          setRadarAutoJoinPin(null);
+        }}
+        initialPin={radarAutoJoinPin}
+        userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude, accuracy: userLocation.accuracy } : null}
         userHeading={userHeading}
         onNavigateToFriend={(name, coord) => {
           setShowRadarModal(false);
+          setRadarAutoJoinPin(null);
           handleRequestNavigation(name, coord, 'walking');
         }}
       />
