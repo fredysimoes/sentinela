@@ -7,7 +7,10 @@ export interface AddressSuggestion {
   subtitle: string;
   latitude: number;
   longitude: number;
-  type: 'police' | 'pharmacy' | 'street' | 'place';
+  type: 'police' | 'pharmacy' | 'street' | 'place' | 'address';
+  houseNumber?: string;
+  streetName?: string;
+  postcode?: string;
   distanceMeters?: number;
 }
 
@@ -115,27 +118,26 @@ export async function searchAddressSuggestions(
           const lon = coords[0];
           const lat = coords[1];
 
-          // Determine clean title
-          let title = props.name || props.street || '';
+          // Determine clean title and address type (incorporating official INE / OSM address imports)
+          const isAddress = !!props.housenumber;
+          let title = '';
           if (props.housenumber && props.street) {
-            title = `${props.street}, ${props.housenumber}`;
+            title = `${props.street}, n.º ${props.housenumber}`;
           } else if (props.name && props.street && props.name !== props.street) {
-            title = `${props.name} · ${props.street}`;
+            title = `${props.name} · ${props.street}${props.housenumber ? ', n.º ' + props.housenumber : ''}`;
+          } else {
+            title = props.name || props.street || trimmed;
           }
 
-          if (!title) {
-            title = trimmed;
-          }
-
-          // Build clean subtitle (locality, city, district)
+          // Build clean subtitle (locality, city, postal code)
           const parts = [
             props.locality || props.district,
             props.city || props.town || props.county,
-            props.state,
+            props.postcode,
           ].filter((p) => p && typeof p === 'string');
 
           const uniqueParts = Array.from(new Set(parts));
-          const subtitle = uniqueParts.length > 0 ? uniqueParts.join(', ') : 'Portugal';
+          const subtitle = uniqueParts.length > 0 ? uniqueParts.join(' · ') : 'Portugal';
 
           // Avoid duplicate coordinates
           const alreadyExists = results.some(
@@ -160,7 +162,10 @@ export async function searchAddressSuggestions(
               subtitle,
               latitude: lat,
               longitude: lon,
-              type: props.osm_key === 'highway' ? 'street' : 'place',
+              type: isAddress ? 'address' : props.osm_key === 'highway' ? 'street' : 'place',
+              houseNumber: props.housenumber,
+              streetName: props.street,
+              postcode: props.postcode,
               distanceMeters: dist,
             });
           }
@@ -204,17 +209,23 @@ export async function searchAddressSuggestions(
 
             if (!alreadyExists) {
               const addr = item.address || {};
+              const isAddress = !!addr.house_number;
+              const streetName = addr.road || addr.pedestrian || addr.street || '';
               const title =
-                addr.road ||
-                addr.pedestrian ||
-                addr.street ||
-                item.display_name.split(',')[0];
+                isAddress && streetName
+                  ? `${streetName}, n.º ${addr.house_number}`
+                  : streetName || item.display_name.split(',')[0];
+
               const city =
                 addr.city ||
                 addr.town ||
                 addr.village ||
                 addr.municipality ||
+                addr.suburb ||
                 'Portugal';
+
+              const subParts = [city, addr.postcode].filter(Boolean);
+              const subtitle = subParts.length > 0 ? subParts.join(' · ') : 'Portugal';
 
               const dist = userLocation
                 ? calculateDistanceMeters(
@@ -228,10 +239,13 @@ export async function searchAddressSuggestions(
               results.push({
                 id: `nom-${item.place_id || item.osm_id}`,
                 title: title.trim(),
-                subtitle: city,
+                subtitle,
                 latitude: lat,
                 longitude: lon,
-                type: 'street',
+                type: isAddress ? 'address' : 'street',
+                houseNumber: addr.house_number,
+                streetName: streetName || undefined,
+                postcode: addr.postcode,
                 distanceMeters: dist,
               });
             }
@@ -255,13 +269,24 @@ export async function searchAddressSuggestions(
   return results.slice(0, 8);
 }
 
+export interface ReverseGeocodeResult {
+  title: string;
+  subtitle: string;
+  street?: string;
+  houseNumber?: string;
+  postcode?: string;
+  city?: string;
+  fullAddress?: string;
+}
+
 /**
- * Reverse geocodes a coordinate to find place, street, or POI name (Google Maps style)
+ * Reverse geocodes a coordinate to find place, street, or POI name (Google Maps style),
+ * with exact house numbers from official INE / OpenStreetMap Portugal imports.
  */
 export async function reverseGeocodeCoordinate(
   latitude: number,
   longitude: number
-): Promise<{ title: string; subtitle: string }> {
+): Promise<ReverseGeocodeResult> {
   // First check if this coordinate is right next to a known safe place (< 40m)
   for (const p of SAFE_PLACES_PORTUGAL) {
     const d = calculateDistanceMeters(latitude, longitude, p.latitude, p.longitude);
@@ -269,13 +294,16 @@ export async function reverseGeocodeCoordinate(
       return {
         title: p.name,
         subtitle: `${p.address ? p.address + ', ' : ''}${p.city || 'Portugal'}`,
+        street: p.address,
+        city: p.city,
+        fullAddress: `${p.name}, ${p.address}, ${p.city}`,
       };
     }
   }
 
-  // Real-time reverse geocode from Nominatim / OpenStreetMap
+  // Real-time reverse geocode from Nominatim / OpenStreetMap at door level (zoom 19)
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=19&addressdetails=1`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3500);
 
@@ -292,26 +320,55 @@ export async function reverseGeocodeCoordinate(
       const data = await res.json();
       const addr = data.address || {};
 
-      const title =
-        data.name ||
-        addr.supermarket ||
-        addr.shop ||
-        addr.amenity ||
-        addr.building ||
-        addr.road ||
-        addr.pedestrian ||
-        'Ponto Selecionado';
+      const street = addr.road || addr.pedestrian || addr.street || addr.footway || '';
+      const houseNumber = addr.house_number || '';
+      const postcode = addr.postcode || '';
+      const locality =
+        addr.suburb ||
+        addr.neighbourhood ||
+        addr.village ||
+        addr.town ||
+        addr.city ||
+        addr.municipality ||
+        '';
 
-      const parts = [
-        addr.road && addr.road !== title ? addr.road : null,
-        addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city,
-      ].filter(Boolean);
+      // 1. Prioritize official street and door number from INE / OSM import
+      let title = '';
+      if (street && houseNumber) {
+        title = `${street}, n.º ${houseNumber}`;
+      } else if (data.name && data.name !== street) {
+        title = street && houseNumber ? `${data.name} · ${street}, n.º ${houseNumber}` : data.name;
+      } else if (street) {
+        title = street;
+      } else {
+        title =
+          addr.supermarket ||
+          addr.shop ||
+          addr.amenity ||
+          addr.building ||
+          'Ponto Selecionado';
+      }
 
-      const subtitle = parts.length > 0 ? parts.join(', ') : 'Portugal';
+      // 2. Build informative subtitle with locality and postcode
+      const parts = [locality, postcode].filter(Boolean);
+      const subtitle = parts.length > 0 ? parts.join(' · ') : 'Portugal';
+
+      const fullAddress = [
+        street ? `${street}${houseNumber ? ', n.º ' + houseNumber : ''}` : null,
+        locality,
+        postcode,
+      ]
+        .filter(Boolean)
+        .join(', ');
 
       return {
         title: title.trim(),
         subtitle,
+        street: street || undefined,
+        houseNumber: houseNumber || undefined,
+        postcode: postcode || undefined,
+        city: locality || undefined,
+        fullAddress,
       };
     }
   } catch (err) {

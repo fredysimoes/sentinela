@@ -1,6 +1,7 @@
 import { Linking, Platform } from 'react-native';
 import { EmergencyContact, SOSAlert } from '../types';
 import { getGoogleMapsUrl } from '../utils/geo';
+import { reverseGeocodeCoordinate } from './geocodingService';
 
 export interface DispatchSOSResult {
   alert: SOSAlert;
@@ -18,9 +19,21 @@ export async function createAndDispatchSOS(params: {
   const now = Date.now();
   const userName = params.userName || 'Utilizador do Sentinela';
 
-  const defaultMsg = params.message 
-    ? `🚨 *EMERGÊNCIA / ALERTA SOS!* 🚨\n"${params.message}"\nEstou a precisar de apoio imediato neste local:\n📍 Coordenadas: ${params.latitude.toFixed(5)}, ${params.longitude.toFixed(5)}\n🗺️ Ver mapa em direto: ${mapUrl}\n(Enviado via app Sentinela)`
-    : `🚨 *EMERGÊNCIA / ALERTA SOS!* 🚨\nEstou a andar a pé e preciso de apoio imediato neste local!\n📍 Coordenadas: ${params.latitude.toFixed(5)}, ${params.longitude.toFixed(5)}\n🗺️ Ver mapa em direto: ${mapUrl}\n(Enviado via app Sentinela)`;
+  let locationAddress = '';
+  try {
+    const geo = await reverseGeocodeCoordinate(params.latitude, params.longitude);
+    if (geo.fullAddress || (geo.title && geo.title !== 'Ponto Selecionado')) {
+      locationAddress = geo.fullAddress || `${geo.title}${geo.subtitle ? ', ' + geo.subtitle : ''}`;
+    }
+  } catch {
+    // Fallback to coordinates
+  }
+
+  const locationTextLine = locationAddress ? `🏠 Morada: ${locationAddress}\n` : '';
+
+  const defaultMsg = params.message
+    ? `🚨 *EMERGÊNCIA / ALERTA SOS!* 🚨\n"${params.message}"\nEstou a precisar de apoio imediato neste local:\n${locationTextLine}📍 Coordenadas: ${params.latitude.toFixed(5)}, ${params.longitude.toFixed(5)}\n🗺️ Ver mapa em direto: ${mapUrl}\n(Enviado via app Sentinela)`
+    : `🚨 *EMERGÊNCIA / ALERTA SOS!* 🚨\nEstou a andar a pé e preciso de apoio imediato neste local!\n${locationTextLine}📍 Coordenadas: ${params.latitude.toFixed(5)}, ${params.longitude.toFixed(5)}\n🗺️ Ver mapa em direto: ${mapUrl}\n(Enviado via app Sentinela)`;
 
   const alert: SOSAlert = {
     id: `sos-${now}`,
@@ -30,6 +43,7 @@ export async function createAndDispatchSOS(params: {
     longitude: params.longitude,
     timestamp: now,
     status: 'active',
+    address: locationAddress || undefined,
     message: params.message,
   };
 

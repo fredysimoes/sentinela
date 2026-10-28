@@ -21,6 +21,8 @@ export interface SelectedMapPoint {
   subtitle?: string;
   latitude: number;
   longitude: number;
+  houseNumber?: string;
+  postcode?: string;
   wheelchair?: WheelchairAccessibility;
   wheelchairDescription?: string;
 }
@@ -141,6 +143,19 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           <Text style={styles.placeSubtitle} numberOfLines={2}>
             {place.subtitle}
           </Text>
+        )}
+        {(place.houseNumber || place.postcode) && (
+          <View style={styles.officialAddressBadgeWrap}>
+            <View style={styles.officialAddressBadge}>
+              <Ionicons name="home-outline" size={12} color="#38BDF8" />
+              <Text style={styles.officialAddressText}>
+                {place.houseNumber ? `N.º ${place.houseNumber}` : ''}
+                {place.houseNumber && place.postcode ? ' · ' : ''}
+                {place.postcode || ''}
+              </Text>
+              <Text style={styles.officialAddressSource}>INE · OSM</Text>
+            </View>
+          </View>
         )}
         {place.wheelchair && (
           <View style={styles.wheelmapInlineBadgeWrap}>
@@ -453,6 +468,34 @@ const styles = StyleSheet.create({
   wheelmapInlineText: {
     fontSize: 11,
     fontWeight: '700',
+  },
+  officialAddressBadgeWrap: {
+    flexDirection: 'row',
+    marginTop: 6,
+  },
+  officialAddressBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: M3Shapes.extraSmall,
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  officialAddressText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#38BDF8',
+  },
+  officialAddressSource: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: M3Colors.onSurfaceVariant,
+    paddingLeft: 4,
+    borderLeftWidth: 1,
+    borderLeftColor: M3Colors.outlineVariant,
   },
   estimatesRow: {
     flexDirection: 'row',

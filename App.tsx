@@ -383,6 +383,8 @@ export default function App() {
       subtitle: geo.subtitle,
       latitude: coord.latitude,
       longitude: coord.longitude,
+      houseNumber: geo.houseNumber,
+      postcode: geo.postcode,
     });
   };
 
