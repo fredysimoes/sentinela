@@ -16,6 +16,9 @@ export const HOSPITAIS_PORTUGAL: SafePlace[] = [
     longitude: -9.160962,
     hours: { is24h: true },
     hoursDescription: 'Urgência Geral e Pediátrica Aberta 24h / 7 dias',
+    wheelchair: 'yes',
+    wheelchairDescription: 'Acessos nivelados com rampas de emergência e elevadores adaptados',
+    wheelchairToilet: 'yes',
   },
   {
     id: 'hosp-lisboa-sao-jose',
@@ -29,6 +32,9 @@ export const HOSPITAIS_PORTUGAL: SafePlace[] = [
     longitude: -9.138002,
     hours: { is24h: true },
     hoursDescription: 'Urgência Central Aberta 24h / 7 dias',
+    wheelchair: 'yes',
+    wheelchairDescription: 'Rampa de acesso na entrada da urgência geral',
+    wheelchairToilet: 'yes',
   },
   {
     id: 'hosp-lisboa-sao-francisco-xavier',
@@ -42,6 +48,9 @@ export const HOSPITAIS_PORTUGAL: SafePlace[] = [
     longitude: -9.217696,
     hours: { is24h: true },
     hoursDescription: 'Urgência Geral e Pediátrica Aberta 24h / 7 dias',
+    wheelchair: 'yes',
+    wheelchairDescription: 'Edifício moderno com acessibilidade integral a cadeira de rodas',
+    wheelchairToilet: 'yes',
   },
   {
     id: 'hosp-lisboa-dona-estefania',
@@ -653,6 +662,9 @@ export const HOSPITAIS_PORTUGAL: SafePlace[] = [
     longitude: -8.601103,
     hours: { is24h: true },
     hoursDescription: 'Urgência Geral e Pediátrica Aberta 24h / 7 dias',
+    wheelchair: 'yes',
+    wheelchairDescription: 'Entrada principal e urgências com rampas amplas e elevadores adaptados',
+    wheelchairToilet: 'yes',
   },
   {
     id: 'hosp-porto-santo-antonio',
@@ -666,6 +678,9 @@ export const HOSPITAIS_PORTUGAL: SafePlace[] = [
     longitude: -8.61907,
     hours: { is24h: true },
     hoursDescription: 'Urgência Geral Aberta 24h / 7 dias',
+    wheelchair: 'yes',
+    wheelchairDescription: 'Acesso pela entrada do Centro Materno-Infantil e rampas laterais',
+    wheelchairToilet: 'yes',
   },
   {
     id: 'hosp-matosinhos-pedro-hispano',

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
-import { UserLocation } from '../types';
+import { UserLocation, WheelchairAccessibility } from '../types';
 import { RouteCoordinate, TransportMode } from '../types/navigation';
 import { calculateDistanceMeters, formatDistance, getGoogleMapsUrl } from '../utils/geo';
 import { formatDuration } from '../services/routingService';
@@ -21,6 +21,8 @@ export interface SelectedMapPoint {
   subtitle?: string;
   latitude: number;
   longitude: number;
+  wheelchair?: WheelchairAccessibility;
+  wheelchairDescription?: string;
 }
 
 interface SelectedPlaceSheetProps {
@@ -139,6 +141,62 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           <Text style={styles.placeSubtitle} numberOfLines={2}>
             {place.subtitle}
           </Text>
+        )}
+        {place.wheelchair && (
+          <View style={styles.wheelmapInlineBadgeWrap}>
+            <View
+              style={[
+                styles.wheelmapInlineBadge,
+                {
+                  borderColor:
+                    place.wheelchair === 'yes'
+                      ? '#10B981'
+                      : place.wheelchair === 'limited'
+                      ? '#F59E0B'
+                      : place.wheelchair === 'no'
+                      ? '#EF4444'
+                      : '#64748B',
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="wheelchair"
+                size={13}
+                color={
+                  place.wheelchair === 'yes'
+                    ? '#10B981'
+                    : place.wheelchair === 'limited'
+                    ? '#F59E0B'
+                    : place.wheelchair === 'no'
+                    ? '#EF4444'
+                    : '#94A3B8'
+                }
+              />
+              <Text
+                style={[
+                  styles.wheelmapInlineText,
+                  {
+                    color:
+                      place.wheelchair === 'yes'
+                        ? '#10B981'
+                        : place.wheelchair === 'limited'
+                        ? '#F59E0B'
+                        : place.wheelchair === 'no'
+                        ? '#EF4444'
+                        : '#94A3B8',
+                  },
+                ]}
+              >
+                {place.wheelchair === 'yes'
+                  ? 'Acessível (Wheelmap)'
+                  : place.wheelchair === 'limited'
+                  ? 'Acesso Parcial (Wheelmap)'
+                  : place.wheelchair === 'no'
+                  ? 'Inacessível (Wheelmap)'
+                  : 'Acessibilidade Não Confirmada'}
+              </Text>
+            </View>
+          </View>
         )}
       </View>
 
@@ -377,6 +435,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: M3Colors.onSurfaceVariant,
     marginTop: 3,
+  },
+  wheelmapInlineBadgeWrap: {
+    flexDirection: 'row',
+    marginTop: 6,
+  },
+  wheelmapInlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: M3Shapes.extraSmall,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+  },
+  wheelmapInlineText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   estimatesRow: {
     flexDirection: 'row',

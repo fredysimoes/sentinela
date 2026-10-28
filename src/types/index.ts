@@ -63,6 +63,8 @@ export interface PharmacyHours {
   sundayClose?: string;
 }
 
+export type WheelchairAccessibility = 'yes' | 'limited' | 'no' | 'unknown';
+
 export interface SafePlace {
   id: string;
   type: SafePlaceType;
@@ -75,6 +77,9 @@ export interface SafePlace {
   longitude: number;
   hours?: PharmacyHours;
   hoursDescription?: string;
+  wheelchair?: WheelchairAccessibility;
+  wheelchairDescription?: string;
+  wheelchairToilet?: 'yes' | 'limited' | 'no' | 'unknown';
 }
 
 export interface HomeAddress {

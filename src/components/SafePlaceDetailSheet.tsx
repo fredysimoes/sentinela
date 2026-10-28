@@ -203,6 +203,121 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
         </Text>
       </View>
 
+      {/* Wheelmap / OpenStreetMap Accessibility Card */}
+      {place.wheelchair && (
+        <View
+          style={[
+            styles.wheelmapCard,
+            {
+              borderLeftColor:
+                place.wheelchair === 'yes'
+                  ? '#10B981'
+                  : place.wheelchair === 'limited'
+                  ? '#F59E0B'
+                  : place.wheelchair === 'no'
+                  ? '#EF4444'
+                  : '#64748B',
+            },
+          ]}
+        >
+          <View style={styles.wheelmapHeader}>
+            <View
+              style={[
+                styles.wheelmapBadge,
+                {
+                  backgroundColor:
+                    place.wheelchair === 'yes'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : place.wheelchair === 'limited'
+                      ? 'rgba(245, 158, 11, 0.15)'
+                      : place.wheelchair === 'no'
+                      ? 'rgba(239, 68, 68, 0.15)'
+                      : 'rgba(100, 116, 139, 0.15)',
+                  borderColor:
+                    place.wheelchair === 'yes'
+                      ? '#10B981'
+                      : place.wheelchair === 'limited'
+                      ? '#F59E0B'
+                      : place.wheelchair === 'no'
+                      ? '#EF4444'
+                      : '#64748B',
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="wheelchair"
+                size={14}
+                color={
+                  place.wheelchair === 'yes'
+                    ? '#10B981'
+                    : place.wheelchair === 'limited'
+                    ? '#F59E0B'
+                    : place.wheelchair === 'no'
+                    ? '#EF4444'
+                    : '#94A3B8'
+                }
+              />
+              <Text
+                style={[
+                  styles.wheelmapBadgeText,
+                  {
+                    color:
+                      place.wheelchair === 'yes'
+                        ? '#10B981'
+                        : place.wheelchair === 'limited'
+                        ? '#F59E0B'
+                        : place.wheelchair === 'no'
+                        ? '#EF4444'
+                        : '#94A3B8',
+                  },
+                ]}
+              >
+                {place.wheelchair === 'yes'
+                  ? 'TOTALMENTE ACESSÍVEL'
+                  : place.wheelchair === 'limited'
+                  ? 'ACESSIBILIDADE PARCIAL'
+                  : place.wheelchair === 'no'
+                  ? 'INACESSÍVEL'
+                  : 'NÃO CLASSIFICADO'}
+              </Text>
+            </View>
+
+            <Text style={styles.wheelmapSourceText}>Wheelmap · OSM</Text>
+          </View>
+
+          <Text style={styles.wheelmapTitle}>
+            {place.wheelchair === 'yes'
+              ? 'Entrada nivelada e interior sem degraus'
+              : place.wheelchair === 'limited'
+              ? 'Entrada com degrau (< 7cm) ou rampa móvel'
+              : place.wheelchair === 'no'
+              ? 'Presença de degraus na entrada sem rampa'
+              : 'Informação de acessibilidade não confirmada'}
+          </Text>
+
+          {place.wheelchairDescription ? (
+            <Text style={styles.wheelmapDescription}>{place.wheelchairDescription}</Text>
+          ) : null}
+
+          {place.wheelchairToilet && (
+            <View style={styles.wheelmapToiletRow}>
+              <MaterialCommunityIcons
+                name={place.wheelchairToilet === 'yes' ? 'human-male-female' : 'close-circle-outline'}
+                size={14}
+                color={place.wheelchairToilet === 'yes' ? '#10B981' : '#94A3B8'}
+              />
+              <Text style={styles.wheelmapToiletText}>
+                {place.wheelchairToilet === 'yes'
+                  ? 'Instalação sanitária adaptada a cadeira de rodas'
+                  : place.wheelchairToilet === 'limited'
+                  ? 'Instalação sanitária com acesso limitado'
+                  : 'Sem instalação sanitária adaptada'}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+
       {/* Safe Path Navigation Button */}
       {onNavigate && (
         <TouchableOpacity
@@ -340,6 +455,64 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: M3Colors.onSurfaceVariant,
     lineHeight: 18,
+  },
+  wheelmapCard: {
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderRadius: M3Shapes.medium,
+    padding: 14,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+  },
+  wheelmapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  wheelmapBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: M3Shapes.extraSmall,
+    borderWidth: 1,
+  },
+  wheelmapBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  wheelmapSourceText: {
+    fontSize: 10,
+    color: M3Colors.onSurfaceVariant,
+    fontWeight: '500',
+  },
+  wheelmapTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: M3Colors.onSurface,
+    marginBottom: 4,
+    lineHeight: 18,
+  },
+  wheelmapDescription: {
+    fontSize: 12,
+    color: M3Colors.onSurfaceVariant,
+    lineHeight: 16,
+    marginBottom: 6,
+  },
+  wheelmapToiletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  wheelmapToiletText: {
+    fontSize: 11,
+    color: M3Colors.onSurfaceVariant,
+    fontWeight: '500',
   },
   actionsRow: {
     flexDirection: 'row',

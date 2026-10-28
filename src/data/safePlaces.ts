@@ -20,6 +20,9 @@ export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
     latitude: 38.7258,
     longitude: -9.1412,
     hoursDescription: 'Atendimento Permanente 24h / 7 dias',
+    wheelchair: 'yes',
+    wheelchairDescription: 'Entrada com rampa regulamentar e elevador adaptado',
+    wheelchairToilet: 'yes',
   },
   {
     id: 'pj-norte-porto',
@@ -32,6 +35,9 @@ export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
     latitude: 41.1645,
     longitude: -8.6015,
     hoursDescription: 'Atendimento Permanente 24h / 7 dias',
+    wheelchair: 'yes',
+    wheelchairDescription: 'Edifício com acesso desimpedido a cadeira de rodas',
+    wheelchairToilet: 'yes',
   },
   {
     id: 'pj-centro-coimbra',

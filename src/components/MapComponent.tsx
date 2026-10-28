@@ -149,6 +149,24 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
             isOpen ? styles.pharmacyTipOpen : styles.pharmacyTipClosed,
           ]}
         />
+        {/* Wheelmap Accessibility Micro Badge */}
+        {place.wheelchair && (
+          <View
+            style={[
+              styles.wheelmapMicroTag,
+              {
+                backgroundColor:
+                  place.wheelchair === 'yes'
+                    ? '#10B981'
+                    : place.wheelchair === 'limited'
+                    ? '#F59E0B'
+                    : '#EF4444',
+              },
+            ]}
+          >
+            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+          </View>
+        )}
       </View>
     </Marker>
   );
@@ -185,6 +203,24 @@ const HospitalMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
             isOpen ? styles.hospitalTipOpen : styles.hospitalTipClosed,
           ]}
         />
+        {/* Wheelmap Accessibility Micro Badge */}
+        {place.wheelchair && (
+          <View
+            style={[
+              styles.wheelmapMicroTag,
+              {
+                backgroundColor:
+                  place.wheelchair === 'yes'
+                    ? '#10B981'
+                    : place.wheelchair === 'limited'
+                    ? '#F59E0B'
+                    : '#EF4444',
+              },
+            ]}
+          >
+            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+          </View>
+        )}
       </View>
     </Marker>
   );
@@ -215,6 +251,24 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
         <View style={styles.policeMicroBadge}>
           <Text style={styles.policeMicroBadgeText}>{policeTag}</Text>
         </View>
+        {/* Wheelmap Accessibility Micro Badge */}
+        {place.wheelchair && (
+          <View
+            style={[
+              styles.wheelmapMicroTag,
+              {
+                backgroundColor:
+                  place.wheelchair === 'yes'
+                    ? '#10B981'
+                    : place.wheelchair === 'limited'
+                    ? '#F59E0B'
+                    : '#EF4444',
+              },
+            ]}
+          >
+            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+          </View>
+        )}
       </View>
     </Marker>
   );
@@ -1327,6 +1381,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 3,
     elevation: 4,
+  },
+  wheelmapMicroTag: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#080A0C',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 4,
+    zIndex: 10,
   },
   votesBadgeText: {
     color: '#06140E',

@@ -1,4 +1,4 @@
-import { SafePlace, SafePlaceType } from '../types';
+import { SafePlace, SafePlaceType, WheelchairAccessibility } from '../types';
 import { parseOsmOpeningHours } from '../utils/pharmacySchedule';
 
 const OVERPASS_ENDPOINTS = [
@@ -64,6 +64,30 @@ out center 80;`;
 
         if (!lat || !lon) continue;
 
+        // Wheelmap / OpenStreetMap accessibility metadata
+        const wheelchairTag = tags.wheelchair;
+        let wheelchair: WheelchairAccessibility | undefined;
+        if (
+          wheelchairTag === 'yes' ||
+          wheelchairTag === 'limited' ||
+          wheelchairTag === 'no' ||
+          wheelchairTag === 'unknown'
+        ) {
+          wheelchair = wheelchairTag;
+        }
+        const wheelchairDescription =
+          tags['wheelchair:description'] || tags['wheelchair:description:pt'] || undefined;
+        const toiletTag = tags['toilets:wheelchair'];
+        let wheelchairToilet: 'yes' | 'limited' | 'no' | 'unknown' | undefined;
+        if (
+          toiletTag === 'yes' ||
+          toiletTag === 'limited' ||
+          toiletTag === 'no' ||
+          toiletTag === 'unknown'
+        ) {
+          wheelchairToilet = toiletTag;
+        }
+
         if (tags.amenity === 'pharmacy') {
           const rawName = tags.name || tags['name:pt'] || 'Farmácia';
           const { hours, hoursDescription } = parseOsmOpeningHours(tags.opening_hours);
@@ -85,6 +109,9 @@ out center 80;`;
             longitude: lon,
             hours,
             hoursDescription,
+            wheelchair,
+            wheelchairDescription,
+            wheelchairToilet,
           });
         } else if (tags.amenity === 'hospital') {
           const rawName = tags.name || tags['name:pt'];
@@ -116,6 +143,9 @@ out center 80;`;
             longitude: lon,
             hours,
             hoursDescription,
+            wheelchair,
+            wheelchairDescription,
+            wheelchairToilet,
           });
         } else if (tags.amenity === 'police') {
           const nameLower = (tags.name || tags.operator || '').toLowerCase();
@@ -147,6 +177,9 @@ out center 80;`;
             latitude: lat,
             longitude: lon,
             hoursDescription: 'Atendimento Permanente 24 Horas',
+            wheelchair,
+            wheelchairDescription,
+            wheelchairToilet,
           });
         }
       }
