@@ -2,6 +2,17 @@ import { NativeModules, Platform } from 'react-native';
 
 const { TorchModule } = NativeModules;
 
+export async function setKeepScreenOn(enabled: boolean): Promise<boolean> {
+  if (Platform.OS === 'android' && TorchModule?.setKeepScreenOn) {
+    try {
+      return await TorchModule.setKeepScreenOn(enabled);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 export async function setTorch(enabled: boolean): Promise<boolean> {
   if (Platform.OS === 'android' && TorchModule?.setTorch) {
     try {

@@ -3,6 +3,7 @@ package com.sentinela.app
 import android.content.Context
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
+import android.view.WindowManager
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -12,6 +13,27 @@ class TorchModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
     override fun getName(): String = "TorchModule"
 
     private var isTorchOn = false
+
+    @ReactMethod
+    fun setKeepScreenOn(enabled: Boolean, promise: Promise) {
+        val activity = reactApplicationContext.currentActivity
+        if (activity == null) {
+            promise.resolve(false)
+            return
+        }
+        activity.runOnUiThread {
+            try {
+                if (enabled) {
+                    activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+                promise.resolve(enabled)
+            } catch (e: Exception) {
+                promise.resolve(false)
+            }
+        }
+    }
 
     @ReactMethod
     fun setTorch(enabled: Boolean, promise: Promise) {

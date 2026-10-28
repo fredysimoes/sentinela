@@ -136,7 +136,7 @@ export async function saveHomeAddress(home: HomeAddress | null): Promise<void> {
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: true,
   radiusMeters: 300,
-  backgroundTracking: true,
+  backgroundTracking: false,
   protestMode: false,
   categories: {
     theft_risk: true,

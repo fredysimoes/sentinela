@@ -56,8 +56,8 @@ export async function checkProximityAndNotify(
     const isCategoryEnabled = settings.categories[incident.category] !== false;
     if (!isCategoryEnabled) continue;
 
-    // Protest infiltrator caution rule: only trigger proximity push if verified by community (>= 2 signals within 300m)
-    if (incident.category === 'protest_infiltrator' && !isProtestInfiltratorVerified(incident, incidents, 300, 2)) {
+    // Protest infiltrator caution rule: only trigger proximity push if verified by community (>= 3 signals within 300m)
+    if (incident.category === 'protest_infiltrator' && !isProtestInfiltratorVerified(incident, incidents, 300, 3)) {
       continue;
     }
 
@@ -80,20 +80,34 @@ export async function checkProximityAndNotify(
 }
 
 /**
- * Requests background location permissions and registers the background task
+ * Starts background location tracking ONLY if background permissions are already granted,
+ * OR if explicitly requested by the user (requestUpgrade = true).
+ * Prevents Android 11-16 from repeatedly opening the system Location Permission Settings screen
+ * when the user chose "Permitir apenas enquanto uso a app".
  */
-export async function startBackgroundLocationTracking(): Promise<boolean> {
+export async function startBackgroundLocationTracking(requestUpgrade: boolean = false): Promise<boolean> {
   try {
-    const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-    if (foregroundStatus !== 'granted') {
-      console.warn('[BackgroundLocation] Permissão de primeiro plano recusada');
+    const existingFg = await Location.getForegroundPermissionsAsync();
+    let fgGranted = existingFg.status === 'granted';
+    if (!fgGranted && requestUpgrade) {
+      const reqFg = await Location.requestForegroundPermissionsAsync();
+      fgGranted = reqFg.status === 'granted';
+    }
+    if (!fgGranted) {
+      console.warn('[BackgroundLocation] Permissão de primeiro plano não concedida');
       return false;
     }
 
     if (Platform.OS === 'android') {
-      const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (backgroundStatus !== 'granted') {
-        console.warn('[BackgroundLocation] Permissão de segundo plano não concedida');
+      const existingBg = await Location.getBackgroundPermissionsAsync();
+      let bgGranted = existingBg.status === 'granted';
+      if (!bgGranted && requestUpgrade) {
+        const reqBg = await Location.requestBackgroundPermissionsAsync();
+        bgGranted = reqBg.status === 'granted';
+      }
+      // If user chose "Permitir apenas enquanto uso a app", do NOT force background task or redirect to OS settings
+      if (!bgGranted) {
+        return false;
       }
     }
 

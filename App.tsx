@@ -62,7 +62,7 @@ import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedP
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
 import { HomeModal } from './src/components/HomeModal';
 import { SettingsModal } from './src/components/SettingsModal';
-import { setTorch } from './src/services/torch';
+import { setTorch, setKeepScreenOn } from './src/services/torch';
 import { ProtestLightModal } from './src/components/ProtestLightModal';
 import { ProtestRightsModal } from './src/components/ProtestRightsModal';
 import { M3Pressable } from './src/components/M3MotionWrapper';
@@ -173,6 +173,21 @@ export default function App() {
   const [showProtestRightsModal, setShowProtestRightsModal] = useState(false);
   const [reportCategory, setReportCategory] = useState<IncidentCategory>('dark_area');
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
+  const incidentsRef = useRef<Incident[]>([]);
+  const notificationSettingsRef = useRef<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
+
+  useEffect(() => {
+    incidentsRef.current = incidents;
+  }, [incidents]);
+
+  useEffect(() => {
+    notificationSettingsRef.current = notificationSettings;
+  }, [notificationSettings]);
+
+  // Ensure screen stays awake during navigation, driving, simulation, or TVDE protection
+  useEffect(() => {
+    setKeepScreenOn(true);
+  }, [navState, transportMode, activeTvdeTrip]);
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
@@ -289,6 +304,7 @@ export default function App() {
   };
 
   const handleSaveNotificationSettings = async (newSettings: NotificationSettings) => {
+    const userJustEnabledBackground = !notificationSettings.backgroundTracking && newSettings.backgroundTracking;
     setNotificationSettings(newSettings);
     await saveNotificationSettings(newSettings);
     if (!newSettings.protestMode && isTorchActive) {
@@ -296,7 +312,12 @@ export default function App() {
       await setTorch(false);
     }
     if (newSettings.enabled && newSettings.backgroundTracking) {
-      await startBackgroundLocationTracking();
+      const started = await startBackgroundLocationTracking(userJustEnabledBackground);
+      if (!started && userJustEnabledBackground) {
+        const reverted = { ...newSettings, backgroundTracking: false };
+        setNotificationSettings(reverted);
+        await saveNotificationSettings(reverted);
+      }
     } else {
       await stopBackgroundLocationTracking();
     }
@@ -667,8 +688,12 @@ export default function App() {
       // Sync any stored offline feedbacks
       syncPendingFeedback().catch(() => {});
 
-      // 2. Request Location permissions
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      // 2. Check existing Foreground Location permission first before requesting
+      let { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        const req = await Location.requestForegroundPermissionsAsync();
+        status = req.status;
+      }
       if (status !== 'granted') {
         Alert.alert(
           'Permissão de Localização',
@@ -749,24 +774,24 @@ export default function App() {
       const savedHome = await loadHomeAddress();
       setHomeAddress(savedHome);
 
-      // Load user proximity notification settings and start background tracking if enabled
+      // Load user proximity notification settings and start background tracking ONLY if background permission is already granted
       const savedSettings = await loadNotificationSettings();
       setNotificationSettings(savedSettings);
       if (savedSettings.enabled && savedSettings.backgroundTracking) {
-        startBackgroundLocationTracking();
+        startBackgroundLocationTracking(false);
       }
 
-      // Load safe places (Police & Pharmacies across Portugal)
+      // Load safe places (Police, Pharmacies & Hospitals across Portugal)
       const places = getSafePlaces('all', initialLat, initialLon);
       setSafePlaces(places);
 
-      // 5. Watch position for walking pedestrians
+      // 5. High-frequency GPS watch for zero-lag driving and walking navigation
       try {
         locationSubscription = await Location.watchPositionAsync(
           {
-            accuracy: Location.Accuracy.High,
-            distanceInterval: 10, // update every 10 meters
-            timeInterval: 4000,
+            accuracy: Location.Accuracy.BestForNavigation,
+            distanceInterval: 1, // update every 1 meter for smooth real-time vehicle & pedestrian movement
+            timeInterval: 1000,  // 1 Hz GPS polling (zero delay while driving on the road)
           },
           (loc) => {
             const newLoc = {
@@ -776,13 +801,22 @@ export default function App() {
             };
             setUserLocation(newLoc);
 
-            // Check real-time proximity to hazards using configured radius (e.g. 300m) and enabled categories
-            const currentIncidents = cleanOnline.length > 0 ? cleanOnline : cleanStored;
+            // If vehicle/pedestrian is moving (> 1.2 m/s ~ 4.3 km/h) and GPS provides course heading, use it for road alignment
+            if (
+              typeof loc.coords.speed === 'number' &&
+              loc.coords.speed > 1.2 &&
+              typeof loc.coords.heading === 'number' &&
+              loc.coords.heading >= 0
+            ) {
+              setUserHeading(Math.round(loc.coords.heading));
+            }
+
+            // Check real-time proximity to hazards using latest incidents and settings
             checkProximityAndNotify(
               newLoc.latitude,
               newLoc.longitude,
-              currentIncidents,
-              savedSettings
+              incidentsRef.current,
+              notificationSettingsRef.current
             );
           }
         );

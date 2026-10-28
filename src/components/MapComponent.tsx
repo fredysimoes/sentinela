@@ -255,6 +255,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   const [followHeading, setFollowHeading] = React.useState(false);
   const [isUserInteracting, setIsUserInteracting] = React.useState(false);
   const [mapCenter, setMapCenter] = React.useState<{ latitude: number; longitude: number } | null>(null);
+  const hasCenteredInitialRef = useRef(false);
 
   const handleRegionChange = (region: {
     latitude: number;
@@ -330,25 +331,38 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           heading: followHeading ? userHeading : 0,
           zoom: navZoom,
         },
-        { duration: 400 }
+        { duration: isDriving ? 220 : 350 }
       );
     }
-  }, [userLocation?.latitude, userLocation?.longitude, userHeading, is3DMode, followHeading, isUserInteracting, isNavigating, navZoom]);
+  }, [userLocation?.latitude, userLocation?.longitude, userHeading, is3DMode, followHeading, isUserInteracting, isNavigating, navZoom, isDriving]);
 
-  // Animate to user on initial load if not navigating or previewing route
+  // Animate to user on initial load once, or smoothly follow when user has not panned away
   useEffect(() => {
     if (userLocation && mapRef.current && !activeRoute && !isNavigating) {
-      mapRef.current.animateToRegion(
-        {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-          latitudeDelta: 0.012,
-          longitudeDelta: 0.012,
-        },
-        800
-      );
+      if (!hasCenteredInitialRef.current) {
+        hasCenteredInitialRef.current = true;
+        mapRef.current.animateToRegion(
+          {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+            latitudeDelta: 0.012,
+            longitudeDelta: 0.012,
+          },
+          600
+        );
+      } else if (!isUserInteracting) {
+        mapRef.current.animateCamera(
+          {
+            center: {
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            },
+          },
+          { duration: 250 }
+        );
+      }
     }
-  }, [userLocation?.latitude, userLocation?.longitude, !!activeRoute, isNavigating]);
+  }, [userLocation?.latitude, userLocation?.longitude, !!activeRoute, isNavigating, isUserInteracting]);
 
   // Fit route coordinates when previewing (only when not simulating or navigating)
   useEffect(() => {

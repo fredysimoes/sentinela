@@ -42,7 +42,7 @@ TaskManager.defineTask(SENTINELA_NAVIGATION_TASK, async ({ data, error }) => {
       // Check for arrival (< 20 meters)
       if (distRemaining <= 20) {
         await sendSystemNotification({
-          title: '🏁 Chegou ao Destino!',
+          title: 'Chegou ao Destino!',
           body: `Chegou com sucesso a ${activeNav.destinationName}.`,
         });
         await saveActiveNavigation(null);
@@ -87,55 +87,50 @@ TaskManager.defineTask(SENTINELA_NAVIGATION_TASK, async ({ data, error }) => {
 });
 
 /**
- * Starts active turn-by-turn navigation background tracking with Foreground Service
+ * Starts active turn-by-turn navigation tracking.
+ * Respects "Permitir apenas enquanto uso a app" without forcing the user to the OS Settings page.
+ * If the user already granted "Permitir sempre", it also registers the background location task.
  */
 export async function startNavigationBackgroundTracking(navState: NavigationState): Promise<boolean> {
   try {
     await saveActiveNavigation(navState);
 
-    const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-    if (foregroundStatus !== 'granted') return false;
+    const existingFg = await Location.getForegroundPermissionsAsync();
+    if (existingFg.status !== 'granted') {
+      const reqFg = await Location.requestForegroundPermissionsAsync();
+      if (reqFg.status !== 'granted') return false;
+    }
 
+    // Check if background permission is ALREADY granted, WITHOUT calling requestBackgroundPermissionsAsync()!
+    // Calling requestBackgroundPermissionsAsync() when user selected "While using the app" forces Android 11-16
+    // to jump out of the app into the Android Settings "Autorização de Localização" screen every time a route starts.
+    let hasBackgroundPermission = false;
     if (Platform.OS === 'android') {
-      const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (backgroundStatus !== 'granted') {
-        console.warn('[NavBackground] Permissão de segundo plano não total');
+      const existingBg = await Location.getBackgroundPermissionsAsync();
+      hasBackgroundPermission = existingBg.status === 'granted';
+    } else {
+      hasBackgroundPermission = true;
+    }
+
+    if (hasBackgroundPermission) {
+      const isRunning = await Location.hasStartedLocationUpdatesAsync(SENTINELA_NAVIGATION_TASK);
+      if (!isRunning) {
+        const isDriving = navState.mode === 'driving';
+        await Location.startLocationUpdatesAsync(SENTINELA_NAVIGATION_TASK, {
+          accuracy: isDriving ? Location.Accuracy.BestForNavigation : Location.Accuracy.High,
+          timeInterval: isDriving ? 1000 : 2500,
+          distanceInterval: isDriving ? 1 : 3,
+          showsBackgroundLocationIndicator: true,
+          foregroundService: {
+            notificationTitle: 'Sentinela Navegação',
+            notificationBody: `A guiar em direção a ${navState.destinationName}`,
+            notificationColor: '#0284C7',
+          },
+        });
       }
     }
 
-    const firstStepObj = navState.route?.steps?.[0];
-    const firstStep = firstStepObj?.instruction || `Siga em direção a ${navState.destinationName}`;
-    const initialDist = navState.distanceRemainingMeters >= 1000
-      ? `${(navState.distanceRemainingMeters / 1000).toFixed(1)} km`
-      : `${Math.round(navState.distanceRemainingMeters)} m`;
-
-    const isRunning = await Location.hasStartedLocationUpdatesAsync(SENTINELA_NAVIGATION_TASK);
-    if (!isRunning) {
-      await Location.startLocationUpdatesAsync(SENTINELA_NAVIGATION_TASK, {
-        accuracy: Location.Accuracy.High,
-        timeInterval: 4000,   // Updates every 4 seconds during active navigation
-        distanceInterval: 5,  // Or every 5 meters moved
-        showsBackgroundLocationIndicator: true,
-        foregroundService: {
-          notificationTitle: 'Sentinela Navegação',
-          notificationBody: `A guiar em direção a ${navState.destinationName}`,
-          notificationColor: '#0284C7',
-        },
-      });
-    }
-
-    // Dispatch ongoing system notification via expo-notifications
-    await updateNavigationNotification({
-      instruction: firstStep,
-      distanceRemainingMeters: navState.distanceRemainingMeters,
-      timeRemainingMinutes: navState.timeRemainingMinutes,
-      destinationName: navState.destinationName,
-      isSafeRoute: navState.route?.isSafe,
-      maneuverType: firstStepObj?.maneuverType,
-      maneuverModifier: firstStepObj?.maneuverModifier,
-    });
-
-    console.log('[NavBackground] Serviço de navegação em primeiro plano iniciado com sucesso');
+    console.log('[NavBackground] Navegação ativa iniciada (Segundo plano total:', hasBackgroundPermission, ')');
     return true;
   } catch (err) {
     console.warn('[NavBackground] Erro ao iniciar serviço de navegação:', err);
