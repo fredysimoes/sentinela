@@ -240,36 +240,73 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </TouchableOpacity>
         )}
 
-        {/* Category selection */}
+        {/* Category selection - Square White Cards Grid */}
         <Text style={styles.sectionLabel}>TIPO DE OCORRÊNCIA</Text>
         <View style={styles.categoriesGrid}>
           {availableCategories.map((catKey) => {
             const cat = CATEGORIES[catKey];
             const isSelected = selectedCategory === catKey;
+            const isFullWidthLast = catKey === 'safe_haven';
+
+            const renderModernCategoryIcon = () => {
+              const iconColor = isSelected ? '#FFFFFF' : cat.color;
+              const size = 20;
+              switch (catKey) {
+                case 'dark_area':
+                  return <MaterialCommunityIcons name="weather-night" size={size} color={iconColor} />;
+                case 'suspicious':
+                  return <MaterialCommunityIcons name="incognito" size={size} color={iconColor} />;
+                case 'harassment':
+                  return <MaterialCommunityIcons name="hand-back-left-off" size={size} color={iconColor} />;
+                case 'theft_risk':
+                  return <MaterialCommunityIcons name="shield-alert" size={size} color={iconColor} />;
+                case 'hazard':
+                  return <MaterialCommunityIcons name="traffic-cone" size={size} color={iconColor} />;
+                case 'police_presence':
+                  return <MaterialCommunityIcons name="police-badge" size={size} color={iconColor} />;
+                case 'safe_haven':
+                  return <MaterialCommunityIcons name="shield-check" size={size} color={iconColor} />;
+                default:
+                  return <Ionicons name={cat.icon as any} size={18} color={iconColor} />;
+              }
+            };
+
             return (
               <TouchableOpacity
                 key={catKey}
                 style={[
                   styles.categoryCard,
-                  isSelected && {
-                    borderColor: cat.color,
-                    backgroundColor: cat.badgeBg,
-                  },
+                  isFullWidthLast && styles.categoryCardFullRow,
+                  isSelected && [
+                    styles.categoryCardSelected,
+                    { borderColor: cat.color, shadowColor: cat.color },
+                  ],
                 ]}
                 onPress={() => handleSelectCategory(catKey)}
-                activeOpacity={0.7}
+                activeOpacity={0.78}
               >
-                <View style={[styles.catIconWrap, { backgroundColor: cat.color }]}>
-                  {cat.icon === 'shield-account' ? (
-                    <MaterialCommunityIcons name="shield-account" size={16} color="#FFFFFF" />
-                  ) : (
-                    <Ionicons name={cat.icon as any} size={15} color="#FFFFFF" />
-                  )}
+                {isSelected && (
+                  <View style={[styles.catSelectedCheckBadge, { backgroundColor: cat.color }]}>
+                    <Ionicons name="checkmark" size={11} color="#FFFFFF" />
+                  </View>
+                )}
+
+                {/* Stealth Teardrop-inspired Squircle Badge inside the Square White Card */}
+                <View
+                  style={[
+                    styles.catIconSquircle,
+                    isSelected
+                      ? { backgroundColor: cat.color, borderColor: cat.color }
+                      : { backgroundColor: '#0E1217', borderColor: cat.color },
+                  ]}
+                >
+                  {renderModernCategoryIcon()}
                 </View>
+
                 <Text
                   style={[
                     styles.catLabel,
-                    isSelected && { color: cat.color, fontWeight: '700' },
+                    isSelected && { color: '#080A0C', fontWeight: '900' },
                   ]}
                   numberOfLines={2}
                 >
@@ -363,8 +400,8 @@ const styles = StyleSheet.create({
     backgroundColor: M3Colors.surfaceContainer,
     borderTopLeftRadius: M3Shapes.extraLarge,
     borderTopRightRadius: M3Shapes.extraLarge,
-    maxHeight: '90%',
-    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    maxHeight: '92%',
+    paddingBottom: Platform.OS === 'ios' ? 92 : 90,
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
     ...M3Elevation.level4,
@@ -561,32 +598,73 @@ const styles = StyleSheet.create({
   categoriesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'space-between',
+    rowGap: 9,
   },
   categoryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-    borderRadius: M3Shapes.medium,
+    position: 'relative',
+    width: '31.5%',
+    aspectRatio: 1.04,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
     paddingVertical: 10,
-    paddingHorizontal: 10,
-    gap: 8,
-    width: '48%',
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  catIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  categoryCardFullRow: {
+    width: '100%',
+    aspectRatio: undefined,
+    height: 60,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+  },
+  categoryCardSelected: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2.5,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    elevation: 7,
+  },
+  catSelectedCheckBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 17,
+    height: 17,
+    borderRadius: 8.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  catIconSquircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
   },
   catLabel: {
-    fontSize: 12,
-    color: M3Colors.onSurface,
-    fontWeight: '500',
-    flexShrink: 1,
+    fontSize: 11,
+    color: '#080A0C',
+    fontWeight: '800',
+    textAlign: 'center',
+    lineHeight: 13.5,
+    letterSpacing: -0.1,
   },
   metaNotice: {
     backgroundColor: M3Colors.surfaceContainerLow,

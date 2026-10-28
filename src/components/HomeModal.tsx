@@ -375,8 +375,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: M3Shapes.extraLarge,
     borderTopWidth: 1,
     borderColor: M3Colors.outlineVariant,
-    paddingBottom: Platform.OS === 'android' ? 24 : 32,
-    maxHeight: '85%',
+    paddingBottom: Platform.OS === 'android' ? 92 : 90,
+    maxHeight: '88%',
     ...M3Elevation.level4,
   },
   header: {

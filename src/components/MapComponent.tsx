@@ -233,11 +233,11 @@ const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSel
     >
       <View style={[styles.markerPin, { borderColor: meta.color }]}>
         <View style={[styles.markerIconWrap, { backgroundColor: meta.color }]}>
-          {isPolicePresence ? (
-            <MaterialCommunityIcons name="shield-account" size={17} color="#FFFFFF" />
-          ) : (
-            <Ionicons name={meta.icon as any} size={15} color="#FFFFFF" />
-          )}
+          <MaterialCommunityIcons
+            name={(meta.mciIcon || 'alert-circle') as any}
+            size={16}
+            color="#FFFFFF"
+          />
         </View>
         {incident.confirmations > 0 && (
           <View style={styles.votesBadge}>

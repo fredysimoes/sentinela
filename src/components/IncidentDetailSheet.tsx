@@ -7,6 +7,7 @@ import {
   Linking,
   Alert,
   Animated,
+  Platform,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics from '../utils/haptics';
@@ -114,11 +115,11 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
       {/* Top row */}
       <View style={styles.topRow}>
         <View style={[styles.categoryBadge, { backgroundColor: meta.badgeBg, borderColor: meta.color }]}>
-          {meta.icon === 'shield-account' ? (
-            <MaterialCommunityIcons name="shield-account" size={14} color={meta.color} />
-          ) : (
-            <Ionicons name={meta.icon as any} size={14} color={meta.color} />
-          )}
+          <MaterialCommunityIcons
+            name={(meta.mciIcon || 'alert-circle') as any}
+            size={14}
+            color={meta.color}
+          />
           <Text style={[styles.categoryBadgeText, { color: meta.color }]}>{meta.label}</Text>
         </View>
 
@@ -223,10 +224,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: M3Shapes.extraLarge,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 28,
+    paddingBottom: Platform.OS === 'android' ? 92 : 90,
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
     ...M3Elevation.level4,
+    zIndex: 8000,
   },
   handle: {
     width: 32,

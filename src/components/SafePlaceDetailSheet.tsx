@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Linking,
   Animated,
+  Platform,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafePlace, UserLocation } from '../types';
@@ -210,7 +211,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           activeOpacity={0.85}
         >
           <Ionicons name="navigate" size={18} color="#06140E" />
-          <Text style={styles.navigateBtnText}>Navegar com Rota Segura Néon</Text>
+          <Text style={styles.navigateBtnText}>Navegar com Rota Segura</Text>
         </TouchableOpacity>
       )}
 
@@ -251,10 +252,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: M3Shapes.extraLarge,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 28,
+    paddingBottom: Platform.OS === 'android' ? 92 : 90,
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
     ...M3Elevation.level4,
+    zIndex: 8000,
   },
   handle: {
     width: 32,

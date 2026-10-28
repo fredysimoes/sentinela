@@ -197,46 +197,39 @@ export const M3BottomSheetWrapper: React.FC<M3BottomSheetWrapperProps> = ({
   if (!shouldRender) return null;
 
   return (
-    <Modal
-      transparent
-      visible={shouldRender}
-      animationType="none"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <View style={styles.sheetOverlay}>
-        <TouchableWithoutFeedback onPress={backdropClose ? onClose : undefined}>
-          <Animated.View
-            style={[
-              styles.backdrop,
-              {
-                opacity: backdropOpacity.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 0.6],
-                }),
-              },
-            ]}
-          />
-        </TouchableWithoutFeedback>
+    <View style={styles.sheetOverlay} pointerEvents="box-none">
+      <TouchableWithoutFeedback onPress={backdropClose ? onClose : undefined}>
+        <Animated.View
+          style={[
+            styles.backdrop,
+            {
+              opacity: backdropOpacity.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.55],
+              }),
+            },
+          ]}
+        />
+      </TouchableWithoutFeedback>
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.sheetCardWrapper}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.sheetCardWrapper}
+        pointerEvents="box-none"
+      >
+        <Animated.View
+          style={[
+            styles.sheetCard,
+            style,
+            {
+              transform: [{ translateY }],
+            },
+          ]}
         >
-          <Animated.View
-            style={[
-              styles.sheetCard,
-              style,
-              {
-                transform: [{ translateY }],
-              },
-            ]}
-          >
-            {children}
-          </Animated.View>
-        </KeyboardAvoidingView>
-      </View>
-    </Modal>
+          {children}
+        </Animated.View>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -334,8 +327,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   sheetOverlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'flex-end',
+    zIndex: 8000,
+    elevation: 16,
   },
   sheetCardWrapper: {
     width: '100%',

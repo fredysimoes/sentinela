@@ -238,9 +238,9 @@ const styles = StyleSheet.create({
     borderColor: M3Colors.outlineVariant,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'android' ? 24 : 32,
+    paddingBottom: Platform.OS === 'android' ? 92 : 90,
     ...M3Elevation.level4,
-    zIndex: 9999,
+    zIndex: 8000,
   },
   handle: {
     width: 32,

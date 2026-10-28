@@ -9,7 +9,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { NotificationSettings, IncidentCategory } from '../types';
 import { CATEGORIES } from '../constants/categories';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
@@ -391,7 +391,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   return (
                     <View key={catKey} style={styles.categoryRow}>
                       <View style={[styles.catIconWrap, { backgroundColor: meta.badgeBg }]}>
-                        <Ionicons name={meta.icon as any} size={18} color={meta.color} />
+                        <MaterialCommunityIcons
+                          name={(meta.mciIcon || 'alert-circle') as any}
+                          size={19}
+                          color={meta.color}
+                        />
                       </View>
                       <View style={styles.catTextWrap}>
                         <Text style={styles.catLabel}>{meta.label}</Text>
@@ -742,7 +746,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   bottomBar: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: Platform.OS === 'android' ? 92 : 90,
     backgroundColor: M3Colors.surfaceContainer,
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,

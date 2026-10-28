@@ -377,12 +377,14 @@ export default function App() {
   const [simulationState, setSimulationState] = useState<RouteSimulationState | null>(null);
   const [transportMode, setTransportMode] = useState<TransportMode>('walking');
   const [showRoutePreview, setShowRoutePreview] = useState(false);
+  const [isAnimatingRouteDraw, setIsAnimatingRouteDraw] = useState(false);
   const [previewSafeRoute, setPreviewSafeRoute] = useState<PedestrianRoute | null>(null);
   const [previewDirectRoute, setPreviewDirectRoute] = useState<PedestrianRoute | undefined>(undefined);
   const [previewOriginName, setPreviewOriginName] = useState('A minha localização');
   const [previewOriginCoord, setPreviewOriginCoord] = useState<RouteCoordinate | null>(null);
   const [previewDestName, setPreviewDestName] = useState('');
   const [previewDestCoord, setPreviewDestCoord] = useState<RouteCoordinate | null>(null);
+  const routeAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ensure screen stays awake during navigation, driving, simulation, or TVDE protection
   useEffect(() => {
@@ -396,6 +398,18 @@ export default function App() {
     customOrigin?: { name: string; coord: RouteCoordinate }
   ) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // 1. Immediately collapse any open detail sheet or route preview so the user can watch the map
+    setSelectedSafePlace(null);
+    setSelectedIncident(null);
+    setSelectedMapPoint(null);
+    setShowRoutePreview(false);
+
+    if (routeAnimTimerRef.current) {
+      clearTimeout(routeAnimTimerRef.current);
+      routeAnimTimerRef.current = null;
+    }
+
     const originCoord: RouteCoordinate =
       customOrigin?.coord ||
       previewOriginCoord || {
@@ -418,9 +432,16 @@ export default function App() {
       mode,
     });
 
+    // 2. Render route on the map and let the progressive neon route animation play out in full view (2.4s)
     setPreviewSafeRoute(routes.safeRoute);
     setPreviewDirectRoute(routes.directRoute);
-    setShowRoutePreview(true);
+    setIsAnimatingRouteDraw(true);
+
+    // 3. Only slide the RoutePreviewModal back up once the route drawing animation completes!
+    routeAnimTimerRef.current = setTimeout(() => {
+      setIsAnimatingRouteDraw(false);
+      setShowRoutePreview(true);
+    }, 2450);
   };
 
   const handleUpdateRouteEndpoints = async (
@@ -1233,7 +1254,7 @@ export default function App() {
               ? navState.route
               : simulationState
               ? simulationState.route
-              : (showRoutePreview ? previewSafeRoute : null)
+              : (showRoutePreview || isAnimatingRouteDraw ? previewSafeRoute : null)
           }
           isNavigating={!!navState}
           isSimulating={!!simulationState}
@@ -1494,19 +1515,11 @@ export default function App() {
                       setSelectedFilter(isSelected ? null : catKey);
                     }}
                   >
-                    {cat.icon === 'shield-account' ? (
-                      <MaterialCommunityIcons
-                        name="shield-account"
-                        size={14}
-                        color={isSelected ? '#FFFFFF' : cat.color}
-                      />
-                    ) : (
-                      <Ionicons
-                        name={cat.icon as any}
-                        size={14}
-                        color={isSelected ? '#FFFFFF' : cat.color}
-                      />
-                    )}
+                    <MaterialCommunityIcons
+                      name={(cat.mciIcon || 'alert-circle') as any}
+                      size={14}
+                      color={isSelected ? '#FFFFFF' : cat.color}
+                    />
                     <Text
                       style={[
                         styles.filterChipText,
@@ -1558,164 +1571,6 @@ export default function App() {
               <Ionicons name="chevron-forward" size={18} color="#10B981" />
             </M3Pressable>
           )}
-        </View>
-      )}
-
-      {/* 3. Stealth Floating Pill Bottom Dock Bar (5 Quick-Access Positions) */}
-      {!navState && !simulationState && (
-        <View style={styles.bottomDockContainer} pointerEvents="box-none">
-          <View style={styles.bottomPillDock}>
-            {/* 1. Mapa (Active White Pill like Image 2) */}
-            <M3Pressable
-              scaleOnPress={0.94}
-              style={[
-                styles.dockMapPill,
-                (showReportModal || showTvdeModal || showSentinelsModal || showSOSModal) &&
-                  styles.dockMapPillInactive,
-              ]}
-              onPress={() => {
-                Haptics.selectionAsync();
-                setShowReportModal(false);
-                setShowTvdeModal(false);
-                setShowSentinelsModal(false);
-                setSelectedIncident(null);
-                setSelectedSafePlace(null);
-                setSelectedMapPoint(null);
-                setMapRecenterSignal((prev) => prev + 1);
-              }}
-            >
-              <Ionicons
-                name="home"
-                size={16}
-                color={
-                  showReportModal || showTvdeModal || showSentinelsModal || showSOSModal
-                    ? '#CBD5E1'
-                    : '#080A0C'
-                }
-              />
-              <Text
-                style={[
-                  styles.dockMapPillText,
-                  (showReportModal || showTvdeModal || showSentinelsModal || showSOSModal) &&
-                    styles.dockMapPillTextInactive,
-                ]}
-              >
-                Mapa
-              </Text>
-            </M3Pressable>
-
-            {/* 2. Sinalizar (Community Report & "Estou a ser seguido") */}
-            <M3Pressable
-              scaleOnPress={0.92}
-              style={[
-                styles.dockActionItem,
-                showReportModal && styles.dockActionItemActive,
-              ]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setTargetCoordinate(null);
-                setShowReportModal(true);
-              }}
-            >
-              <View style={styles.dockIconWrap}>
-                <Ionicons
-                  name="warning-outline"
-                  size={19}
-                  color={showReportModal ? '#FBBF24' : '#CBD5E1'}
-                />
-                {activeStalkingSession && <View style={styles.dockLiveBadgeDotRed} />}
-              </View>
-              <Text
-                style={[
-                  styles.dockActionLabel,
-                  showReportModal && { color: '#FBBF24', fontWeight: '800' },
-                ]}
-              >
-                Sinalizar
-              </Text>
-            </M3Pressable>
-
-            {/* 3. TVDE (Uber / Bolt / Táxi Ride Protection) */}
-            <M3Pressable
-              scaleOnPress={0.92}
-              style={[
-                styles.dockActionItem,
-                (showTvdeModal || !!activeTvdeTrip) && styles.dockActionItemActiveNeon,
-              ]}
-              onPress={() => {
-                Haptics.selectionAsync();
-                setShowTvdeModal(true);
-              }}
-            >
-              <View style={styles.dockIconWrap}>
-                <Ionicons
-                  name="car-sport-outline"
-                  size={20}
-                  color={showTvdeModal || activeTvdeTrip ? '#10B981' : '#CBD5E1'}
-                />
-                {activeTvdeTrip && <View style={styles.dockLiveBadgeDotNeon} />}
-              </View>
-              <Text
-                style={[
-                  styles.dockActionLabel,
-                  (showTvdeModal || activeTvdeTrip) && { color: '#10B981', fontWeight: '800' },
-                ]}
-              >
-                TVDE
-              </Text>
-            </M3Pressable>
-
-            {/* 4. Sentinelas (Trusted Circle & Live Tracking) */}
-            <M3Pressable
-              scaleOnPress={0.92}
-              style={[
-                styles.dockActionItem,
-                showSentinelsModal && styles.dockActionItemActiveCyan,
-              ]}
-              onPress={() => {
-                Haptics.selectionAsync();
-                if (currentUserProfile) {
-                  setShowSentinelsModal(true);
-                } else {
-                  setShowAuthModal(true);
-                }
-              }}
-            >
-              <View style={styles.dockIconWrap}>
-                <Ionicons
-                  name="shield-checkmark-outline"
-                  size={19}
-                  color={showSentinelsModal ? '#38BDF8' : '#CBD5E1'}
-                />
-                {mySentinels.length > 0 && (
-                  <View style={styles.dockCountBadge}>
-                    <Text style={styles.dockCountBadgeText}>{mySentinels.length}</Text>
-                  </View>
-                )}
-              </View>
-              <Text
-                style={[
-                  styles.dockActionLabel,
-                  showSentinelsModal && { color: '#38BDF8', fontWeight: '800' },
-                ]}
-              >
-                Sentinelas
-              </Text>
-            </M3Pressable>
-
-            {/* 5. SOS (Emergency Pill Button on the Right Edge) */}
-            <M3Pressable
-              scaleOnPress={0.91}
-              style={styles.dockSosPill}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                setShowSOSModal(true);
-              }}
-            >
-              <Ionicons name="megaphone" size={16} color="#FFFFFF" />
-              <Text style={styles.dockSosPillText}>SOS</Text>
-            </M3Pressable>
-          </View>
         </View>
       )}
 
@@ -1942,6 +1797,182 @@ export default function App() {
         visible={showProtestRightsModal}
         onClose={() => setShowProtestRightsModal(false)}
       />
+
+      {/* 3. Stealth Floating Pill Bottom Dock Bar (Always Visible & Active Tab Highlighted in White Pill) */}
+      {!navState && !simulationState && (
+        <View style={styles.bottomDockContainer} pointerEvents="box-none">
+          <View style={styles.bottomPillDock}>
+            {/* 1. Mapa */}
+            {(() => {
+              const isMapActive = !showReportModal && !showTvdeModal && !showSentinelsModal;
+              return (
+                <M3Pressable
+                  scaleOnPress={0.94}
+                  style={[
+                    styles.dockPillItem,
+                    isMapActive && styles.dockPillItemSelectedWhite,
+                  ]}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setShowReportModal(false);
+                    setShowTvdeModal(false);
+                    setShowSentinelsModal(false);
+                    setShowSettingsModal(false);
+                    setShowContactsModal(false);
+                    setShowHomeModal(false);
+                    setSelectedIncident(null);
+                    setSelectedSafePlace(null);
+                    setSelectedMapPoint(null);
+                    setMapRecenterSignal((prev) => prev + 1);
+                  }}
+                >
+                  <Ionicons
+                    name={isMapActive ? 'home' : 'home-outline'}
+                    size={16}
+                    color={isMapActive ? '#080A0C' : '#CBD5E1'}
+                  />
+                  <Text
+                    style={[
+                      styles.dockPillItemText,
+                      isMapActive && styles.dockPillItemTextSelectedDark,
+                    ]}
+                  >
+                    Mapa
+                  </Text>
+                </M3Pressable>
+              );
+            })()}
+
+            {/* 2. Sinalizar (Community Report & "Estou a ser seguido") */}
+            <M3Pressable
+              scaleOnPress={0.93}
+              style={[
+                styles.dockPillItem,
+                showReportModal && styles.dockPillItemSelectedWhite,
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowTvdeModal(false);
+                setShowSentinelsModal(false);
+                setShowSettingsModal(false);
+                setShowContactsModal(false);
+                setShowHomeModal(false);
+                setTargetCoordinate(null);
+                setShowReportModal((prev) => !prev);
+              }}
+            >
+              <View style={styles.dockIconWrap}>
+                <Ionicons
+                  name={showReportModal ? 'warning' : 'warning-outline'}
+                  size={16}
+                  color={showReportModal ? '#080A0C' : '#CBD5E1'}
+                />
+                {activeStalkingSession && <View style={styles.dockLiveBadgeDotRed} />}
+              </View>
+              <Text
+                style={[
+                  styles.dockPillItemText,
+                  showReportModal && styles.dockPillItemTextSelectedDark,
+                ]}
+              >
+                Sinalizar
+              </Text>
+            </M3Pressable>
+
+            {/* 3. TVDE (Uber / Bolt / Táxi Ride Protection) */}
+            <M3Pressable
+              scaleOnPress={0.93}
+              style={[
+                styles.dockPillItem,
+                showTvdeModal && styles.dockPillItemSelectedWhite,
+              ]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setShowReportModal(false);
+                setShowSentinelsModal(false);
+                setShowSettingsModal(false);
+                setShowContactsModal(false);
+                setShowHomeModal(false);
+                setShowTvdeModal((prev) => !prev);
+              }}
+            >
+              <View style={styles.dockIconWrap}>
+                <Ionicons
+                  name={showTvdeModal ? 'car-sport' : 'car-sport-outline'}
+                  size={17}
+                  color={showTvdeModal ? '#080A0C' : activeTvdeTrip ? '#10B981' : '#CBD5E1'}
+                />
+                {activeTvdeTrip && <View style={styles.dockLiveBadgeDotNeon} />}
+              </View>
+              <Text
+                style={[
+                  styles.dockPillItemText,
+                  !showTvdeModal && activeTvdeTrip && { color: '#10B981', fontWeight: '800' },
+                  showTvdeModal && styles.dockPillItemTextSelectedDark,
+                ]}
+              >
+                TVDE
+              </Text>
+            </M3Pressable>
+
+            {/* 4. Sentinelas (Trusted Circle & Live Tracking) */}
+            <M3Pressable
+              scaleOnPress={0.93}
+              style={[
+                styles.dockPillItem,
+                showSentinelsModal && styles.dockPillItemSelectedWhite,
+              ]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setShowReportModal(false);
+                setShowTvdeModal(false);
+                setShowSettingsModal(false);
+                setShowContactsModal(false);
+                setShowHomeModal(false);
+                if (currentUserProfile) {
+                  setShowSentinelsModal((prev) => !prev);
+                } else {
+                  setShowAuthModal(true);
+                }
+              }}
+            >
+              <View style={styles.dockIconWrap}>
+                <Ionicons
+                  name={showSentinelsModal ? 'shield-checkmark' : 'shield-checkmark-outline'}
+                  size={16}
+                  color={showSentinelsModal ? '#080A0C' : '#CBD5E1'}
+                />
+                {mySentinels.length > 0 && (
+                  <View style={styles.dockCountBadge}>
+                    <Text style={styles.dockCountBadgeText}>{mySentinels.length}</Text>
+                  </View>
+                )}
+              </View>
+              <Text
+                style={[
+                  styles.dockPillItemText,
+                  showSentinelsModal && styles.dockPillItemTextSelectedDark,
+                ]}
+              >
+                Sentinelas
+              </Text>
+            </M3Pressable>
+
+            {/* 5. SOS (Emergency Pill Button on the Right Edge) */}
+            <M3Pressable
+              scaleOnPress={0.91}
+              style={styles.dockSosPill}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                setShowSOSModal(true);
+              }}
+            >
+              <Ionicons name="megaphone" size={14} color="#FFFFFF" />
+              <Text style={styles.dockSosPillText}>SOS</Text>
+            </M3Pressable>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -2075,86 +2106,65 @@ const styles = StyleSheet.create({
   bottomDockContainer: {
     position: 'absolute',
     bottom: Platform.OS === 'android' ? 20 : 18,
-    left: 12,
-    right: 12,
+    left: 10,
+    right: 10,
     alignItems: 'center',
-    zIndex: 900,
+    zIndex: 10000,
+    elevation: 28,
   },
   bottomPillDock: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    backgroundColor: 'rgba(16, 20, 27, 0.96)',
+    backgroundColor: 'rgba(14, 18, 25, 0.98)',
     borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.55,
-    shadowRadius: 14,
-    elevation: 12,
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
+    elevation: 28,
+    gap: 2,
   },
-  dockMapPill: {
+  dockPillItem: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 14,
+    gap: 4,
     height: 44,
     borderRadius: 999,
+    paddingHorizontal: 6,
+  },
+  dockPillItemSelectedWhite: {
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 11,
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 4,
   },
-  dockMapPillInactive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  dockMapPillText: {
-    color: '#080A0C',
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-  dockMapPillTextInactive: {
+  dockPillItemText: {
     color: '#CBD5E1',
+    fontSize: 10.5,
     fontWeight: '600',
+    letterSpacing: 0.1,
   },
-  dockActionItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 44,
-    borderRadius: 999,
-    paddingHorizontal: 4,
-  },
-  dockActionItemActive: {
-    backgroundColor: 'rgba(251, 191, 36, 0.14)',
-  },
-  dockActionItemActiveNeon: {
-    backgroundColor: 'rgba(16, 185, 129, 0.14)',
-  },
-  dockActionItemActiveCyan: {
-    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+  dockPillItemTextSelectedDark: {
+    color: '#080A0C',
+    fontSize: 11.5,
+    fontWeight: '800',
+    letterSpacing: 0.15,
   },
   dockIconWrap: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  dockActionLabel: {
-    color: '#CBD5E1',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 2,
-    letterSpacing: 0.1,
   },
   dockLiveBadgeDotRed: {
     position: 'absolute',
@@ -2180,8 +2190,8 @@ const styles = StyleSheet.create({
   },
   dockCountBadge: {
     position: 'absolute',
-    top: -4,
-    right: -9,
+    top: -5,
+    right: -8,
     backgroundColor: '#38BDF8',
     borderRadius: 8,
     minWidth: 14,
@@ -2201,9 +2211,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: '#DC2626',
-    paddingHorizontal: 15,
+    paddingHorizontal: 13,
     height: 44,
     borderRadius: 999,
     borderWidth: 1.5,
@@ -2216,8 +2226,8 @@ const styles = StyleSheet.create({
   },
   dockSosPillText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '900',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
 });

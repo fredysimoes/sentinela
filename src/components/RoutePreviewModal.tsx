@@ -1346,7 +1346,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   footer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 92,
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
   },

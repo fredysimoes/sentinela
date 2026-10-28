@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: M3Shapes.extraLarge,
     borderTopRightRadius: M3Shapes.extraLarge,
     maxHeight: '92%',
-    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    paddingBottom: Platform.OS === 'ios' ? 92 : 90,
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
     ...M3Elevation.level4,
