@@ -120,12 +120,122 @@ const GOOGLE_MAPS_DARK_STYLE = [
     stylers: [{ color: '#64748B' }],
   },
 ];
+
+const GOOGLE_MAPS_LIGHT_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#F8FAFC' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#FFFFFF' }, { weight: 3.5 }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#334155' }] },
+  {
+    featureType: 'administrative.locality',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#0F172A' }],
+  },
+  {
+    featureType: 'administrative.neighborhood',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#475569' }],
+  },
+  {
+    featureType: 'landscape.man_made',
+    elementType: 'geometry.fill',
+    stylers: [{ color: '#F1F5F9' }],
+  },
+  {
+    featureType: 'landscape.man_made',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#E2E8F0' }, { weight: 1 }],
+  },
+  {
+    featureType: 'poi',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#475569' }],
+  },
+  {
+    featureType: 'poi.business',
+    stylers: [{ visibility: 'off' }],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [{ color: '#DCFCE7' }],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#15803D' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry',
+    stylers: [{ color: '#FFFFFF' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#E2E8F0' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#1E293B' }],
+  },
+  {
+    featureType: 'road.local',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#475569' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [{ color: '#FDE68A' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#F59E0B' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#78350F' }],
+  },
+  {
+    featureType: 'road.highway.controlled_access',
+    elementType: 'geometry',
+    stylers: [{ color: '#FCD34D' }],
+  },
+  {
+    featureType: 'road.highway.controlled_access',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#D97706' }],
+  },
+  {
+    featureType: 'road.highway.controlled_access',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#451A03' }],
+  },
+  {
+    featureType: 'transit',
+    elementType: 'geometry',
+    stylers: [{ color: '#EDE9FE' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{ color: '#BAE6FD' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#0284C7' }],
+  },
+];
 import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace, HomeAddress } from '../types';
 import { PedestrianRoute, RouteCoordinate } from '../types/navigation';
 import { CATEGORIES, isAccessibilityCategory } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
-import { isProtestInfiltratorVerified } from '../utils/geo';
+import { isProtestInfiltratorVerified, isDaylight } from '../utils/geo';
 import { SelectedMapPoint } from './SelectedPlaceSheet';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { M3Pressable } from './M3MotionWrapper';
@@ -427,6 +537,7 @@ interface MapComponentProps {
   simulatedLocation?: RouteCoordinate | null;
   recenterSignal?: number;
   onOpenRadar?: () => void;
+  isDaytime?: boolean;
 }
 
 export const MapComponent: React.FC<MapComponentProps> = memo(({
@@ -464,8 +575,33 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   simulatedLocation = null,
   recenterSignal = 0,
   onOpenRadar,
+  isDaytime,
 }) => {
   const mapRef = useRef<MapView | null>(null);
+  const [internalDayTime, setInternalDayTime] = useState<boolean>(() => {
+    if (typeof isDaytime === 'boolean') return isDaytime;
+    const lat = userLocation?.latitude ?? 39.5;
+    const lng = userLocation?.longitude ?? -8.0;
+    return isDaylight(lat, lng);
+  });
+
+  useEffect(() => {
+    if (typeof isDaytime === 'boolean') {
+      setInternalDayTime(isDaytime);
+      return;
+    }
+    const updateDaylight = () => {
+      const lat = userLocation?.latitude ?? 39.5;
+      const lng = userLocation?.longitude ?? -8.0;
+      setInternalDayTime(isDaylight(lat, lng));
+    };
+    updateDaylight();
+    const interval = setInterval(updateDaylight, 60000);
+    return () => clearInterval(interval);
+  }, [isDaytime, userLocation?.latitude, userLocation?.longitude]);
+
+  const activeIsDayTime = typeof isDaytime === 'boolean' ? isDaytime : internalDayTime;
+
   const [is3DMode, setIs3DMode] = React.useState(false);
   const [followHeading, setFollowHeading] = React.useState(false);
   const [isUserInteracting, setIsUserInteracting] = React.useState(false);
@@ -807,8 +943,8 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
         showsCompass={false}
         showsBuildings={true}
         showsIndoors={false}
-        userInterfaceStyle="dark"
-        customMapStyle={GOOGLE_MAPS_DARK_STYLE}
+        userInterfaceStyle={activeIsDayTime ? 'light' : 'dark'}
+        customMapStyle={activeIsDayTime ? GOOGLE_MAPS_LIGHT_STYLE : GOOGLE_MAPS_DARK_STYLE}
         onPanDrag={() => setIsUserInteracting(true)}
         onRegionChangeComplete={handleRegionChange}
         onPoiClick={(e) => {

@@ -108,6 +108,7 @@ import {
   calculateTriangulatedCluster,
   filterExpiredIncidents,
   REPORT_RENEWAL_RADIUS_METERS,
+  isDaylight,
 } from './src/utils/geo';
 import { getPharmacyStatus } from './src/utils/pharmacySchedule';
 import { reverseGeocodeCoordinate } from './src/services/geocodingService';
@@ -134,6 +135,24 @@ export default function App() {
   const [selectedSafePlace, setSelectedSafePlace] = useState<SafePlace | null>(null);
   const [additionalPlaces, setAdditionalPlaces] = useState<SafePlace[]>([]);
   const regionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Dynamic Day/Night Cycle based on local solar twilight
+  const [isDayTime, setIsDayTime] = useState<boolean>(() => {
+    const lat = userLocation?.latitude ?? 39.5;
+    const lng = userLocation?.longitude ?? -8.0;
+    return isDaylight(lat, lng);
+  });
+
+  useEffect(() => {
+    const updateDaylight = () => {
+      const lat = userLocation?.latitude ?? 39.5;
+      const lng = userLocation?.longitude ?? -8.0;
+      setIsDayTime(isDaylight(lat, lng));
+    };
+    updateDaylight();
+    const interval = setInterval(updateDaylight, 60000);
+    return () => clearInterval(interval);
+  }, [userLocation?.latitude, userLocation?.longitude]);
 
   const handleRegionChangeComplete = (region: {
     latitude: number;
@@ -1511,11 +1530,12 @@ export default function App() {
           stalkingSession={activeStalkingSession || incomingStalkingAlert}
           recenterSignal={mapRecenterSignal}
           onOpenRadar={() => setShowRadarModal(true)}
+          isDaytime={isDayTime}
         />
 
         {/* Camada Festiva de Halloween (Isolada e facilmente removível) */}
         {!navState && !simulationState && (
-          <HalloweenAmbientOverlay />
+          <HalloweenAmbientOverlay isDaytime={isDayTime} />
         )}
       </View>
 

@@ -361,3 +361,35 @@ export function isProtestInfiltratorVerified(
 
   return totalSignals >= minSignalsThreshold;
 }
+
+/**
+ * Determina se é dia ou noite para uma dada coordenada e data,
+ * baseando-se no ângulo horário solar e no crepúsculo/pôr do sol real.
+ * Por defeito utiliza as coordenadas centrais de Portugal (lat: 39.5, lng: -8.0).
+ */
+export function isDaylight(
+  latitude: number = 39.5,
+  longitude: number = -8.0,
+  date: Date = new Date()
+): boolean {
+  const dayOfYear = Math.floor(
+    (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  // Declinação solar aproximada em radianos
+  const declination = 0.4095 * Math.sin((2 * Math.PI * (dayOfYear - 79.75)) / 365);
+  const latRad = (latitude * Math.PI) / 180;
+
+  // Cosseno do ângulo horário no nascer/pôr do sol
+  const cosHourAngle = -Math.tan(latRad) * Math.tan(declination);
+  if (cosHourAngle >= 1) return false; // noite polar
+  if (cosHourAngle <= -1) return true; // sol da meia-noite
+
+  const hourAngle = Math.acos(cosHourAngle) * (180 / Math.PI);
+  const solarNoonUTC = 12 - longitude / 15; // em horas UTC
+  const sunriseUTC = solarNoonUTC - hourAngle / 15;
+  const sunsetUTC = solarNoonUTC + hourAngle / 15;
+
+  const currentUTC = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+  return currentUTC >= sunriseUTC && currentUTC < sunsetUTC;
+}
+
