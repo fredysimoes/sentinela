@@ -145,7 +145,7 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
       <View style={styles.etaBar}>
         <View style={styles.etaItem}>
           <Ionicons
-            name={navState.mode === 'driving' ? 'car-sport' : 'walk'}
+            name={navState.mode === 'driving' ? 'car-sport' : navState.mode === 'transit' ? 'bus' : 'walk'}
             size={15}
             color="#38BDF8"
           />

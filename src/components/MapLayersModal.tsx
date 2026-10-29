@@ -27,6 +27,8 @@ interface MapLayersModalProps {
   onToggleHospitals: () => void;
   showWheelmapOnMap: boolean;
   onToggleWheelmap: () => void;
+  showStcpBusesOnMap?: boolean;
+  onToggleStcpBuses?: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -47,6 +49,8 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onToggleHospitals,
   showWheelmapOnMap,
   onToggleWheelmap,
+  showStcpBusesOnMap = false,
+  onToggleStcpBuses,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -59,9 +63,10 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     showPharmaciesOnMap,
     showHospitalsOnMap,
     showWheelmapOnMap,
+    showStcpBusesOnMap,
   ].filter(Boolean).length;
 
-  const allLayersActive = activeLayersCount === 4;
+  const allLayersActive = activeLayersCount === 5;
 
   const INFRASTRUCTURE_LAYERS: {
     id: string;
@@ -73,6 +78,15 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     active: boolean;
     onToggle: () => void;
   }[] = [
+    {
+      id: 'stcp',
+      name: 'Autocarros STCP',
+      subtitle: 'Em direto no Grande Porto',
+      icon: 'bus-side',
+      color: '#0284C7',
+      active: showStcpBusesOnMap,
+      onToggle: onToggleStcpBuses || (() => {}),
+    },
     {
       id: 'pharmacy',
       name: 'Farmácias',

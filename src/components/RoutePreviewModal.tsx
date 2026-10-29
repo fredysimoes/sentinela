@@ -252,7 +252,9 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
     }
   };
 
-  const isDriving = (safeRoute.mode || currentMode) === 'driving';
+  const activeMode = safeRoute.mode || currentMode;
+  const isDriving = activeMode === 'driving';
+  const isTransit = activeMode === 'transit';
 
   return (
     <M3BottomSheetWrapper
@@ -267,11 +269,13 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.modeIconCircle}>
-          <Ionicons
-            name={isDriving ? 'car-sport' : 'walk'}
-            size={22}
-            color="#38BDF8"
-          />
+          {isDriving ? (
+            <Ionicons name="car-sport" size={22} color="#38BDF8" />
+          ) : isTransit ? (
+            <MaterialCommunityIcons name="bus-side" size={22} color="#38BDF8" />
+          ) : (
+            <Ionicons name="walk" size={22} color="#38BDF8" />
+          )}
         </View>
 
         <View style={{ flex: 1 }}>
@@ -648,20 +652,20 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.modeSwitchBtn,
-                      !isDriving && styles.modeSwitchBtnActive,
+                      activeMode === 'walking' && styles.modeSwitchBtnActive,
                     ]}
                     onPress={() => onToggleMode('walking')}
                     activeOpacity={0.8}
                   >
                     <Ionicons
                       name="walk"
-                      size={15}
-                      color={!isDriving ? '#0F172A' : '#94A3B8'}
+                      size={14}
+                      color={activeMode === 'walking' ? '#0F172A' : '#94A3B8'}
                     />
                     <Text
                       style={[
                         styles.modeSwitchText,
-                        !isDriving && styles.modeSwitchTextActive,
+                        activeMode === 'walking' && styles.modeSwitchTextActive,
                       ]}
                     >
                       A Pé
@@ -671,20 +675,43 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.modeSwitchBtn,
-                      isDriving && styles.modeSwitchBtnActive,
+                      activeMode === 'transit' && styles.modeSwitchBtnActive,
+                    ]}
+                    onPress={() => onToggleMode('transit')}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons
+                      name="bus-side"
+                      size={15}
+                      color={activeMode === 'transit' ? '#0F172A' : '#94A3B8'}
+                    />
+                    <Text
+                      style={[
+                        styles.modeSwitchText,
+                        activeMode === 'transit' && styles.modeSwitchTextActive,
+                      ]}
+                    >
+                      Transportes
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.modeSwitchBtn,
+                      activeMode === 'driving' && styles.modeSwitchBtnActive,
                     ]}
                     onPress={() => onToggleMode('driving')}
                     activeOpacity={0.8}
                   >
                     <Ionicons
                       name="car-sport"
-                      size={15}
-                      color={isDriving ? '#0F172A' : '#94A3B8'}
+                      size={14}
+                      color={activeMode === 'driving' ? '#0F172A' : '#94A3B8'}
                     />
                     <Text
                       style={[
                         styles.modeSwitchText,
-                        isDriving && styles.modeSwitchTextActive,
+                        activeMode === 'driving' && styles.modeSwitchTextActive,
                       ]}
                     >
                       De Carro

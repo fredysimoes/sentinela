@@ -242,6 +242,13 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
               <Text style={styles.estimateValue}>~{formatDuration(driveMins)}</Text>
             </View>
           )}
+
+          {distanceMeters !== null && (
+            <View style={styles.estimatePill}>
+              <MaterialCommunityIcons name="bus" size={15} color="#38BDF8" />
+              <Text style={styles.estimateValue}>~{formatDuration(Math.max(1, Math.round(distanceMeters / 250)))}</Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -339,8 +346,25 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           onPress={handleStartDriveRoute}
           activeOpacity={0.85}
         >
-          <Ionicons name="car-sport" size={18} color="#F8FAFC" />
+          <Ionicons name="car-sport" size={17} color="#F8FAFC" />
           <Text style={styles.navBtnTextLight}>De Carro</Text>
+        </TouchableOpacity>
+
+        {/* Navigate Transit (STCP / Metro do Porto) */}
+        <TouchableOpacity
+          style={[styles.navBtn, styles.navBtnTransit]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            onNavigate(
+              place.name,
+              { latitude: place.latitude, longitude: place.longitude },
+              'transit'
+            );
+          }}
+          activeOpacity={0.85}
+        >
+          <MaterialCommunityIcons name="bus-side" size={17} color="#F8FAFC" />
+          <Text style={styles.navBtnTextLight}>Transportes</Text>
         </TouchableOpacity>
       </View>
 
@@ -619,6 +643,11 @@ const styles = StyleSheet.create({
     backgroundColor: M3Colors.surfaceContainerHigh,
     borderWidth: 1,
     borderColor: M3Colors.outlineVariant,
+  },
+  navBtnTransit: {
+    backgroundColor: '#0284C7',
+    borderWidth: 1,
+    borderColor: '#38BDF8',
   },
   navBtnTextDark: {
     color: M3Colors.onPrimaryContainer,

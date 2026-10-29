@@ -1,6 +1,6 @@
 import { Incident } from './index';
 
-export type TransportMode = 'walking' | 'driving';
+export type TransportMode = 'walking' | 'driving' | 'transit';
 
 export interface RouteCoordinate {
   latitude: number;

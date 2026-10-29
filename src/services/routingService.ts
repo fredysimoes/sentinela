@@ -2,6 +2,7 @@ import { Incident } from '../types';
 import { PedestrianRoute, RouteCoordinate, RouteStep, TransportMode } from '../types/navigation';
 import { calculateDistanceMeters } from '../utils/geo';
 import { isAccessibilityCategory } from '../constants/categories';
+import { fetchPortoTransitRoute } from './stcpRealtimeService';
 
 export function formatDuration(minutes: number): string {
   if (minutes < 1) return '1 min';
@@ -403,6 +404,35 @@ export async function calculateSafeNavigationRoutes(params: {
 
   // Accessibility avoidance strictly applies to pedestrian mode, never to driving mode
   const effectiveAccessibilityAvoidance = mode !== 'driving' && Boolean(avoidAccessibilityBarriers);
+
+  // 0. Modo de Transportes Públicos (Porto Digital OTP - STCP / Metro)
+  if (mode === 'transit') {
+    const transitRoute = await fetchPortoTransitRoute(origin, destination);
+    if (transitRoute) {
+      const hazardsOnRoute: Incident[] = [];
+      const hazardsAvoided: Incident[] = [];
+
+      incidents.forEach((inc) => {
+        const isNear = transitRoute.coordinates.some(
+          (c) => calculateDistanceMeters(c.latitude, c.longitude, inc.latitude, inc.longitude) < 65
+        );
+        if (isNear) {
+          hazardsOnRoute.push(inc);
+        } else {
+          hazardsAvoided.push(inc);
+        }
+      });
+
+      transitRoute.hazardsOnRoute = hazardsOnRoute;
+      transitRoute.hazardsAvoided = hazardsAvoided;
+      transitRoute.isSafe = hazardsOnRoute.length === 0;
+
+      return {
+        safeRoute: transitRoute,
+        directRoute: transitRoute,
+      };
+    }
+  }
 
   // 1. Fetch direct route via Valhalla (fallback OSRM)
   const directData = await fetchRouteMultiEngine(

@@ -138,7 +138,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         itemLon
       );
     const distText = formatDistance(dist);
-    const speed = transportMode === 'driving' ? 500 : 75; // meters per minute
+    const speed = transportMode === 'driving' ? 500 : transportMode === 'transit' ? 250 : 75; // meters per minute
     const mins = Math.max(1, Math.round(dist / speed));
     const timeText = formatDuration(mins);
     return `${distText} • ~${timeText}`;
@@ -183,6 +183,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           placeholder={
             transportMode === 'driving'
               ? 'Destino de carro seguro...'
+              : transportMode === 'transit'
+              ? 'Destino de transportes públicos...'
               : 'Para onde vai em segurança?'
           }
           placeholderTextColor="#64748B"
@@ -205,20 +207,29 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <ActivityIndicator size="small" color="#10B981" style={styles.iconBtn} />
         )}
 
-        {/* Transport Mode Toggle Button (Walk vs Drive vs Accessible Walk) */}
+        {/* Transport Mode Toggle Button (Walk vs Transit vs Drive vs Accessible Walk) */}
         <M3Pressable
           style={[
             styles.modeToggleBtn,
             transportMode === 'driving' && styles.modeToggleBtnDriving,
+            transportMode === 'transit' && styles.modeToggleBtnTransit,
             transportMode === 'walking' && accessibleRouteOnly && styles.modeToggleBtnAccessible,
           ]}
           onPress={() => {
             Haptics.selectionAsync();
-            onTransportModeChange(transportMode === 'walking' ? 'driving' : 'walking');
+            const nextMode: TransportMode =
+              transportMode === 'walking'
+                ? 'transit'
+                : transportMode === 'transit'
+                ? 'driving'
+                : 'walking';
+            onTransportModeChange(nextMode);
           }}
         >
           {transportMode === 'driving' ? (
             <Ionicons name="car-sport" size={16} color="#06140E" />
+          ) : transportMode === 'transit' ? (
+            <MaterialCommunityIcons name="bus" size={17} color="#38BDF8" />
           ) : accessibleRouteOnly ? (
             <MaterialCommunityIcons name="wheelchair" size={17} color="#06B6D4" />
           ) : (
@@ -390,6 +401,10 @@ const styles = StyleSheet.create({
   modeToggleBtnDriving: {
     backgroundColor: '#10B981',
     borderColor: '#34D399',
+  },
+  modeToggleBtnTransit: {
+    backgroundColor: 'rgba(2, 132, 199, 0.25)',
+    borderColor: '#38BDF8',
   },
   modeToggleBtnAccessible: {
     backgroundColor: 'rgba(6, 182, 212, 0.16)',

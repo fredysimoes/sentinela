@@ -80,6 +80,7 @@ import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerMo
 import { TvdeTripModal } from './src/components/TvdeTripModal';
 import { MapLayersModal } from './src/components/MapLayersModal';
 import { HalloweenAmbientOverlay } from './src/components/HalloweenAmbientOverlay';
+import { StcpVehicle, fetchStcpLiveVehicles } from './src/services/stcpRealtimeService';
 import {
   TvdeTripSession,
   ParsedTvdeDraft,
@@ -193,6 +194,8 @@ export default function App() {
   const [showPharmaciesOnMap, setShowPharmaciesOnMap] = useState(false);
   const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(false);
   const [showWheelmapOnMap, setShowWheelmapOnMap] = useState(false);
+  const [showStcpBusesOnMap, setShowStcpBusesOnMap] = useState(false);
+  const [stcpVehicles, setStcpVehicles] = useState<StcpVehicle[]>([]);
   const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
@@ -219,6 +222,33 @@ export default function App() {
     notificationSettingsRef.current = notificationSettings;
   }, [notificationSettings]);
 
+  // Polling em Tempo Real de Autocarros STCP (Grande Porto)
+  useEffect(() => {
+    if (!showStcpBusesOnMap) {
+      setStcpVehicles([]);
+      return;
+    }
+
+    let isMounted = true;
+    const loadBuses = async () => {
+      try {
+        const vehicles = await fetchStcpLiveVehicles();
+        if (isMounted && vehicles.length > 0) {
+          setStcpVehicles(vehicles);
+        }
+      } catch (err) {
+        console.warn('Falha ao atualizar autocarros STCP:', err);
+      }
+    };
+
+    loadBuses();
+    const interval = setInterval(loadBuses, 7000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [showStcpBusesOnMap]);
+
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const activeLayersCount = [
@@ -226,6 +256,7 @@ export default function App() {
     showPharmaciesOnMap,
     showHospitalsOnMap,
     showWheelmapOnMap,
+    showStcpBusesOnMap,
   ].filter(Boolean).length;
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
@@ -1439,6 +1470,15 @@ export default function App() {
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
           showWheelmapOnMap={showWheelmapOnMap}
+          showStcpBusesOnMap={showStcpBusesOnMap}
+          stcpVehicles={stcpVehicles}
+          onSelectStcpVehicle={(bus) => {
+            Haptics.selectionAsync();
+            Alert.alert(
+              `STCP Linha ${bus.routeId}`,
+              `Autocarro em circulação no Grande Porto.\nRumo: ${bus.bearing ? `${bus.bearing}º` : 'Em circulação'}`
+            );
+          }}
           activeRoute={
             navState
               ? navState.route
@@ -1862,17 +1902,21 @@ export default function App() {
         onToggleHospitals={() => setShowHospitalsOnMap((prev) => !prev)}
         showWheelmapOnMap={showWheelmapOnMap}
         onToggleWheelmap={() => setShowWheelmapOnMap((prev) => !prev)}
+        showStcpBusesOnMap={showStcpBusesOnMap}
+        onToggleStcpBuses={() => setShowStcpBusesOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
           setShowPharmaciesOnMap(true);
           setShowHospitalsOnMap(true);
           setShowWheelmapOnMap(true);
+          setShowStcpBusesOnMap(true);
         }}
         onDeactivateAllLayers={() => {
           setShowPoliceOnMap(false);
           setShowPharmaciesOnMap(false);
           setShowHospitalsOnMap(false);
           setShowWheelmapOnMap(false);
+          setShowStcpBusesOnMap(false);
         }}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}

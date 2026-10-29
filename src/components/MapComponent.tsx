@@ -236,6 +236,7 @@ import { CATEGORIES, isAccessibilityCategory } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
 import { isProtestInfiltratorVerified, isDaylight } from '../utils/geo';
+import { StcpVehicle, getStcpLineColor } from '../services/stcpRealtimeService';
 import { SelectedMapPoint } from './SelectedPlaceSheet';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { M3Pressable } from './M3MotionWrapper';
@@ -502,6 +503,33 @@ const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSel
   );
 });
 
+// Marcador em Cápsula para Autocarros STCP em Tempo Real
+const StcpBusCapsuleMarker = memo(({ vehicle, onSelect }: { vehicle: StcpVehicle; onSelect?: (vehicle: StcpVehicle) => void }) => {
+  const color = getStcpLineColor(vehicle.routeId);
+  const bearing = typeof vehicle.bearing === 'number' && !isNaN(vehicle.bearing) ? vehicle.bearing : null;
+
+  return (
+    <Marker
+      coordinate={{ latitude: vehicle.lat, longitude: vehicle.lng }}
+      onPress={() => onSelect?.(vehicle)}
+      tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.5 }}
+      flat={false}
+      zIndex={600}
+    >
+      <View style={[styles.busCapsuleWrap, { backgroundColor: color.bg, borderColor: color.border }]}>
+        <MaterialCommunityIcons name="bus-side" size={13} color={color.text} style={styles.busCapsuleIcon} />
+        <Text style={[styles.busCapsuleText, { color: color.text }]}>{vehicle.routeId || 'STCP'}</Text>
+        {bearing !== null && (
+          <View style={[styles.busBearingIndicator, { transform: [{ rotate: `${bearing}deg` }] }]}>
+            <Ionicons name="navigate" size={10} color={color.text} />
+          </View>
+        )}
+      </View>
+    </Marker>
+  );
+});
+
 interface MapComponentProps {
   userLocation: UserLocation | null;
   userHeading?: number;
@@ -513,6 +541,9 @@ interface MapComponentProps {
   showPharmaciesOnMap?: boolean;
   showHospitalsOnMap?: boolean;
   showWheelmapOnMap?: boolean;
+  showStcpBusesOnMap?: boolean;
+  stcpVehicles?: StcpVehicle[];
+  onSelectStcpVehicle?: (vehicle: StcpVehicle) => void;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -551,6 +582,9 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   showPharmaciesOnMap = false,
   showHospitalsOnMap = false,
   showWheelmapOnMap = false,
+  showStcpBusesOnMap = false,
+  stcpVehicles = [],
+  onSelectStcpVehicle,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -1246,6 +1280,15 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             />
           );
         })}
+
+        {/* Live STCP Realtime Bus Capsule Markers (Grande Porto) */}
+        {showStcpBusesOnMap && stcpVehicles.map((vehicle) => (
+          <StcpBusCapsuleMarker
+            key={`stcp-${vehicle.id}-${vehicle.routeId}`}
+            vehicle={vehicle}
+            onSelect={onSelectStcpVehicle}
+          />
+        ))}
 
         {/* Community Hazard Incidents */}
         {filteredIncidents.map((incident) => (
@@ -2083,5 +2126,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.7,
     shadowRadius: 5,
     elevation: 8,
+  },
+
+  // STCP Realtime Bus Capsule Marker (Grande Porto)
+  busCapsuleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 7,
+    paddingVertical: 3.5,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 3.5,
+    elevation: 6,
+    gap: 3.5,
+  },
+  busCapsuleIcon: {
+    marginRight: 1,
+  },
+  busCapsuleText: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+  },
+  busBearingIndicator: {
+    marginLeft: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
