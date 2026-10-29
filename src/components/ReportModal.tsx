@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -84,9 +84,52 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     }
   }, [protestMode, selectedCategory]);
 
+  const lastTapRef = useRef<{ catKey: IncidentCategory | null; time: number }>({
+    catKey: null,
+    time: 0,
+  });
+
   const handleSelectCategory = (cat: IncidentCategory) => {
     Haptics.selectionAsync();
     setSelectedCategory(cat);
+  };
+
+  const handleInstantSubmit = (catKey: IncidentCategory) => {
+    // Caution confirmation specifically for infiltrator reports
+    if (catKey === 'protest_infiltrator') {
+      handleSelectCategory(catKey);
+      return;
+    }
+
+    const catMeta = CATEGORIES[catKey] || CATEGORIES.suspicious;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    onSubmit({
+      category: catKey,
+      title: catMeta.label,
+      description: catMeta.description,
+      latitude: reportCoord.latitude,
+      longitude: reportCoord.longitude,
+      severity: catMeta.severity,
+    });
+
+    setTitle('');
+    setDescription('');
+    setSubmenuMode('main');
+    onClose();
+  };
+
+  const handleCategoryPress = (catKey: IncidentCategory) => {
+    const now = Date.now();
+    const isDoubleTap =
+      lastTapRef.current.catKey === catKey && now - lastTapRef.current.time < 380;
+
+    lastTapRef.current = { catKey, time: now };
+
+    if (isDoubleTap) {
+      handleInstantSubmit(catKey);
+    } else {
+      handleSelectCategory(catKey);
+    }
   };
 
   const handleClose = () => {
@@ -363,9 +406,16 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         )}
 
         {/* Category selection Grid */}
-        <Text style={styles.sectionLabel}>
-          {isAccessibility ? 'SELECIONE A BARREIRA ENCONTRADA' : 'TIPO DE OCORRÊNCIA'}
-        </Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionLabel}>
+            {isAccessibility ? 'SELECIONE A BARREIRA ENCONTRADA' : 'TIPO DE OCORRÊNCIA'}
+          </Text>
+          <View style={styles.quickActionHintBadge}>
+            <MaterialCommunityIcons name="gesture-double-tap" size={13} color="#10B981" />
+            <Text style={styles.quickActionHintText}>2x toque: sinaliza logo</Text>
+          </View>
+        </View>
+
         <View style={styles.categoriesGrid}>
           {currentCategories.map((catKey) => {
             const cat = CATEGORIES[catKey];
@@ -383,7 +433,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                     { borderColor: cat.color, shadowColor: cat.color },
                   ],
                 ]}
-                onPress={() => handleSelectCategory(catKey)}
+                onPress={() => handleCategoryPress(catKey)}
                 activeOpacity={0.78}
               >
                 {isSelected && (
@@ -815,13 +865,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    marginTop: 10,
+  },
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
     color: M3Colors.onSurfaceVariant,
     letterSpacing: 0.8,
-    marginBottom: 8,
-    marginTop: 10,
+  },
+  quickActionHintBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: M3Shapes.full,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  quickActionHintText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#10B981',
   },
   categoriesGrid: {
     flexDirection: 'row',

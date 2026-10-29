@@ -1056,4 +1056,10 @@ export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
     hours: { is24h: true },
     hoursDescription: 'Aberto 24h todos os dias sem interrupção',
   },
+  ...PSP_DISTRITO_PORTO,
+  ...FARMACIAS_DISTRITO_PORTO,
+  ...PSP_DISTRITO_LISBOA,
+  ...FARMACIAS_DISTRITO_LISBOA,
+  ...HOSPITAIS_PORTUGAL,
+  ...WHEELMAP_PORTUGAL,
 ];

@@ -128,7 +128,7 @@ export default function App() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [activeSOSAlerts, setActiveSOSAlerts] = useState<SOSAlert[]>([]);
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
-  const [safePlaces, setSafePlaces] = useState<SafePlaceWithDistance[]>([]);
+  const [safePlaces, setSafePlaces] = useState<SafePlaceWithDistance[]>(() => getSafePlaces('all'));
   const [selectedSafePlace, setSelectedSafePlace] = useState<SafePlace | null>(null);
   const [additionalPlaces, setAdditionalPlaces] = useState<SafePlace[]>([]);
   const regionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

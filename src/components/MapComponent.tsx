@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo, memo } from 'react';
+import React, { useRef, useEffect, useMemo, useState, memo } from 'react';
 import {
   StyleSheet,
   View,
@@ -135,13 +135,18 @@ import { M3Pressable } from './M3MotionWrapper';
 const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
   const status = place.pharmacyStatus || getPharmacyStatus(place);
   const isOpen = status.isOpen;
+  const [tracksView, setTracksView] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setTracksView(false), 200);
+    return () => clearTimeout(t);
+  }, [isOpen]);
 
   return (
     <Marker
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
-      tracksViewChanges={false}
-      anchor={{ x: 0.5, y: 0.92 }}
+      tracksViewChanges={tracksView}
+      anchor={{ x: 0.5, y: 1.0 }}
     >
       <View style={styles.teardropMarkerWrap}>
         <View
@@ -170,13 +175,18 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
 const HospitalMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
   const status = place.pharmacyStatus || getPharmacyStatus(place);
   const isOpen = status.isOpen;
+  const [tracksView, setTracksView] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setTracksView(false), 200);
+    return () => clearTimeout(t);
+  }, [isOpen]);
 
   return (
     <Marker
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
-      tracksViewChanges={false}
-      anchor={{ x: 0.5, y: 0.92 }}
+      tracksViewChanges={tracksView}
+      anchor={{ x: 0.5, y: 1.0 }}
     >
       <View style={styles.teardropMarkerWrap}>
         <View
@@ -207,12 +217,18 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
   const isGNR = place.type === 'gnr';
   const policeTag = isPSP ? 'PSP' : isGNR ? 'GNR' : 'PJ';
 
+  const [tracksView, setTracksView] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setTracksView(false), 200);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <Marker
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
-      tracksViewChanges={false}
-      anchor={{ x: 0.5, y: 0.92 }}
+      tracksViewChanges={tracksView}
+      anchor={{ x: 0.5, y: 1.0 }}
     >
       <View style={styles.teardropMarkerWrap}>
         <View style={[styles.teardropHead, styles.policeHead]}>
@@ -232,12 +248,18 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
 });
 
 const SchoolMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  const [tracksView, setTracksView] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setTracksView(false), 200);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <Marker
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
-      tracksViewChanges={false}
-      anchor={{ x: 0.5, y: 0.92 }}
+      tracksViewChanges={tracksView}
+      anchor={{ x: 0.5, y: 1.0 }}
     >
       <View style={styles.teardropMarkerWrap}>
         <View style={[styles.teardropHead, styles.schoolHead]}>
@@ -257,12 +279,18 @@ const SchoolMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
 });
 
 const HeritageMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  const [tracksView, setTracksView] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setTracksView(false), 200);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <Marker
       coordinate={{ latitude: place.latitude, longitude: place.longitude }}
       onPress={onSelect}
-      tracksViewChanges={false}
-      anchor={{ x: 0.5, y: 0.92 }}
+      tracksViewChanges={tracksView}
+      anchor={{ x: 0.5, y: 1.0 }}
     >
       <View style={styles.teardropMarkerWrap}>
         <View style={[styles.teardropHead, styles.heritageHead]}>
@@ -275,6 +303,54 @@ const HeritageMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
         <View style={[styles.teardropTip, styles.heritageTip]} />
         <View style={styles.heritageMicroBadge}>
           <Text style={styles.heritageMicroBadgeText}>PATRIMÓNIO</Text>
+        </View>
+      </View>
+    </Marker>
+  );
+});
+
+const WheelmapMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  const isYes = place.wheelchair === 'yes';
+  const isLimited = place.wheelchair === 'limited';
+  const color = isYes ? '#10B981' : isLimited ? '#F59E0B' : '#EF4444';
+  const borderColor = isYes ? '#6EE7B7' : isLimited ? '#FDE68A' : '#FCA5A5';
+
+  const [tracksView, setTracksView] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setTracksView(false), 200);
+    return () => clearTimeout(t);
+  }, [place.wheelchair]);
+
+  return (
+    <Marker
+      coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+      onPress={onSelect}
+      tracksViewChanges={tracksView}
+      anchor={{ x: 0.5, y: 1.0 }}
+    >
+      <View style={styles.teardropMarkerWrap}>
+        <View style={[styles.teardropHead, { backgroundColor: color, borderColor, borderWidth: 2 }]}>
+          <MaterialCommunityIcons
+            name="wheelchair"
+            size={18}
+            color="#FFFFFF"
+          />
+        </View>
+        <View
+          style={[
+            styles.teardropTip,
+            {
+              backgroundColor: color,
+              borderColor,
+              borderRightWidth: 1.5,
+              borderBottomWidth: 1.5,
+            },
+          ]}
+        />
+        <View style={[styles.wheelmapMicroBadge, { borderColor }]}>
+          <Text style={[styles.wheelmapMicroBadgeText, { color: borderColor }]}>
+            {isYes ? 'WHEELMAP' : 'PARCIAL'}
+          </Text>
         </View>
       </View>
     </Marker>
@@ -393,6 +469,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   const [mapCenter, setMapCenter] = React.useState<{ latitude: number; longitude: number } | null>(null);
   const [animatedRouteCoords, setAnimatedRouteCoords] = React.useState<RouteCoordinate[]>([]);
   const hasCenteredInitialRef = useRef(false);
+  const lastFilteredCenterRef = useRef<{ latitude: number; longitude: number } | null>(null);
 
   // Progressive Neon Route Drawing Animation (max 2.5s <= 3s)
   useEffect(() => {
@@ -462,6 +539,20 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
     latitudeDelta: number;
     longitudeDelta: number;
   }) => {
+    // Avoid re-sorting / recalculating places on jitter / small pans (< 350 meters)
+    const prev = lastFilteredCenterRef.current;
+    if (prev) {
+      const dLat = (region.latitude - prev.latitude) * 111000;
+      const dLng = (region.longitude - prev.longitude) * 111000 * Math.cos((region.latitude * Math.PI) / 180);
+      const dist = Math.hypot(dLat, dLng);
+      if (dist < 350) {
+        if (onRegionChangeComplete) {
+          onRegionChangeComplete(region);
+        }
+        return;
+      }
+    }
+    lastFilteredCenterRef.current = { latitude: region.latitude, longitude: region.longitude };
     setMapCenter({ latitude: region.latitude, longitude: region.longitude });
     if (onRegionChangeComplete) {
       onRegionChangeComplete(region);
@@ -652,26 +743,30 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
 
     if (showPoliceOnMap) {
       const police = safePlaces.filter((p) => p.type === 'psp' || p.type === 'gnr' || p.type === 'pj');
-      result.push(...sortByDistanceToCenter(police).slice(0, 50));
+      result.push(...sortByDistanceToCenter(police).slice(0, 20));
     }
 
     if (showPharmaciesOnMap) {
       const pharmacies = safePlaces.filter((p) => p.type === 'pharmacy');
-      result.push(...sortByDistanceToCenter(pharmacies).slice(0, 75));
+      result.push(...sortByDistanceToCenter(pharmacies).slice(0, 25));
     }
 
     if (showHospitalsOnMap) {
       const hospitals = safePlaces.filter((p) => p.type === 'hospital');
-      result.push(...sortByDistanceToCenter(hospitals).slice(0, 35));
+      result.push(...sortByDistanceToCenter(hospitals).slice(0, 15));
     }
 
     // Escolas (cartografia integrada permanente no backend)
     const schools = safePlaces.filter((p) => p.type === 'school');
-    result.push(...sortByDistanceToCenter(schools).slice(0, 40));
+    result.push(...sortByDistanceToCenter(schools).slice(0, 15));
 
     // Património Cultural (cartografia integrada permanente no backend)
     const heritage = safePlaces.filter((p) => p.type === 'heritage');
-    result.push(...sortByDistanceToCenter(heritage).slice(0, 30));
+    result.push(...sortByDistanceToCenter(heritage).slice(0, 15));
+
+    // Wheelmap Pontos de Acessibilidade (OpenStreetMap Wheelmap)
+    const wheelmapPlaces = safePlaces.filter((p) => p.type === 'wheelmap');
+    result.push(...sortByDistanceToCenter(wheelmapPlaces).slice(0, 20));
 
     return result;
   }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, mapCenter, userLocation]);
@@ -965,6 +1060,16 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           if (place.type === 'hospital') {
             return (
               <HospitalMarker
+                key={place.id}
+                place={place}
+                onSelect={() => onSelectSafePlace(place)}
+              />
+            );
+          }
+
+          if (place.type === 'wheelmap') {
+            return (
+              <WheelmapMarker
                 key={place.id}
                 place={place}
                 onSelect={() => onSelectSafePlace(place)}
@@ -1630,6 +1735,24 @@ const styles = StyleSheet.create({
   heritageMicroBadgeText: {
     color: '#FDE68A',
     fontSize: 6,
+    fontWeight: '900',
+    letterSpacing: 0.2,
+  },
+
+  // Wheelmap Accessibility Teardrop Badge
+  wheelmapMicroBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#080A0C',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 3.5,
+    paddingVertical: 0.5,
+    zIndex: 3,
+  },
+  wheelmapMicroBadgeText: {
+    fontSize: 6.5,
     fontWeight: '900',
     letterSpacing: 0.2,
   },
