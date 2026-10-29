@@ -318,6 +318,50 @@ const SchoolMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
   );
 });
 
+const HeritageMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  return (
+    <Marker
+      coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+      onPress={onSelect}
+      tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.92 }}
+    >
+      <View style={styles.teardropMarkerWrap}>
+        {/* Solid Amber / Bronze Teardrop Head with Castle Silhouette */}
+        <View style={[styles.teardropHead, styles.heritageHead]}>
+          <MaterialCommunityIcons
+            name="castle"
+            size={18}
+            color="#FFFFFF"
+          />
+        </View>
+        <View style={[styles.teardropTip, styles.heritageTip]} />
+        <View style={styles.heritageMicroBadge}>
+          <Text style={styles.heritageMicroBadgeText}>PATRIMÓNIO</Text>
+        </View>
+        {/* Wheelmap Accessibility Micro Badge */}
+        {place.wheelchair && (
+          <View
+            style={[
+              styles.wheelmapMicroTag,
+              {
+                backgroundColor:
+                  place.wheelchair === 'yes'
+                    ? '#10B981'
+                    : place.wheelchair === 'limited'
+                    ? '#F59E0B'
+                    : '#EF4444',
+              },
+            ]}
+          >
+            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+          </View>
+        )}
+      </View>
+    </Marker>
+  );
+});
+
 const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSelect: () => void }) => {
   const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
   const isAccess = isAccessibilityCategory(incident.category);
@@ -358,11 +402,12 @@ interface MapComponentProps {
   incidents: Incident[];
   activeSOSAlerts: SOSAlert[];
   safePlaces: SafePlaceWithDistance[];
-  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy' | 'hospital' | 'school' | null;
+  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy' | 'hospital' | 'school' | 'heritage' | null;
   showPoliceOnMap?: boolean;
   showPharmaciesOnMap?: boolean;
   showHospitalsOnMap?: boolean;
   showSchoolsOnMap?: boolean;
+  showHeritageOnMap?: boolean;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -400,6 +445,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   showPharmaciesOnMap = true,
   showHospitalsOnMap = true,
   showSchoolsOnMap = true,
+  showHeritageOnMap = true,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -709,8 +755,13 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
       result.push(...sortByDistanceToCenter(schools).slice(0, 50));
     }
 
+    if (showHeritageOnMap) {
+      const heritage = safePlaces.filter((p) => p.type === 'heritage');
+      result.push(...sortByDistanceToCenter(heritage).slice(0, 40));
+    }
+
     return result;
-  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, showSchoolsOnMap, mapCenter, userLocation]);
+  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, showSchoolsOnMap, showHeritageOnMap, mapCenter, userLocation]);
 
   // Memoized filter of incidents
   const filteredIncidents = useMemo(() => {
@@ -1011,6 +1062,16 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           if (place.type === 'school') {
             return (
               <SchoolMarker
+                key={place.id}
+                place={place}
+                onSelect={() => onSelectSafePlace(place)}
+              />
+            );
+          }
+
+          if (place.type === 'heritage') {
+            return (
+              <HeritageMarker
                 key={place.id}
                 place={place}
                 onSelect={() => onSelectSafePlace(place)}
@@ -1644,6 +1705,37 @@ const styles = StyleSheet.create({
     fontSize: 6.5,
     fontWeight: '900',
     letterSpacing: 0.3,
+  },
+
+  // Heritage (Património Cultural Classificado) Teardrop: Amber / Bronze
+  heritageHead: {
+    backgroundColor: '#D97706',
+    borderWidth: 2,
+    borderColor: '#FDE68A',
+  },
+  heritageTip: {
+    backgroundColor: '#D97706',
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: '#FDE68A',
+  },
+  heritageMicroBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#080A0C',
+    borderWidth: 1,
+    borderColor: '#D97706',
+    borderRadius: 5,
+    paddingHorizontal: 3,
+    paddingVertical: 0.5,
+    zIndex: 3,
+  },
+  heritageMicroBadgeText: {
+    color: '#FDE68A',
+    fontSize: 6,
+    fontWeight: '900',
+    letterSpacing: 0.2,
   },
 
   // Selected Map Point Pin (POI / Custom Point)

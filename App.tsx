@@ -171,6 +171,7 @@ export default function App() {
   const [showPharmaciesOnMap, setShowPharmaciesOnMap] = useState(true);
   const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(true);
   const [showSchoolsOnMap, setShowSchoolsOnMap] = useState(true);
+  const [showHeritageOnMap, setShowHeritageOnMap] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
   const [homeAddress, setHomeAddress] = useState<HomeAddress | null>(null);
@@ -1404,6 +1405,7 @@ export default function App() {
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
           showSchoolsOnMap={showSchoolsOnMap}
+          showHeritageOnMap={showHeritageOnMap}
           activeRoute={
             navState
               ? navState.route
@@ -1558,6 +1560,7 @@ export default function App() {
                   setShowPharmaciesOnMap(true);
                   setShowHospitalsOnMap(true);
                   setShowSchoolsOnMap(true);
+                  setShowHeritageOnMap(true);
                 }}
               >
                 <Ionicons
@@ -1680,6 +1683,33 @@ export default function App() {
                   ]}
                 >
                   Escolas
+                </Text>
+              </M3Pressable>
+
+              {/* 7. Heritage Quick Chip (Selected by default, toggles Heritage markers on/off) */}
+              <M3Pressable
+                scaleOnPress={0.94}
+                style={[
+                  styles.filterChip,
+                  showHeritageOnMap && styles.filterChipActiveHeritage,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setShowHeritageOnMap((prev) => !prev);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="castle"
+                  size={14}
+                  color={showHeritageOnMap ? '#FFFFFF' : '#D97706'}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    showHeritageOnMap && styles.filterChipTextActiveDark,
+                  ]}
+                >
+                  Património
                 </Text>
               </M3Pressable>
 
@@ -2301,6 +2331,10 @@ const styles = StyleSheet.create({
   filterChipActiveSchool: {
     backgroundColor: '#8B5CF6',
     borderColor: '#C4B5FD',
+  },
+  filterChipActiveHeritage: {
+    backgroundColor: '#D97706',
+    borderColor: '#FDE68A',
   },
   filterChipActive: {
     backgroundColor: M3Colors.secondaryContainer,

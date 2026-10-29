@@ -135,6 +135,17 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           isMci: true,
           badgeText: 'ESCOLA SEGURA',
         };
+      case 'heritage':
+        return {
+          title: place.protectionTitle || 'Património Cultural Classificado',
+          color: '#D97706',
+          bg: 'rgba(217, 119, 6, 0.16)',
+          icon: 'castle',
+          isMci: true,
+          badgeText: place.protectionTitle
+            ? place.protectionTitle.toUpperCase()
+            : 'PATRIMÓNIO CULTURAL',
+        };
     }
   };
 
@@ -221,6 +232,21 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           </View>
           <Text style={styles.schoolSafeDesc}>
             Perímetro de segurança prioritário com vigilância policial e acalmia de tráfego pedonal.
+          </Text>
+        </View>
+      )}
+
+      {/* Património Cultural Classificado Badge (Património Cultural, I.P.) */}
+      {place.type === 'heritage' && (
+        <View style={styles.heritageBanner}>
+          <View style={styles.heritageHeader}>
+            <MaterialCommunityIcons name="castle" size={16} color="#D97706" />
+            <Text style={styles.heritageTitle}>
+              {place.protectionTitle || 'Património Cultural Classificado'}
+            </Text>
+          </View>
+          <Text style={styles.heritageDesc}>
+            Imóvel de proteção oficial tutelado pelo Património Cultural, I.P. Ponto de referência e vigilância urbana.
           </Text>
         </View>
       )}
@@ -483,6 +509,30 @@ const styles = StyleSheet.create({
     color: '#8B5CF6',
   },
   schoolSafeDesc: {
+    fontSize: 11,
+    color: M3Colors.onSurfaceVariant,
+    lineHeight: 16,
+  },
+  heritageBanner: {
+    backgroundColor: 'rgba(217, 119, 6, 0.08)',
+    borderRadius: M3Shapes.medium,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 119, 6, 0.3)',
+  },
+  heritageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  heritageTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#D97706',
+  },
+  heritageDesc: {
     fontSize: 11,
     color: M3Colors.onSurfaceVariant,
     lineHeight: 16,

@@ -7,7 +7,7 @@ export interface AddressSuggestion {
   subtitle: string;
   latitude: number;
   longitude: number;
-  type: 'police' | 'pharmacy' | 'street' | 'place' | 'address' | 'school';
+  type: 'police' | 'pharmacy' | 'street' | 'place' | 'address' | 'school' | 'heritage';
   houseNumber?: string;
   streetName?: string;
   postcode?: string;
@@ -163,8 +163,10 @@ export async function searchAddressSuggestions(
               latitude: lat,
               longitude: lon,
               type:
-                props.osm_key === 'amenity' &&
-                (props.osm_value === 'school' || props.osm_value === 'university' || props.osm_value === 'college')
+                props.osm_key === 'historic' || props.osm_key === 'heritage'
+                  ? 'heritage'
+                  : props.osm_key === 'amenity' &&
+                    (props.osm_value === 'school' || props.osm_value === 'university' || props.osm_value === 'college')
                   ? 'school'
                   : isAddress
                   ? 'address'

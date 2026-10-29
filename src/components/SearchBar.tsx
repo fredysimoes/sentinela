@@ -147,17 +147,19 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const getItemIcon = (type: AddressSuggestion['type']) => {
     switch (type) {
       case 'police':
-        return { name: 'shield-sharp', color: '#3B82F6' };
+        return { name: 'shield-sharp', color: '#3B82F6', isMci: false };
       case 'pharmacy':
-        return { name: 'medical', color: '#10B981' };
+        return { name: 'medical', color: '#10B981', isMci: false };
       case 'address':
-        return { name: 'home-outline', color: '#06B6D4' };
+        return { name: 'home-outline', color: '#06B6D4', isMci: false };
       case 'school':
-        return { name: 'school-outline', color: '#8B5CF6' };
+        return { name: 'school-outline', color: '#8B5CF6', isMci: false };
+      case 'heritage':
+        return { name: 'castle', color: '#D97706', isMci: true };
       case 'street':
-        return { name: 'navigate-circle', color: '#38BDF8' };
+        return { name: 'navigate-circle', color: '#38BDF8', isMci: false };
       default:
-        return { name: 'location', color: '#F59E0B' };
+        return { name: 'location', color: '#F59E0B', isMci: false };
     }
   };
 
@@ -283,7 +285,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                   activeOpacity={0.7}
                 >
                   <View style={[styles.itemPinWrap, { backgroundColor: `${iconInfo.color}1A` }]}>
-                    <Ionicons name={iconInfo.name as any} size={18} color={iconInfo.color} />
+                    {iconInfo.isMci ? (
+                      <MaterialCommunityIcons name={iconInfo.name as any} size={18} color={iconInfo.color} />
+                    ) : (
+                      <Ionicons name={iconInfo.name as any} size={18} color={iconInfo.color} />
+                    )}
                   </View>
 
                   <View style={styles.itemTextWrap}>

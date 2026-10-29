@@ -37,8 +37,12 @@ export async function fetchOsmPlacesInBoundingBox(params: {
   node["amenity"="school"](${minLat},${minLon},${maxLat},${maxLon});
   way["amenity"="school"](${minLat},${minLon},${maxLat},${maxLon});
   node["amenity"="university"](${minLat},${minLon},${maxLat},${maxLon});
+  node["heritage"](${minLat},${minLon},${maxLat},${maxLon});
+  way["heritage"](${minLat},${minLon},${maxLat},${maxLon});
+  node["historic"="castle"](${minLat},${minLon},${maxLat},${maxLon});
+  node["historic"="monument"](${minLat},${minLon},${maxLat},${maxLon});
 );
-out center 120;`;
+out center 140;`;
 
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
@@ -261,6 +265,66 @@ out center 120;`;
             wheelchairToilet,
             schoolType,
             operator,
+          });
+        } else if (
+          tags.heritage ||
+          tags['heritage:operator'] === 'pc' ||
+          tags.protection_title ||
+          tags.historic === 'castle' ||
+          tags.historic === 'monument' ||
+          tags.historic === 'memorial' ||
+          tags.historic === 'archaeological_site'
+        ) {
+          const rawName = tags.name || tags['name:pt'];
+          if (!rawName) continue;
+
+          let heritageProtection: 'national_monument' | 'public_interest' | 'municipal_interest' | 'unesco' | 'classified' = 'classified';
+          const protTitle = (tags.protection_title || tags.short_protection_title || '').toLowerCase();
+
+          if (tags.heritage === '1' || protTitle.includes('unesco') || protTitle.includes('mundial')) {
+            heritageProtection = 'unesco';
+          } else if (tags.heritage === '2' || protTitle.includes('monumento nacional') || protTitle.includes('nacional')) {
+            heritageProtection = 'national_monument';
+          } else if (protTitle.includes('público') || protTitle.includes('publico') || protTitle.includes('iip')) {
+            heritageProtection = 'public_interest';
+          } else if (protTitle.includes('municipal') || protTitle.includes('iim')) {
+            heritageProtection = 'municipal_interest';
+          }
+
+          const protectionTitle =
+            tags.protection_title ||
+            (heritageProtection === 'unesco'
+              ? 'Património Mundial da UNESCO'
+              : heritageProtection === 'national_monument'
+              ? 'Monumento Nacional'
+              : heritageProtection === 'public_interest'
+              ? 'Imóvel de Interesse Público'
+              : heritageProtection === 'municipal_interest'
+              ? 'Imóvel de Interesse Municipal'
+              : 'Património Cultural Classificado');
+
+          const street = tags['addr:street']
+            ? `${tags['addr:street']}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`
+            : 'Portugal';
+          const city = tags['addr:city'] || tags['addr:suburb'] || '';
+          const phone = tags.phone || tags['contact:phone'];
+
+          places.push({
+            id: `osm-heritage-${el.id}`,
+            type: 'heritage',
+            name: rawName,
+            address: street,
+            city: city || 'Local',
+            district: '',
+            phone,
+            latitude: lat,
+            longitude: lon,
+            hoursDescription: `${protectionTitle} · Património Cultural, I.P.`,
+            wheelchair,
+            wheelchairDescription,
+            wheelchairToilet,
+            heritageProtection,
+            protectionTitle,
           });
         }
       }
