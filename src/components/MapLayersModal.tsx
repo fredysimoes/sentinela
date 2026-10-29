@@ -31,6 +31,10 @@ interface MapLayersModalProps {
   onToggleStcpBuses?: () => void;
   showUnirBusesOnMap?: boolean;
   onToggleUnirBuses?: () => void;
+  showCarrisBusesOnMap?: boolean;
+  onToggleCarrisBuses?: () => void;
+  showCarrisMetroBusesOnMap?: boolean;
+  onToggleCarrisMetroBuses?: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -55,6 +59,10 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onToggleStcpBuses,
   showUnirBusesOnMap = false,
   onToggleUnirBuses,
+  showCarrisBusesOnMap = false,
+  onToggleCarrisBuses,
+  showCarrisMetroBusesOnMap = false,
+  onToggleCarrisMetroBuses,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -69,9 +77,11 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     showWheelmapOnMap,
     showStcpBusesOnMap,
     showUnirBusesOnMap,
+    showCarrisBusesOnMap,
+    showCarrisMetroBusesOnMap,
   ].filter(Boolean).length;
 
-  const allLayersActive = activeLayersCount === 6;
+  const allLayersActive = activeLayersCount === 8;
 
   const INFRASTRUCTURE_LAYERS: {
     id: string;
@@ -95,11 +105,29 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     {
       id: 'unir',
       name: 'Autocarros UNIR',
-      subtitle: 'Área Metropolitana em direto',
+      subtitle: 'Porto Metropolitano em direto',
       icon: 'bus',
       color: '#0891B2',
       active: showUnirBusesOnMap,
       onToggle: onToggleUnirBuses || (() => {}),
+    },
+    {
+      id: 'carris',
+      name: 'Carris Lisboa',
+      subtitle: 'Lisboa Urbana e Elétricos em direto',
+      icon: 'bus-side',
+      color: '#EAB308',
+      active: showCarrisBusesOnMap,
+      onToggle: onToggleCarrisBuses || (() => {}),
+    },
+    {
+      id: 'carris_metro',
+      name: 'Carris Metropolitana',
+      subtitle: 'Grande Lisboa e Margem Sul em direto',
+      icon: 'bus',
+      color: '#F59E0B',
+      active: showCarrisMetroBusesOnMap,
+      onToggle: onToggleCarrisMetroBuses || (() => {}),
     },
     {
       id: 'pharmacy',

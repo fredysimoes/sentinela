@@ -503,12 +503,15 @@ const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSel
   );
 });
 
-// Marcador em Cápsula para Autocarros STCP e UNIR em Tempo Real
+// Marcador em Cápsula para Transportes Públicos em Tempo Real (STCP, UNIR, Carris, Carris Metropolitana)
 const StcpBusCapsuleMarker = memo(({ vehicle, onSelect }: { vehicle: StcpVehicle; onSelect?: (vehicle: StcpVehicle) => void }) => {
   const color = getStcpLineColor(vehicle.routeId, vehicle.operator);
   const bearing = typeof vehicle.bearing === 'number' && !isNaN(vehicle.bearing) ? vehicle.bearing : null;
   const isUnir = vehicle.operator === 'unir';
-  const displayLine = vehicle.displayLine || vehicle.routeId || (isUnir ? 'UNIR' : 'STCP');
+  const isCarris = vehicle.operator === 'carris';
+  const isCarrisMetro = vehicle.operator === 'carris_metropolitana';
+  const isTram = vehicle.vehicleType === 'tram' || /E$/i.test(vehicle.displayLine || vehicle.routeId);
+  const displayLine = vehicle.displayLine || vehicle.routeId || (isUnir ? 'UNIR' : isCarris ? 'CARRIS' : isCarrisMetro ? 'CM' : 'STCP');
 
   return (
     <Marker
@@ -520,11 +523,26 @@ const StcpBusCapsuleMarker = memo(({ vehicle, onSelect }: { vehicle: StcpVehicle
       zIndex={600}
     >
       <View style={[styles.busCapsuleWrap, { backgroundColor: color.bg, borderColor: color.border }]}>
-        <MaterialCommunityIcons name="bus-side" size={13} color={color.text} style={styles.busCapsuleIcon} />
+        <MaterialCommunityIcons
+          name={isTram ? 'tram' : 'bus-side'}
+          size={13}
+          color={color.text}
+          style={styles.busCapsuleIcon}
+        />
         <Text style={[styles.busCapsuleText, { color: color.text }]}>{displayLine}</Text>
         {isUnir && (
           <View style={styles.unirMicroBadge}>
             <Text style={styles.unirMicroBadgeText}>UNIR</Text>
+          </View>
+        )}
+        {isCarrisMetro && (
+          <View style={[styles.unirMicroBadge, { backgroundColor: 'rgba(0, 0, 0, 0.28)' }]}>
+            <Text style={[styles.unirMicroBadgeText, { color: '#0F172A' }]}>CM</Text>
+          </View>
+        )}
+        {isTram && (
+          <View style={[styles.unirMicroBadge, { backgroundColor: 'rgba(255, 255, 255, 0.3)' }]}>
+            <Text style={[styles.unirMicroBadgeText, { color: color.text }]}>ELÉTRICO</Text>
           </View>
         )}
         {bearing !== null && (

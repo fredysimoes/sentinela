@@ -4,6 +4,7 @@
  * intermodais (Metro do Porto + STCP) através dos nós de dados abertos do Porto.
  */
 
+import { transit_realtime } from 'gtfs-realtime-bindings';
 import { PedestrianRoute, RouteCoordinate, RouteStep } from '../types/navigation';
 import { calculateDistanceMeters } from '../utils/geo';
 import { formatDuration, formatDistance, calculateEstimatedArrival } from './routingService';
@@ -16,19 +17,56 @@ export interface StcpVehicle {
   lat: number;
   lng: number;
   bearing?: number;
-  operator: 'stcp' | 'unir' | string;
+  operator: 'stcp' | 'unir' | 'carris' | 'carris_metropolitana' | string;
+  vehicleType?: 'bus' | 'tram' | string;
   timestamp?: number | null;
   speed?: number | null;
 }
 
 /**
- * Paleta de cores oficiais da rede STCP e UNIR por família de linhas
+ * Paleta de cores oficiais das redes STCP, UNIR, Carris e Carris Metropolitana
  */
 export function getTransitLineColor(routeId: string, operator?: string): { bg: string; border: string; text: string } {
   const clean = String(routeId || '').trim().toUpperCase();
 
-  // Se for operador UNIR ou carreira de 4 dígitos
-  if (operator === 'unir' || /^\d{4}/.test(clean)) {
+  // Carris (Lisboa Urbana)
+  if (operator === 'carris') {
+    // Elétricos Históricos e Rápidos (12E, 15E, 18E, 24E, 25E, 28E)
+    if (clean.endsWith('E') || clean.includes('E')) {
+      return { bg: '#B45309', border: '#FDE047', text: '#FFFFFF' };
+    }
+    // Linhas Noturnas de Lisboa (201 a 210)
+    if (clean.startsWith('20') || clean.startsWith('21')) {
+      return { bg: '#0F172A', border: '#334155', text: '#F8FAFC' };
+    }
+    // Amarelo Característico da Carris Lisboa
+    return { bg: '#EAB308', border: '#FEF08A', text: '#0F172A' };
+  }
+
+  // Carris Metropolitana (Área Metropolitana de Lisboa)
+  if (operator === 'carris_metropolitana') {
+    const num = parseInt(clean, 10);
+    // Área 1: Amadora, Cascais, Oeiras, Sintra (Linhas 1xxx)
+    if (num >= 1000 && num < 2000) {
+      return { bg: '#F59E0B', border: '#FDE68A', text: '#0F172A' };
+    }
+    // Área 2: Loures, Mafra, Odivelas, Vila Franca de Xira (Linhas 2xxx)
+    if (num >= 2000 && num < 3000) {
+      return { bg: '#D97706', border: '#FBBF24', text: '#FFFFFF' };
+    }
+    // Área 3: Almada, Seixal, Sesimbra (Linhas 3xxx)
+    if (num >= 3000 && num < 4000) {
+      return { bg: '#EA580C', border: '#FB923C', text: '#FFFFFF' };
+    }
+    // Área 4: Alcochete, Barreiro, Moita, Montijo, Palmela, Setúbal (Linhas 4xxx)
+    if (num >= 4000 && num < 5000) {
+      return { bg: '#C2410C', border: '#F97316', text: '#FFFFFF' };
+    }
+    return { bg: '#F59E0B', border: '#FDE68A', text: '#0F172A' };
+  }
+
+  // Se for operador UNIR ou carreira de 4 dígitos da AMP
+  if (operator === 'unir' || (/^\d{4}/.test(clean) && clean.length === 4 && parseInt(clean, 10) >= 5000)) {
     const num = parseInt(clean, 10);
     // Lote 1 & 3: Linhas 3000, 5000, 6000 (Norte Litoral - Matosinhos / Maia / Póvoa)
     if ((num >= 3000 && num < 4000) || (num >= 5000 && num < 7000)) {
@@ -249,6 +287,214 @@ export async function fetchPortoLiveBuses(options?: {
       }
     }
   });
+
+  return allVehicles;
+}
+
+/**
+ * Obtém a telemetria em tempo real dos autocarros e elétricos da Carris (Lisboa Urbana)
+ * Consome o feed oficial GTFS-Realtime Protobuf da Carris Gateway
+ */
+export async function fetchCarrisLiveVehicles(): Promise<StcpVehicle[]> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+    const response = await fetch('https://gateway.carris.pt/gateway/gtfs/api/v2.11/GTFS/realtime/vehiclepositions', {
+      headers: {
+        Accept: 'application/x-protobuf, application/octet-stream, */*',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Falha ao obter autocarros Carris: ${response.status}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const u8 = new Uint8Array(arrayBuffer);
+    const feed = transit_realtime.FeedMessage.decode(u8);
+
+    if (!feed || !Array.isArray(feed.entity)) {
+      return [];
+    }
+
+    const validVehicles: StcpVehicle[] = [];
+
+    for (const entity of feed.entity) {
+      const v = entity.vehicle;
+      if (!v || !v.position) continue;
+
+      const lat = v.position.latitude;
+      const lng = v.position.longitude;
+
+      if (
+        typeof lat === 'number' &&
+        typeof lng === 'number' &&
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        lat >= 38.45 &&
+        lat <= 39.15 &&
+        lng >= -9.55 &&
+        lng <= -8.80
+      ) {
+        // Ex.: id = "2799_727" -> carreira 727; "558_28E" -> elétrico 28E
+        const idParts = String(entity.id || '').split('_');
+        let displayLine = idParts.length > 1 ? idParts[1] : '';
+        if (!displayLine) {
+          displayLine = String(v.trip?.routeId || v.vehicle?.id || 'CARRIS');
+        }
+
+        const isTram = /E$/i.test(displayLine);
+
+        validVehicles.push({
+          id: String(entity.id || `carris-${lat}-${lng}`),
+          routeId: displayLine,
+          displayLine,
+          directionId: Number(v.trip?.directionId ?? 0),
+          lat,
+          lng,
+          bearing: typeof v.position.bearing === 'number' && !isNaN(v.position.bearing) ? v.position.bearing : undefined,
+          operator: 'carris',
+          vehicleType: isTram ? 'tram' : 'bus',
+          timestamp: typeof v.timestamp === 'number' ? v.timestamp : null,
+          speed: typeof v.position.speed === 'number' ? v.position.speed : null,
+        });
+      }
+    }
+
+    return validVehicles;
+  } catch (error) {
+    console.warn('Erro ao consultar autocarros Carris Lisboa em tempo real:', error);
+    return [];
+  }
+}
+
+/**
+ * Obtém a telemetria em tempo real dos autocarros da Carris Metropolitana (AML)
+ * Consome a API pública em JSON da TML / Carris Metropolitana
+ */
+export async function fetchCarrisMetropolitanaLiveVehicles(): Promise<StcpVehicle[]> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+    const response = await fetch('https://api.carrismetropolitana.pt/v2/vehicles', {
+      headers: {
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Falha ao obter autocarros Carris Metropolitana: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    const validVehicles: StcpVehicle[] = [];
+
+    for (const v of data) {
+      const lat = typeof v.lat === 'number' ? v.lat : parseFloat(v.lat);
+      const lng = typeof v.lon === 'number' ? v.lon : parseFloat(v.lon);
+
+      if (
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        lat >= 38.30 &&
+        lat <= 39.25 &&
+        lng >= -9.60 &&
+        lng <= -8.45
+      ) {
+        const lineId = String(v.line_id || '').trim();
+
+        validVehicles.push({
+          id: String(v.id || `cm-${lineId}-${lat}-${lng}`),
+          routeId: lineId,
+          displayLine: lineId,
+          directionId: Number(v.direction_id ?? 0),
+          lat,
+          lng,
+          bearing: typeof v.bearing === 'number' && !isNaN(v.bearing) ? v.bearing : undefined,
+          operator: 'carris_metropolitana',
+          vehicleType: 'bus',
+          timestamp: v.timestamp ? Number(v.timestamp) : null,
+          speed: typeof v.speed === 'number' ? v.speed : null,
+        });
+      }
+    }
+
+    return validVehicles;
+  } catch (error) {
+    console.warn('Erro ao consultar autocarros Carris Metropolitana em tempo real:', error);
+    return [];
+  }
+}
+
+export interface UnifiedTransitOptions {
+  includeStcp?: boolean;
+  includeUnir?: boolean;
+  includeCarris?: boolean;
+  includeCarrisMetropolitana?: boolean;
+  userCoordinate?: { latitude: number; longitude: number } | null;
+  maxDistanceKm?: number;
+}
+
+/**
+ * Consulta unificada e otimizada de transportes em tempo real (Porto + Lisboa)
+ * Permite filtrar por proximidade para poupança de bateria, dados móveis e memória.
+ */
+export async function fetchUnifiedTransitBuses(options: UnifiedTransitOptions): Promise<StcpVehicle[]> {
+  const {
+    includeStcp = false,
+    includeUnir = false,
+    includeCarris = false,
+    includeCarrisMetropolitana = false,
+    userCoordinate,
+    maxDistanceKm = 40,
+  } = options;
+
+  const promises: Promise<StcpVehicle[]>[] = [];
+
+  if (includeStcp) promises.push(fetchStcpLiveVehicles());
+  if (includeUnir) promises.push(fetchUnirLiveVehicles());
+  if (includeCarris) promises.push(fetchCarrisLiveVehicles());
+  if (includeCarrisMetropolitana) promises.push(fetchCarrisMetropolitanaLiveVehicles());
+
+  if (promises.length === 0) {
+    return [];
+  }
+
+  const results = await Promise.allSettled(promises);
+  const allVehicles: StcpVehicle[] = [];
+  const seenIds = new Set<string>();
+
+  for (const res of results) {
+    if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+      for (const v of res.value) {
+        if (!seenIds.has(v.id)) {
+          seenIds.add(v.id);
+
+          // Filtragem de proximidade (se coordenadas do mapa/utilizador fornecidas)
+          if (userCoordinate && maxDistanceKm > 0) {
+            const distM = calculateDistanceMeters(userCoordinate.latitude, userCoordinate.longitude, v.lat, v.lng);
+            if (distM > maxDistanceKm * 1000) {
+              continue;
+            }
+          }
+
+          allVehicles.push(v);
+        }
+      }
+    }
+  }
 
   return allVehicles;
 }
