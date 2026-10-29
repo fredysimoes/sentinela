@@ -274,6 +274,50 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
   );
 });
 
+const SchoolMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  return (
+    <Marker
+      coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+      onPress={onSelect}
+      tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.92 }}
+    >
+      <View style={styles.teardropMarkerWrap}>
+        {/* Solid Indigo/Violet Teardrop Head with School Graduation Cap */}
+        <View style={[styles.teardropHead, styles.schoolHead]}>
+          <MaterialCommunityIcons
+            name="school"
+            size={18}
+            color="#FFFFFF"
+          />
+        </View>
+        <View style={[styles.teardropTip, styles.schoolTip]} />
+        <View style={styles.schoolMicroBadge}>
+          <Text style={styles.schoolMicroBadgeText}>ESCOLA</Text>
+        </View>
+        {/* Wheelmap Accessibility Micro Badge */}
+        {place.wheelchair && (
+          <View
+            style={[
+              styles.wheelmapMicroTag,
+              {
+                backgroundColor:
+                  place.wheelchair === 'yes'
+                    ? '#10B981'
+                    : place.wheelchair === 'limited'
+                    ? '#F59E0B'
+                    : '#EF4444',
+              },
+            ]}
+          >
+            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+          </View>
+        )}
+      </View>
+    </Marker>
+  );
+});
+
 const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSelect: () => void }) => {
   const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
   const isAccess = isAccessibilityCategory(incident.category);
@@ -314,10 +358,11 @@ interface MapComponentProps {
   incidents: Incident[];
   activeSOSAlerts: SOSAlert[];
   safePlaces: SafePlaceWithDistance[];
-  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy' | 'hospital' | null;
+  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy' | 'hospital' | 'school' | null;
   showPoliceOnMap?: boolean;
   showPharmaciesOnMap?: boolean;
   showHospitalsOnMap?: boolean;
+  showSchoolsOnMap?: boolean;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -354,6 +399,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   showPoliceOnMap = true,
   showPharmaciesOnMap = true,
   showHospitalsOnMap = true,
+  showSchoolsOnMap = true,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -658,8 +704,13 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
       result.push(...sortByDistanceToCenter(hospitals).slice(0, 35));
     }
 
+    if (showSchoolsOnMap) {
+      const schools = safePlaces.filter((p) => p.type === 'school');
+      result.push(...sortByDistanceToCenter(schools).slice(0, 50));
+    }
+
     return result;
-  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, mapCenter, userLocation]);
+  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, showSchoolsOnMap, mapCenter, userLocation]);
 
   // Memoized filter of incidents
   const filteredIncidents = useMemo(() => {
@@ -950,6 +1001,16 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           if (place.type === 'hospital') {
             return (
               <HospitalMarker
+                key={place.id}
+                place={place}
+                onSelect={() => onSelectSafePlace(place)}
+              />
+            );
+          }
+
+          if (place.type === 'school') {
+            return (
+              <SchoolMarker
                 key={place.id}
                 place={place}
                 onSelect={() => onSelectSafePlace(place)}
@@ -1549,6 +1610,37 @@ const styles = StyleSheet.create({
   },
   policeMicroBadgeText: {
     color: '#F8FAFC',
+    fontSize: 6.5,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+  },
+
+  // School (Escola Segura) Teardrop: Violet / Indigo
+  schoolHead: {
+    backgroundColor: '#8B5CF6',
+    borderWidth: 2,
+    borderColor: '#DDD6FE',
+  },
+  schoolTip: {
+    backgroundColor: '#8B5CF6',
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: '#DDD6FE',
+  },
+  schoolMicroBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#080A0C',
+    borderWidth: 1,
+    borderColor: '#8B5CF6',
+    borderRadius: 5,
+    paddingHorizontal: 3.5,
+    paddingVertical: 0.5,
+    zIndex: 3,
+  },
+  schoolMicroBadgeText: {
+    color: '#DDD6FE',
     fontSize: 6.5,
     fontWeight: '900',
     letterSpacing: 0.3,

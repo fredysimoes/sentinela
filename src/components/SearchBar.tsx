@@ -152,6 +152,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         return { name: 'medical', color: '#10B981' };
       case 'address':
         return { name: 'home-outline', color: '#06B6D4' };
+      case 'school':
+        return { name: 'school-outline', color: '#8B5CF6' };
       case 'street':
         return { name: 'navigate-circle', color: '#38BDF8' };
       default:

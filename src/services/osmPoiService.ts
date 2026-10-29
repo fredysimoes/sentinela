@@ -34,8 +34,11 @@ export async function fetchOsmPlacesInBoundingBox(params: {
   node["amenity"="pharmacy"](${minLat},${minLon},${maxLat},${maxLon});
   node["amenity"="hospital"](${minLat},${minLon},${maxLat},${maxLon});
   way["amenity"="hospital"](${minLat},${minLon},${maxLat},${maxLon});
+  node["amenity"="school"](${minLat},${minLon},${maxLat},${maxLon});
+  way["amenity"="school"](${minLat},${minLon},${maxLat},${maxLon});
+  node["amenity"="university"](${minLat},${minLon},${maxLat},${maxLon});
 );
-out center 80;`;
+out center 120;`;
 
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
@@ -180,6 +183,84 @@ out center 80;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
+          });
+        } else if (
+          tags.amenity === 'school' ||
+          tags.amenity === 'university' ||
+          tags.amenity === 'college' ||
+          tags.amenity === 'kindergarten'
+        ) {
+          const rawName = tags.name || tags['name:pt'];
+          if (!rawName) continue;
+
+          let schoolType: 'basic' | 'secondary' | 'university' | 'kindergarten' | 'integrated' = 'basic';
+          const nameLower = rawName.toLowerCase();
+          if (
+            tags.amenity === 'university' ||
+            nameLower.includes('universidade') ||
+            nameLower.includes('faculdade') ||
+            nameLower.includes('instituto superior') ||
+            nameLower.includes('politécnico')
+          ) {
+            schoolType = 'university';
+          } else if (
+            nameLower.includes('secundária') ||
+            nameLower.includes('secundaria') ||
+            nameLower.includes('liceu')
+          ) {
+            schoolType = 'secondary';
+          } else if (
+            nameLower.includes('básica') ||
+            nameLower.includes('basica') ||
+            nameLower.includes('eb1') ||
+            nameLower.includes('eb 2,3') ||
+            nameLower.includes('eb23')
+          ) {
+            schoolType = 'basic';
+          } else if (
+            tags.amenity === 'kindergarten' ||
+            nameLower.includes('jardim de infância') ||
+            nameLower.includes('infantário')
+          ) {
+            schoolType = 'kindergarten';
+          } else {
+            schoolType = 'integrated';
+          }
+
+          const operator = tags.operator || tags['operator:type'];
+          const street = tags['addr:street']
+            ? `${tags['addr:street']}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`
+            : 'Portugal';
+          const city = tags['addr:city'] || tags['addr:suburb'] || '';
+          const phone = tags.phone || tags['contact:phone'];
+
+          const schoolTypeLabel =
+            schoolType === 'university'
+              ? 'Ensino Superior / Universidade'
+              : schoolType === 'secondary'
+              ? 'Ensino Secundário (Escola Segura)'
+              : schoolType === 'basic'
+              ? 'Ensino Básico (Escola Segura)'
+              : schoolType === 'kindergarten'
+              ? 'Educação Pré-Escolar / Jardim de Infância'
+              : 'Estabelecimento de Ensino (Escola Segura)';
+
+          places.push({
+            id: `osm-school-${el.id}`,
+            type: 'school',
+            name: rawName,
+            address: street,
+            city: city || 'Local',
+            district: '',
+            phone,
+            latitude: lat,
+            longitude: lon,
+            hoursDescription: `${schoolTypeLabel}${operator ? ' · ' + operator : ''}`,
+            wheelchair,
+            wheelchairDescription,
+            wheelchairToilet,
+            schoolType,
+            operator,
           });
         }
       }

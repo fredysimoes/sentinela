@@ -170,6 +170,7 @@ export default function App() {
   const [showPoliceOnMap, setShowPoliceOnMap] = useState(true);
   const [showPharmaciesOnMap, setShowPharmaciesOnMap] = useState(true);
   const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(true);
+  const [showSchoolsOnMap, setShowSchoolsOnMap] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
   const [homeAddress, setHomeAddress] = useState<HomeAddress | null>(null);
@@ -1402,6 +1403,7 @@ export default function App() {
           showPoliceOnMap={showPoliceOnMap}
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
+          showSchoolsOnMap={showSchoolsOnMap}
           activeRoute={
             navState
               ? navState.route
@@ -1555,6 +1557,7 @@ export default function App() {
                   setShowPoliceOnMap(true);
                   setShowPharmaciesOnMap(true);
                   setShowHospitalsOnMap(true);
+                  setShowSchoolsOnMap(true);
                 }}
               >
                 <Ionicons
@@ -1650,6 +1653,33 @@ export default function App() {
                   ]}
                 >
                   Hospitais
+                </Text>
+              </M3Pressable>
+
+              {/* 6. Schools Quick Chip (Selected by default, toggles School markers on/off) */}
+              <M3Pressable
+                scaleOnPress={0.94}
+                style={[
+                  styles.filterChip,
+                  showSchoolsOnMap && styles.filterChipActiveSchool,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setShowSchoolsOnMap((prev) => !prev);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="school"
+                  size={14}
+                  color={showSchoolsOnMap ? '#FFFFFF' : '#8B5CF6'}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    showSchoolsOnMap && styles.filterChipTextActiveDark,
+                  ]}
+                >
+                  Escolas
                 </Text>
               </M3Pressable>
 
@@ -2267,6 +2297,10 @@ const styles = StyleSheet.create({
   filterChipActiveHospital: {
     backgroundColor: '#0EA5E9',
     borderColor: '#38BDF8',
+  },
+  filterChipActiveSchool: {
+    backgroundColor: '#8B5CF6',
+    borderColor: '#C4B5FD',
   },
   filterChipActive: {
     backgroundColor: M3Colors.secondaryContainer,

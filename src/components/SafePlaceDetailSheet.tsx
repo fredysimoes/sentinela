@@ -126,6 +126,15 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           isMci: true,
           badgeText: placeStatus?.badgeText || 'FARMÁCIA',
         };
+      case 'school':
+        return {
+          title: 'Escola / Estabelecimento de Ensino',
+          color: '#8B5CF6',
+          bg: 'rgba(139, 92, 246, 0.16)',
+          icon: 'school',
+          isMci: true,
+          badgeText: 'ESCOLA SEGURA',
+        };
     }
   };
 
@@ -202,6 +211,19 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           {hasScheduleStatus ? placeStatus?.hoursDescription : place.hoursDescription}
         </Text>
       </View>
+
+      {/* Escola Segura Badge (PSP / GNR) */}
+      {place.type === 'school' && (
+        <View style={styles.schoolSafeBanner}>
+          <View style={styles.schoolSafeHeader}>
+            <MaterialCommunityIcons name="shield-check" size={16} color="#8B5CF6" />
+            <Text style={styles.schoolSafeTitle}>Programa Escola Segura (PSP / GNR)</Text>
+          </View>
+          <Text style={styles.schoolSafeDesc}>
+            Perímetro de segurança prioritário com vigilância policial e acalmia de tráfego pedonal.
+          </Text>
+        </View>
+      )}
 
       {/* Wheelmap / OpenStreetMap Accessibility Card */}
       {place.wheelchair && (
@@ -440,6 +462,30 @@ const styles = StyleSheet.create({
     borderLeftColor: M3Colors.success,
     borderWidth: 1,
     borderColor: M3Colors.outlineVariant,
+  },
+  schoolSafeBanner: {
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
+    borderRadius: M3Shapes.medium,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+  },
+  schoolSafeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  schoolSafeTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#8B5CF6',
+  },
+  schoolSafeDesc: {
+    fontSize: 11,
+    color: M3Colors.onSurfaceVariant,
+    lineHeight: 16,
   },
   scheduleHeader: {
     flexDirection: 'row',
