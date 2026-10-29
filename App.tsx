@@ -79,6 +79,7 @@ import { StalkingActiveModal } from './src/components/StalkingActiveModal';
 import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
 import { TvdeTripModal } from './src/components/TvdeTripModal';
 import { MapLayersModal } from './src/components/MapLayersModal';
+import { HalloweenAmbientOverlay } from './src/components/HalloweenAmbientOverlay';
 import {
   TvdeTripSession,
   ParsedTvdeDraft,
@@ -1511,6 +1512,11 @@ export default function App() {
           recenterSignal={mapRecenterSignal}
           onOpenRadar={() => setShowRadarModal(true)}
         />
+
+        {/* Camada Festiva de Halloween (Isolada e facilmente removível) */}
+        {!navState && !simulationState && (
+          <HalloweenAmbientOverlay />
+        )}
       </View>
 
       {/* 2. Google M3 Floating Search Capsule & Floating Chips Overlay */}
