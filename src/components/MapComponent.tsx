@@ -130,6 +130,23 @@ import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { M3Pressable } from './M3MotionWrapper';
 
 // -------------------------------------------------------------
+// Helper to detect if a location has elevator / lift accessibility
+// -------------------------------------------------------------
+function placeHasElevator(place: SafePlace): boolean {
+  if (place.hasElevator) return true;
+  const desc = (place.wheelchairDescription || '').toLowerCase();
+  const hours = (place.hoursDescription || '').toLowerCase();
+  const name = (place.name || '').toLowerCase();
+  return (
+    desc.includes('elevador') ||
+    desc.includes('elevator') ||
+    desc.includes('lift') ||
+    hours.includes('elevador') ||
+    name.includes('elevador')
+  );
+}
+
+// -------------------------------------------------------------
 // High Performance Memoized Teardrop Markers (Stealth & Neon UI)
 // -------------------------------------------------------------
 const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
@@ -164,7 +181,7 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
             isOpen ? styles.pharmacyTipOpen : styles.pharmacyTipClosed,
           ]}
         />
-        {/* Wheelmap Accessibility Micro Badge */}
+        {/* Wheelmap Accessibility Micro Badge (Canto Superior Esquerdo) */}
         {place.wheelchair && (
           <View
             style={[
@@ -179,7 +196,13 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
               },
             ]}
           >
-            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+            <MaterialCommunityIcons name="wheelchair" size={8} color="#FFFFFF" />
+          </View>
+        )}
+        {/* Elevator Micro Badge (Canto Superior Direito) */}
+        {placeHasElevator(place) && (
+          <View style={styles.elevatorMicroTag}>
+            <MaterialCommunityIcons name="elevator" size={8} color="#FFFFFF" />
           </View>
         )}
       </View>
@@ -218,7 +241,7 @@ const HospitalMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
             isOpen ? styles.hospitalTipOpen : styles.hospitalTipClosed,
           ]}
         />
-        {/* Wheelmap Accessibility Micro Badge */}
+        {/* Wheelmap Accessibility Micro Badge (Canto Superior Esquerdo) */}
         {place.wheelchair && (
           <View
             style={[
@@ -233,7 +256,13 @@ const HospitalMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
               },
             ]}
           >
-            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+            <MaterialCommunityIcons name="wheelchair" size={8} color="#FFFFFF" />
+          </View>
+        )}
+        {/* Elevator Micro Badge (Canto Superior Direito) */}
+        {placeHasElevator(place) && (
+          <View style={styles.elevatorMicroTag}>
+            <MaterialCommunityIcons name="elevator" size={8} color="#FFFFFF" />
           </View>
         )}
       </View>
@@ -266,7 +295,7 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
         <View style={styles.policeMicroBadge}>
           <Text style={styles.policeMicroBadgeText}>{policeTag}</Text>
         </View>
-        {/* Wheelmap Accessibility Micro Badge */}
+        {/* Wheelmap Accessibility Micro Badge (Canto Superior Esquerdo) */}
         {place.wheelchair && (
           <View
             style={[
@@ -281,7 +310,13 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
               },
             ]}
           >
-            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+            <MaterialCommunityIcons name="wheelchair" size={8} color="#FFFFFF" />
+          </View>
+        )}
+        {/* Elevator Micro Badge (Canto Superior Direito) */}
+        {placeHasElevator(place) && (
+          <View style={styles.elevatorMicroTag}>
+            <MaterialCommunityIcons name="elevator" size={8} color="#FFFFFF" />
           </View>
         )}
       </View>
@@ -310,7 +345,7 @@ const SchoolMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
         <View style={styles.schoolMicroBadge}>
           <Text style={styles.schoolMicroBadgeText}>ESCOLA</Text>
         </View>
-        {/* Wheelmap Accessibility Micro Badge */}
+        {/* Wheelmap Accessibility Micro Badge (Canto Superior Esquerdo) */}
         {place.wheelchair && (
           <View
             style={[
@@ -325,7 +360,13 @@ const SchoolMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
               },
             ]}
           >
-            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+            <MaterialCommunityIcons name="wheelchair" size={8} color="#FFFFFF" />
+          </View>
+        )}
+        {/* Elevator Micro Badge (Canto Superior Direito) */}
+        {placeHasElevator(place) && (
+          <View style={styles.elevatorMicroTag}>
+            <MaterialCommunityIcons name="elevator" size={8} color="#FFFFFF" />
           </View>
         )}
       </View>
@@ -354,7 +395,7 @@ const HeritageMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
         <View style={styles.heritageMicroBadge}>
           <Text style={styles.heritageMicroBadgeText}>PATRIMÓNIO</Text>
         </View>
-        {/* Wheelmap Accessibility Micro Badge */}
+        {/* Wheelmap Accessibility Micro Badge (Canto Superior Esquerdo) */}
         {place.wheelchair && (
           <View
             style={[
@@ -369,7 +410,13 @@ const HeritageMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
               },
             ]}
           >
-            <MaterialCommunityIcons name="wheelchair" size={9} color="#FFFFFF" />
+            <MaterialCommunityIcons name="wheelchair" size={8} color="#FFFFFF" />
+          </View>
+        )}
+        {/* Elevator Micro Badge (Canto Superior Direito) */}
+        {placeHasElevator(place) && (
+          <View style={styles.elevatorMicroTag}>
+            <MaterialCommunityIcons name="elevator" size={8} color="#FFFFFF" />
           </View>
         )}
       </View>
@@ -377,11 +424,8 @@ const HeritageMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
   );
 });
 
-const WheelmapMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
-  const isYes = place.wheelchair === 'yes';
-  const isLimited = place.wheelchair === 'limited';
-  const headColor = isYes ? '#10B981' : isLimited ? '#F59E0B' : '#EF4444';
-  const borderColor = isYes ? '#6EE7B7' : isLimited ? '#FDE68A' : '#FCA5A5';
+const MetroMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  const hasElevator = placeHasElevator(place);
 
   return (
     <Marker
@@ -391,31 +435,40 @@ const WheelmapMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
       anchor={{ x: 0.5, y: 0.92 }}
     >
       <View style={styles.teardropMarkerWrap}>
-        {/* Wheelmap Accessibility Teardrop Head */}
-        <View style={[styles.teardropHead, { backgroundColor: headColor, borderColor, borderWidth: 2 }]}>
+        {/* Metro / Subway Teardrop Head */}
+        <View style={[styles.teardropHead, styles.metroHead]}>
           <MaterialCommunityIcons
-            name="wheelchair"
+            name="subway-variant"
             size={18}
             color="#FFFFFF"
           />
         </View>
-        <View
-          style={[
-            styles.teardropTip,
-            {
-              backgroundColor: headColor,
-              borderColor,
-              borderRightWidth: 1.5,
-              borderBottomWidth: 1.5,
-            },
-          ]}
-        />
-        <View style={[styles.wheelmapMicroBadge, { borderColor }]}>
-          <Text style={[styles.wheelmapMicroBadgeText, { color: borderColor }]}>WHEELMAP</Text>
+        <View style={[styles.teardropTip, styles.metroTip]} />
+        <View style={styles.metroMicroBadge}>
+          <Text style={styles.metroMicroBadgeText}>METRO</Text>
         </View>
-        {place.wheelchairToilet === 'yes' && (
-          <View style={[styles.wheelmapMicroTag, { backgroundColor: '#0284C7' }]}>
-            <MaterialCommunityIcons name="toilet" size={9} color="#FFFFFF" />
+        {/* Wheelmap Accessibility Micro Badge (Canto Superior Esquerdo) */}
+        {place.wheelchair && (
+          <View
+            style={[
+              styles.wheelmapMicroTag,
+              {
+                backgroundColor:
+                  place.wheelchair === 'yes'
+                    ? '#10B981'
+                    : place.wheelchair === 'limited'
+                    ? '#F59E0B'
+                    : '#EF4444',
+              },
+            ]}
+          >
+            <MaterialCommunityIcons name="wheelchair" size={8} color="#FFFFFF" />
+          </View>
+        )}
+        {/* Elevator Micro Badge (Canto Superior Direito) */}
+        {hasElevator && (
+          <View style={styles.elevatorMicroTag}>
+            <MaterialCommunityIcons name="elevator" size={8} color="#FFFFFF" />
           </View>
         )}
       </View>
@@ -467,9 +520,6 @@ interface MapComponentProps {
   showPoliceOnMap?: boolean;
   showPharmaciesOnMap?: boolean;
   showHospitalsOnMap?: boolean;
-  showSchoolsOnMap?: boolean;
-  showHeritageOnMap?: boolean;
-  showWheelmapOnMap?: boolean;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -506,9 +556,6 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   showPoliceOnMap = true,
   showPharmaciesOnMap = true,
   showHospitalsOnMap = true,
-  showSchoolsOnMap = true,
-  showHeritageOnMap = true,
-  showWheelmapOnMap = true,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -813,23 +860,20 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
       result.push(...sortByDistanceToCenter(hospitals).slice(0, 35));
     }
 
-    if (showSchoolsOnMap) {
-      const schools = safePlaces.filter((p) => p.type === 'school');
-      result.push(...sortByDistanceToCenter(schools).slice(0, 50));
-    }
+    // Escolas (cartografia integrada permanente no backend)
+    const schools = safePlaces.filter((p) => p.type === 'school');
+    result.push(...sortByDistanceToCenter(schools).slice(0, 40));
 
-    if (showHeritageOnMap) {
-      const heritage = safePlaces.filter((p) => p.type === 'heritage');
-      result.push(...sortByDistanceToCenter(heritage).slice(0, 40));
-    }
+    // Património Cultural (cartografia integrada permanente no backend)
+    const heritage = safePlaces.filter((p) => p.type === 'heritage');
+    result.push(...sortByDistanceToCenter(heritage).slice(0, 30));
 
-    if (showWheelmapOnMap) {
-      const wheelmapPlaces = safePlaces.filter((p) => p.type === 'wheelmap');
-      result.push(...sortByDistanceToCenter(wheelmapPlaces).slice(0, 50));
-    }
+    // Estações de Metro / Transportes (com acessibilidade e elevador integrados)
+    const metro = safePlaces.filter((p) => p.type === 'metro');
+    result.push(...sortByDistanceToCenter(metro).slice(0, 30));
 
     return result;
-  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, showSchoolsOnMap, showHeritageOnMap, showWheelmapOnMap, mapCenter, userLocation]);
+  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, mapCenter, userLocation]);
 
   // Memoized filter of incidents
   const filteredIncidents = useMemo(() => {
@@ -1147,9 +1191,9 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             );
           }
 
-          if (place.type === 'wheelmap') {
+          if (place.type === 'metro') {
             return (
-              <WheelmapMarker
+              <MetroMarker
                 key={place.id}
                 place={place}
                 onSelect={() => onSelectSafePlace(place)}
@@ -1584,11 +1628,11 @@ const styles = StyleSheet.create({
   },
   wheelmapMicroTag: {
     position: 'absolute',
-    top: -4,
-    left: -4,
-    borderRadius: 8,
-    width: 16,
-    height: 16,
+    top: -3,
+    left: -3,
+    borderRadius: 7,
+    width: 14,
+    height: 14,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
@@ -1597,8 +1641,27 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.5,
     shadowRadius: 2,
-    elevation: 4,
-    zIndex: 10,
+    elevation: 6,
+    zIndex: 12,
+  },
+  elevatorMicroTag: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    borderRadius: 7,
+    width: 14,
+    height: 14,
+    backgroundColor: '#0284C7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#080A0C',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 6,
+    zIndex: 12,
   },
   votesBadgeText: {
     color: '#06140E',
@@ -1816,22 +1879,34 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Wheelmap (Pontos de Acessibilidade) Micro Badge
-  wheelmapMicroBadge: {
+  // Metro / Subway Teardrop: Blue `#0284C7`
+  metroHead: {
+    backgroundColor: '#0284C7',
+    borderWidth: 2,
+    borderColor: '#38BDF8',
+  },
+  metroTip: {
+    backgroundColor: '#0284C7',
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: '#38BDF8',
+  },
+  metroMicroBadge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    bottom: -4,
     backgroundColor: '#080A0C',
     borderWidth: 1,
+    borderColor: '#0284C7',
     borderRadius: 5,
-    paddingHorizontal: 3,
+    paddingHorizontal: 3.5,
     paddingVertical: 0.5,
     zIndex: 3,
   },
-  wheelmapMicroBadgeText: {
-    fontSize: 6,
+  metroMicroBadgeText: {
+    color: '#38BDF8',
+    fontSize: 6.5,
     fontWeight: '900',
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
 
   // Selected Map Point Pin (POI / Custom Point)

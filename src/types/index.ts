@@ -51,7 +51,7 @@ export interface UserLocation {
   accuracy?: number | null;
 }
 
-export type SafePlaceType = 'psp' | 'gnr' | 'pj' | 'pharmacy' | 'hospital' | 'school' | 'heritage' | 'wheelmap';
+export type SafePlaceType = 'psp' | 'gnr' | 'pj' | 'pharmacy' | 'hospital' | 'school' | 'heritage' | 'metro' | 'wheelmap';
 
 export interface PharmacyHours {
   is24h?: boolean;
@@ -80,6 +80,7 @@ export interface SafePlace {
   wheelchair?: WheelchairAccessibility;
   wheelchairDescription?: string;
   wheelchairToilet?: 'yes' | 'limited' | 'no' | 'unknown';
+  hasElevator?: boolean;
   schoolType?: 'basic' | 'secondary' | 'university' | 'kindergarten' | 'integrated';
   operator?: string;
   heritageProtection?: 'national_monument' | 'public_interest' | 'municipal_interest' | 'unesco' | 'classified';

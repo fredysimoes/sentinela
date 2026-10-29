@@ -171,9 +171,6 @@ export default function App() {
   const [showPoliceOnMap, setShowPoliceOnMap] = useState(true);
   const [showPharmaciesOnMap, setShowPharmaciesOnMap] = useState(true);
   const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(true);
-  const [showSchoolsOnMap, setShowSchoolsOnMap] = useState(true);
-  const [showHeritageOnMap, setShowHeritageOnMap] = useState(true);
-  const [showWheelmapOnMap, setShowWheelmapOnMap] = useState(true);
   const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
@@ -206,9 +203,6 @@ export default function App() {
     showPoliceOnMap,
     showPharmaciesOnMap,
     showHospitalsOnMap,
-    showSchoolsOnMap,
-    showHeritageOnMap,
-    showWheelmapOnMap,
   ].filter(Boolean).length;
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
@@ -1416,9 +1410,6 @@ export default function App() {
           showPoliceOnMap={showPoliceOnMap}
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
-          showSchoolsOnMap={showSchoolsOnMap}
-          showHeritageOnMap={showHeritageOnMap}
-          showWheelmapOnMap={showWheelmapOnMap}
           activeRoute={
             navState
               ? navState.route
@@ -1590,7 +1581,7 @@ export default function App() {
               scaleOnPress={0.92}
               style={[
                 styles.layersFab,
-                activeLayersCount < 6 && styles.layersFabModified,
+                activeLayersCount < 3 && styles.layersFabModified,
               ]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -1606,11 +1597,11 @@ export default function App() {
               <View
                 style={[
                   styles.layersBadge,
-                  activeLayersCount === 6 ? styles.layersBadgeAll : styles.layersBadgePartial,
+                  activeLayersCount === 3 ? styles.layersBadgeAll : styles.layersBadgePartial,
                 ]}
               >
                 <Text style={styles.layersBadgeText}>
-                  {activeLayersCount}/6
+                  {activeLayersCount}/3
                 </Text>
               </View>
             </M3Pressable>
@@ -1837,27 +1828,15 @@ export default function App() {
         onTogglePharmacies={() => setShowPharmaciesOnMap((prev) => !prev)}
         showHospitalsOnMap={showHospitalsOnMap}
         onToggleHospitals={() => setShowHospitalsOnMap((prev) => !prev)}
-        showSchoolsOnMap={showSchoolsOnMap}
-        onToggleSchools={() => setShowSchoolsOnMap((prev) => !prev)}
-        showHeritageOnMap={showHeritageOnMap}
-        onToggleHeritage={() => setShowHeritageOnMap((prev) => !prev)}
-        showWheelmapOnMap={showWheelmapOnMap}
-        onToggleWheelmap={() => setShowWheelmapOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
           setShowPharmaciesOnMap(true);
           setShowHospitalsOnMap(true);
-          setShowSchoolsOnMap(true);
-          setShowHeritageOnMap(true);
-          setShowWheelmapOnMap(true);
         }}
         onDeactivateAllLayers={() => {
           setShowPoliceOnMap(false);
           setShowPharmaciesOnMap(false);
           setShowHospitalsOnMap(false);
-          setShowSchoolsOnMap(false);
-          setShowHeritageOnMap(false);
-          setShowWheelmapOnMap(false);
         }}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}

@@ -17,19 +17,13 @@ import { M3BottomSheetWrapper, M3Pressable } from './M3MotionWrapper';
 interface MapLayersModalProps {
   visible: boolean;
   onClose: () => void;
-  // Infrastructure Layers Toggles
+  // Infrastructure Layers Toggles (Polícia, Farmácias, Hospitais)
   showPoliceOnMap: boolean;
   onTogglePolice: () => void;
   showPharmaciesOnMap: boolean;
   onTogglePharmacies: () => void;
   showHospitalsOnMap: boolean;
   onToggleHospitals: () => void;
-  showSchoolsOnMap: boolean;
-  onToggleSchools: () => void;
-  showHeritageOnMap: boolean;
-  onToggleHeritage: () => void;
-  showWheelmapOnMap: boolean;
-  onToggleWheelmap: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -48,12 +42,6 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onTogglePharmacies,
   showHospitalsOnMap,
   onToggleHospitals,
-  showSchoolsOnMap,
-  onToggleSchools,
-  showHeritageOnMap,
-  onToggleHeritage,
-  showWheelmapOnMap,
-  onToggleWheelmap,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -65,12 +53,9 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     showPoliceOnMap,
     showPharmaciesOnMap,
     showHospitalsOnMap,
-    showSchoolsOnMap,
-    showHeritageOnMap,
-    showWheelmapOnMap,
   ].filter(Boolean).length;
 
-  const allLayersActive = activeLayersCount === 6;
+  const allLayersActive = activeLayersCount === 3;
 
   const INFRASTRUCTURE_LAYERS = [
     {
@@ -100,33 +85,6 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
       active: showHospitalsOnMap,
       onToggle: onToggleHospitals,
     },
-    {
-      id: 'school',
-      name: 'Escolas',
-      subtitle: 'Programa Escola Segura',
-      icon: 'school',
-      color: '#8B5CF6',
-      active: showSchoolsOnMap,
-      onToggle: onToggleSchools,
-    },
-    {
-      id: 'heritage',
-      name: 'Património Cultural',
-      subtitle: 'Monumentos e imóveis de interesse',
-      icon: 'castle',
-      color: '#D97706',
-      active: showHeritageOnMap,
-      onToggle: onToggleHeritage,
-    },
-    {
-      id: 'wheelmap',
-      name: 'Acessibilidade',
-      subtitle: 'Wheelmap (cadeiras de rodas)',
-      icon: 'wheelchair',
-      color: '#10B981',
-      active: showWheelmapOnMap,
-      onToggle: onToggleWheelmap,
-    },
   ];
 
   return (
@@ -144,7 +102,7 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
             <View>
               <Text style={styles.headerTitle}>Camadas do Mapa</Text>
               <Text style={styles.headerSubtitle}>
-                {activeLayersCount} de 6 camadas ativas no mapa
+                {activeLayersCount} de 3 camadas ativas no mapa
               </Text>
             </View>
           </View>

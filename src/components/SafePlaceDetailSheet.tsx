@@ -146,6 +146,15 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
             ? place.protectionTitle.toUpperCase()
             : 'PATRIMÓNIO CULTURAL',
         };
+      case 'metro':
+        return {
+          title: 'Estação de Metro / Transporte',
+          color: '#0284C7',
+          bg: 'rgba(2, 132, 199, 0.16)',
+          icon: 'subway-variant',
+          isMci: true,
+          badgeText: place.hasElevator ? 'ESTAÇÃO C/ ELEVADOR' : 'ESTAÇÃO DE METRO',
+        };
       case 'wheelmap':
         const isYes = place.wheelchair === 'yes';
         const isLimited = place.wheelchair === 'limited';
@@ -264,6 +273,21 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           </View>
           <Text style={styles.heritageDesc}>
             Imóvel de proteção oficial tutelado pelo Património Cultural, I.P. Ponto de referência e vigilância urbana.
+          </Text>
+        </View>
+      )}
+
+      {/* Metro Station Transit Banner */}
+      {place.type === 'metro' && (
+        <View style={styles.metroBanner}>
+          <View style={styles.metroHeader}>
+            <MaterialCommunityIcons name="subway-variant" size={16} color="#0284C7" />
+            <Text style={styles.metroTitle}>Rede de Metro / Transporte Metropolitano</Text>
+          </View>
+          <Text style={styles.metroDesc}>
+            {place.hasElevator
+              ? 'Estação equipada com elevador operacional e acessos sem barreiras arquitetónicas.'
+              : 'Ponto de transporte de alta afluência com ligação direta à rede metropolitana.'}
           </Text>
         </View>
       )}
@@ -550,6 +574,30 @@ const styles = StyleSheet.create({
     color: '#D97706',
   },
   heritageDesc: {
+    fontSize: 11,
+    color: M3Colors.onSurfaceVariant,
+    lineHeight: 16,
+  },
+  metroBanner: {
+    backgroundColor: 'rgba(2, 132, 199, 0.08)',
+    borderRadius: M3Shapes.medium,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(2, 132, 199, 0.3)',
+  },
+  metroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  metroTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0284C7',
+  },
+  metroDesc: {
     fontSize: 11,
     color: M3Colors.onSurfaceVariant,
     lineHeight: 16,

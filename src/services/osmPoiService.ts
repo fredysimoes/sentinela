@@ -41,10 +41,10 @@ export async function fetchOsmPlacesInBoundingBox(params: {
   way["heritage"](${minLat},${minLon},${maxLat},${maxLon});
   node["historic"="castle"](${minLat},${minLon},${maxLat},${maxLon});
   node["historic"="monument"](${minLat},${minLon},${maxLat},${maxLon});
-  node["wheelchair"](${minLat},${minLon},${maxLat},${maxLon});
-  way["wheelchair"](${minLat},${minLon},${maxLat},${maxLon});
+  node["railway"="station"](${minLat},${minLon},${maxLat},${maxLon});
+  node["station"="subway"](${minLat},${minLon},${maxLat},${maxLon});
 );
-out center 200;`;
+out center 160;`;
 
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
@@ -97,6 +97,12 @@ out center 200;`;
           wheelchairToilet = toiletTag;
         }
 
+        const hasElevator =
+          tags.elevator === 'yes' ||
+          (wheelchairDescription || '').toLowerCase().includes('elevador') ||
+          (tags.description || '').toLowerCase().includes('elevador') ||
+          (tags['description:pt'] || '').toLowerCase().includes('elevador');
+
         if (tags.amenity === 'pharmacy') {
           const rawName = tags.name || tags['name:pt'] || 'Farmácia';
           const { hours, hoursDescription } = parseOsmOpeningHours(tags.opening_hours);
@@ -121,6 +127,7 @@ out center 200;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
+            hasElevator,
           });
         } else if (tags.amenity === 'hospital') {
           const rawName = tags.name || tags['name:pt'];
@@ -155,6 +162,7 @@ out center 200;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
+            hasElevator,
           });
         } else if (tags.amenity === 'police') {
           const nameLower = (tags.name || tags.operator || '').toLowerCase();
@@ -189,6 +197,7 @@ out center 200;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
+            hasElevator,
           });
         } else if (
           tags.amenity === 'school' ||
@@ -265,6 +274,7 @@ out center 200;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
+            hasElevator,
             schoolType,
             operator,
           });
@@ -325,45 +335,25 @@ out center 200;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
+            hasElevator,
             heritageProtection,
             protectionTitle,
           });
-        } else if (wheelchair || tags['toilets:wheelchair']) {
-          // General Wheelmap Accessibility POI (transport, civic, cultural, commerce, public toilet, etc.)
-          const rawName =
-            tags.name ||
-            tags['name:pt'] ||
-            tags.operator ||
-            (tags.amenity === 'toilets'
-              ? 'Instalação Sanitária Acessível'
-              : tags.railway === 'station' || tags.station === 'subway'
-              ? 'Estação Acessível'
-              : tags.amenity
-              ? `Local Acessível (${tags.amenity})`
-              : tags.shop
-              ? `Estabelecimento (${tags.shop})`
-              : 'Ponto Acessível Wheelmap');
-
+        } else if (
+          tags.railway === 'station' ||
+          tags.station === 'subway' ||
+          tags.subway === 'yes'
+        ) {
+          const rawName = tags.name || tags['name:pt'] || 'Estação de Metro / Comboio';
           const street = tags['addr:street']
             ? `${tags['addr:street']}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`
             : 'Portugal';
           const city = tags['addr:city'] || tags['addr:suburb'] || '';
           const phone = tags.phone || tags['contact:phone'];
 
-          const statusText =
-            wheelchair === 'yes'
-              ? 'Totalmente Acessível a Cadeira de Rodas'
-              : wheelchair === 'limited'
-              ? 'Parcialmente Acessível (Com Apoio/Degrau Baixo)'
-              : wheelchair === 'no'
-              ? 'Não Acessível (Degraus sem Rampa)'
-              : 'Acessibilidade Reportada';
-
-          const categoryDesc = tags.amenity || tags.shop || tags.railway || tags.tourism || 'Acessibilidade';
-
           places.push({
-            id: `osm-wheelmap-${el.id}`,
-            type: 'wheelmap',
+            id: `osm-metro-${el.id}`,
+            type: 'metro',
             name: rawName,
             address: street,
             city: city || 'Local',
@@ -371,11 +361,13 @@ out center 200;`;
             phone,
             latitude: lat,
             longitude: lon,
-            hoursDescription: `${statusText} · Wheelmap / OSM`,
-            wheelchair: wheelchair || 'limited',
+            hoursDescription: hasElevator
+              ? 'Estação com Elevadores e Acessibilidade · Metro / CP'
+              : 'Estação de Transporte Público',
+            wheelchair,
             wheelchairDescription,
             wheelchairToilet,
-            wheelmapCategory: categoryDesc,
+            hasElevator,
           });
         }
       }
