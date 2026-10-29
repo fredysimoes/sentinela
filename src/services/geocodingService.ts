@@ -25,6 +25,106 @@ function normalizeStr(str: string): string {
     .trim();
 }
 
+const SECURITY_KEYWORDS = [
+  'farmacia',
+  'farmacias',
+  'policia',
+  'psp',
+  'gnr',
+  'pj',
+  'esquadra',
+  'posto policial',
+  'posto gnr',
+  'hospital',
+  'hospitais',
+  'urgencia',
+  'urgencias',
+  'centro de saude',
+  'acessivel',
+  'acessibilidade',
+  'wheelchair',
+  'wheelmap',
+];
+
+/**
+ * Calcula a pontuação de relevância de cada sugestão (estilo Google Maps e Waze).
+ * Dá prioridade a endereços com número de porta, ruas e vias principais,
+ * e só prioriza farmácias/esquadras/hospitais se o utilizador manifestar intenção explícita.
+ */
+function calculateSuggestionScore(
+  item: AddressSuggestion,
+  normQuery: string,
+  isSecurityIntent: boolean,
+  hasHouseNumber: boolean
+): number {
+  let score = 0;
+  const normTitle = normalizeStr(item.title);
+  const normSubtitle = normalizeStr(item.subtitle);
+
+  // 1. Relevância Textual
+  if (normTitle === normQuery) {
+    score += 1200; // Correspondência total exata
+  } else if (normTitle.startsWith(normQuery)) {
+    score += 800; // O título começa pelo termo pesquisado
+  } else if (normTitle.includes(normQuery)) {
+    score += 550; // O título contém o termo pesquisado
+  } else if (normSubtitle.includes(normQuery)) {
+    score += 180; // O termo surge na localidade / concelho
+  } else {
+    // Correspondência por tokens
+    const queryTokens = normQuery.split(/\s+/).filter(Boolean);
+    const matchedTokens = queryTokens.filter((token) => normTitle.includes(token) || normSubtitle.includes(token));
+    score += matchedTokens.length * 100;
+  }
+
+  // 2. Hierarquia de Tipos (Estilo Google Maps / Waze)
+  switch (item.type) {
+    case 'address':
+      // Se a pesquisa tinha número de porta, a morada exata ganha o topo absoluto
+      score += hasHouseNumber ? 500 : 350;
+      break;
+    case 'street':
+      score += 400; // Ruas, avenidas, praças
+      break;
+    case 'road':
+      score += 370; // Autoestradas, vias rápidas e estradas nacionais
+      break;
+    case 'place':
+      score += 280; // Cidades, vilas, freguesias e bairros
+      break;
+    case 'school':
+    case 'heritage':
+      score += 200; // POIs e equipamentos públicos
+      break;
+    case 'pharmacy':
+    case 'police':
+    case 'wheelmap':
+      if (isSecurityIntent) {
+        score += 750; // Prioridade máxima quando o utilizador pede farmácia/polícia/hospital
+      } else {
+        score += 40; // Baixa prioridade em pesquisas normais de ruas/endereços
+      }
+      break;
+    default:
+      score += 120;
+      break;
+  }
+
+  // 3. Proximidade Suave (Proximity Bias)
+  // Desempata localidades próximas sem esmagar o nome da rua ou morada
+  if (typeof item.distanceMeters === 'number') {
+    const km = item.distanceMeters / 1000;
+    if (km < 5) {
+      score += Math.round((5 - km) * 15); // Até +75 pontos para menos de 5 km
+    } else {
+      const penalty = Math.min(120, Math.round((km - 5) * 2)); // Máximo 120 pontos de penalização
+      score -= penalty;
+    }
+  }
+
+  return score;
+}
+
 /**
  * Searches destinations with instant local database match and real-time
  * OSM Photon / Nominatim geocoding with proximity bias.
@@ -37,48 +137,79 @@ export async function searchAddressSuggestions(
   if (trimmed.length < 2) return [];
 
   const normQuery = normalizeStr(trimmed);
-  const results: AddressSuggestion[] = [];
+  const isSecurityIntent = SECURITY_KEYWORDS.some((kw) => normQuery.includes(kw));
+  const hasHouseNumber = /\b\d{1,4}[a-z]?\b/i.test(trimmed);
 
-  // 1. Instant local match from pre-loaded official catalog (0ms latency)
+  const candidates: (AddressSuggestion & { score?: number })[] = [];
+  const seenKeys = new Set<string>();
+
+  const addCandidate = (item: AddressSuggestion) => {
+    // Chave de desduplicação por rua + número + concelho para não duplicar vias no OSM
+    const streetNorm = normalizeStr(item.streetName || item.title);
+    const houseNorm = normalizeStr(item.houseNumber || '');
+    const subNorm = normalizeStr(item.subtitle);
+
+    const dedupKey =
+      item.type === 'address'
+        ? `addr:${streetNorm}:${houseNorm}:${subNorm}`
+        : item.type === 'street' || item.type === 'road'
+        ? `street:${streetNorm}:${subNorm}`
+        : item.type === 'place'
+        ? `place:${streetNorm}:${subNorm}`
+        : `${item.type}:${streetNorm}:${subNorm}`;
+
+    if (seenKeys.has(dedupKey)) {
+      return;
+    }
+
+    // Se já existir um item com o mesmo título a menos de 400 metros, evitar duplicado técnico de segmento
+    const isNearbyDuplicate = candidates.some(
+      (c) =>
+        normalizeStr(c.title) === normalizeStr(item.title) &&
+        Math.abs(c.latitude - item.latitude) < 0.0035 &&
+        Math.abs(c.longitude - item.longitude) < 0.0035
+    );
+
+    if (isNearbyDuplicate) {
+      return;
+    }
+
+    seenKeys.add(dedupKey);
+    candidates.push(item);
+  };
+
+  // 1. Catálogo Local de Locais Seguros:
+  // Se houver intenção explícita de segurança/farmácia/hospital, pesquisa por nome e morada.
+  // Se for uma pesquisa normal de rua/endereço, pesquisa estritamente pelo nome do estabelecimento (para nunca sobrepor farmácias a ruas).
   let localMatches = SAFE_PLACES_PORTUGAL.filter((place) => {
     const matchName = normalizeStr(place.name).includes(normQuery);
-    const matchAddr = normalizeStr(place.address || '').includes(normQuery);
-    const matchCity = normalizeStr(place.city || '').includes(normQuery);
-    return matchName || matchAddr || matchCity;
+    if (isSecurityIntent) {
+      const matchAddr = normalizeStr(place.address || '').includes(normQuery);
+      const matchCity = normalizeStr(place.city || '').includes(normQuery);
+      return matchName || matchAddr || matchCity;
+    }
+    return matchName;
   });
 
   if (userLocation) {
     localMatches = [...localMatches].sort((a, b) => {
-      const distA = calculateDistanceMeters(
-        userLocation.latitude,
-        userLocation.longitude,
-        a.latitude,
-        a.longitude
-      );
-      const distB = calculateDistanceMeters(
-        userLocation.latitude,
-        userLocation.longitude,
-        b.latitude,
-        b.longitude
-      );
+      const distA = calculateDistanceMeters(userLocation.latitude, userLocation.longitude, a.latitude, a.longitude);
+      const distB = calculateDistanceMeters(userLocation.latitude, userLocation.longitude, b.latitude, b.longitude);
       return distA - distB;
     });
   }
 
-  for (const p of localMatches.slice(0, 3)) {
+  // Em pesquisas normais, limita a 1 ou 2 estabelecimentos no máximo para deixar espaço às vias e moradas
+  const maxLocal = isSecurityIntent ? 5 : 2;
+  for (const p of localMatches.slice(0, maxLocal)) {
     const dist = userLocation
-      ? calculateDistanceMeters(
-          userLocation.latitude,
-          userLocation.longitude,
-          p.latitude,
-          p.longitude
-        )
+      ? calculateDistanceMeters(userLocation.latitude, userLocation.longitude, p.latitude, p.longitude)
       : undefined;
 
-    results.push({
+    addCandidate({
       id: `local-${p.id}`,
       title: p.name,
-      subtitle: `${p.address ? p.address + ', ' : ''}${p.city || 'Porto'}`,
+      subtitle: `${p.address ? p.address + ', ' : ''}${p.city || 'Portugal'}`,
       latitude: p.latitude,
       longitude: p.longitude,
       type: p.type === 'pharmacy' ? 'pharmacy' : p.type === 'wheelmap' ? 'wheelmap' : 'police',
@@ -86,19 +217,14 @@ export async function searchAddressSuggestions(
     });
   }
 
-  // 1b. Instant match for Portuguese Road Network (PRN 2000: Autoestradas, Vias Rápidas, Estradas Nacionais)
+  // 1b. Rede Rodoviária Nacional (Autoestradas, Vias Rápidas, Estradas Nacionais)
   const roadMatches = findMatchingRoads(trimmed);
   for (const road of roadMatches.slice(0, 3)) {
     const dist = userLocation
-      ? calculateDistanceMeters(
-          userLocation.latitude,
-          userLocation.longitude,
-          road.latitude,
-          road.longitude
-        )
+      ? calculateDistanceMeters(userLocation.latitude, userLocation.longitude, road.latitude, road.longitude)
       : undefined;
 
-    results.push({
+    addCandidate({
       id: `road-${road.code}`,
       title: `${road.ref} · ${road.name}`,
       subtitle: `${road.categoryLabel} · ${road.startLocation} ➔ ${road.endLocation}`,
@@ -111,16 +237,14 @@ export async function searchAddressSuggestions(
     });
   }
 
-  // 2. Real-time Photon (Komoot / OpenStreetMap) API with Proximity Bias
-  // Note: Photon supports lang: 'default', 'de', 'en', 'fr', 'it'.
-  // Using 'default' preserves local Portuguese names (ruas, avenidas, praças).
+  // 2. Geocodificação em Tempo Real no Photon (Komoot / OpenStreetMap) com Proximity Bias
   try {
     const biasLat = userLocation?.latitude ?? 41.1579;
     const biasLon = userLocation?.longitude ?? -8.6291;
 
     const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(
       trimmed
-    )}&limit=10&lang=default&lat=${biasLat}&lon=${biasLon}`;
+    )}&limit=15&lang=default&lat=${biasLat}&lon=${biasLon}`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
@@ -129,7 +253,7 @@ export async function searchAddressSuggestions(
       signal: controller.signal,
       headers: {
         'User-Agent': 'SentinelaMobileSafety/2.0',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
     clearTimeout(timeout);
@@ -146,7 +270,6 @@ export async function searchAddressSuggestions(
           const lon = coords[0];
           const lat = coords[1];
 
-          // Determine clean title and address type (incorporating official INE / OSM address imports & PRN road standardization)
           const isRoad =
             props.osm_key === 'highway' &&
             (props.osm_value === 'motorway' ||
@@ -169,7 +292,6 @@ export async function searchAddressSuggestions(
             title = props.name || props.street || trimmed;
           }
 
-          // Build clean subtitle (locality, city, postal code, and road category)
           const parts: (string | undefined)[] = [];
           if (isRoad) {
             const roadBadge =
@@ -193,52 +315,38 @@ export async function searchAddressSuggestions(
           const uniqueParts = Array.from(new Set(parts.filter((p) => p && typeof p === 'string')));
           const subtitle = uniqueParts.length > 0 ? uniqueParts.join(' · ') : 'Portugal';
 
-          // Avoid duplicate coordinates
-          const alreadyExists = results.some(
-            (r) =>
-              Math.abs(r.latitude - lat) < 0.0004 &&
-              Math.abs(r.longitude - lon) < 0.0004
-          );
+          const dist = userLocation
+            ? calculateDistanceMeters(userLocation.latitude, userLocation.longitude, lat, lon)
+            : undefined;
 
-          if (!alreadyExists) {
-            const dist = userLocation
-              ? calculateDistanceMeters(
-                  userLocation.latitude,
-                  userLocation.longitude,
-                  lat,
-                  lon
-                )
-              : undefined;
-
-            results.push({
-              id: `photon-${props.osm_id || Math.random()}`,
-              title,
-              subtitle,
-              latitude: lat,
-              longitude: lon,
-              type:
-                isRoad
-                  ? 'road'
-                  : props.wheelchair || props.osm_key === 'wheelchair'
-                  ? 'wheelmap'
-                  : props.osm_key === 'historic' || props.osm_key === 'heritage'
-                  ? 'heritage'
-                  : props.osm_key === 'amenity' &&
-                    (props.osm_value === 'school' || props.osm_value === 'university' || props.osm_value === 'college')
-                  ? 'school'
-                  : isAddress
-                  ? 'address'
-                  : props.osm_key === 'highway'
-                  ? 'street'
-                  : 'place',
-              houseNumber: props.housenumber,
-              streetName: props.street,
-              postcode: props.postcode,
-              distanceMeters: dist,
-              roadClassification,
-              roadRef,
-            });
-          }
+          addCandidate({
+            id: `photon-${props.osm_id || Math.random()}`,
+            title,
+            subtitle,
+            latitude: lat,
+            longitude: lon,
+            type:
+              isRoad
+                ? 'road'
+                : props.wheelchair || props.osm_key === 'wheelchair'
+                ? 'wheelmap'
+                : props.osm_key === 'historic' || props.osm_key === 'heritage'
+                ? 'heritage'
+                : props.osm_key === 'amenity' &&
+                  (props.osm_value === 'school' || props.osm_value === 'university' || props.osm_value === 'college')
+                ? 'school'
+                : isAddress
+                ? 'address'
+                : props.osm_key === 'highway'
+                ? 'street'
+                : 'place',
+            houseNumber: props.housenumber,
+            streetName: props.street,
+            postcode: props.postcode,
+            distanceMeters: dist,
+            roadClassification,
+            roadRef,
+          });
         }
       }
     }
@@ -246,10 +354,10 @@ export async function searchAddressSuggestions(
     console.warn('Erro ao consultar Photon:', error);
   }
 
-  // 3. Fallback to Nominatim if results are few
-  if (results.length < 3) {
+  // 3. Fallback / Enriquecimento via Nominatim OpenStreetMap (especialmente se houver número de porta)
+  if (candidates.length < 5 || hasHouseNumber) {
     try {
-      const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=pt&addressdetails=1&limit=5&q=${encodeURIComponent(
+      const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=pt&addressdetails=1&limit=6&q=${encodeURIComponent(
         trimmed
       )}`;
       const controller = new AbortController();
@@ -271,54 +379,41 @@ export async function searchAddressSuggestions(
             const lat = parseFloat(item.lat);
             const lon = parseFloat(item.lon);
 
-            const alreadyExists = results.some(
-              (r) =>
-                Math.abs(r.latitude - lat) < 0.0004 &&
-                Math.abs(r.longitude - lon) < 0.0004
-            );
+            const addr = item.address || {};
+            const isAddress = !!addr.house_number;
+            const streetName = addr.road || addr.pedestrian || addr.street || '';
+            const title =
+              isAddress && streetName
+                ? `${streetName}, n.º ${addr.house_number}`
+                : streetName || item.display_name.split(',')[0];
 
-            if (!alreadyExists) {
-              const addr = item.address || {};
-              const isAddress = !!addr.house_number;
-              const streetName = addr.road || addr.pedestrian || addr.street || '';
-              const title =
-                isAddress && streetName
-                  ? `${streetName}, n.º ${addr.house_number}`
-                  : streetName || item.display_name.split(',')[0];
+            const city =
+              addr.city ||
+              addr.town ||
+              addr.village ||
+              addr.municipality ||
+              addr.suburb ||
+              'Portugal';
 
-              const city =
-                addr.city ||
-                addr.town ||
-                addr.village ||
-                addr.municipality ||
-                addr.suburb ||
-                'Portugal';
+            const subParts = [city, addr.postcode].filter(Boolean);
+            const subtitle = subParts.length > 0 ? subParts.join(' · ') : 'Portugal';
 
-              const subParts = [city, addr.postcode].filter(Boolean);
-              const subtitle = subParts.length > 0 ? subParts.join(' · ') : 'Portugal';
+            const dist = userLocation
+              ? calculateDistanceMeters(userLocation.latitude, userLocation.longitude, lat, lon)
+              : undefined;
 
-              const dist = userLocation
-                ? calculateDistanceMeters(
-                    userLocation.latitude,
-                    userLocation.longitude,
-                    lat,
-                    lon
-                  )
-                : undefined;
-
-              results.push({
-                id: `nom-${item.place_id || item.osm_id}`,
-                title: title.trim(),
-                subtitle,
-                latitude: lat,
-                longitude: lon,
-                type: isAddress ? 'address' : 'street',
-                houseNumber: addr.house_number,
-                streetName: streetName || undefined,
-                postcode: addr.postcode,
-                distanceMeters: dist,
-              });
-            }
+            addCandidate({
+              id: `nom-${item.place_id || item.osm_id}`,
+              title: title.trim(),
+              subtitle,
+              latitude: lat,
+              longitude: lon,
+              type: isAddress ? 'address' : 'street',
+              houseNumber: addr.house_number,
+              streetName: streetName || undefined,
+              postcode: addr.postcode,
+              distanceMeters: dist,
+            });
           }
         }
       }
@@ -327,16 +422,15 @@ export async function searchAddressSuggestions(
     }
   }
 
-  // Sort strictly by proximity to user GPS location (Google Maps style)
-  if (userLocation) {
-    results.sort((a, b) => {
-      const distA = a.distanceMeters ?? 999999999;
-      const distB = b.distanceMeters ?? 999999999;
-      return distA - distB;
-    });
-  }
+  // 4. Ordenação por Relevância Ponderada (Estilo Google Maps e Waze)
+  const scoredResults = candidates.map((item) => ({
+    ...item,
+    score: calculateSuggestionScore(item, normQuery, isSecurityIntent, hasHouseNumber),
+  }));
 
-  return results.slice(0, 8);
+  scoredResults.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+
+  return scoredResults.slice(0, 8);
 }
 
 export interface ReverseGeocodeResult {

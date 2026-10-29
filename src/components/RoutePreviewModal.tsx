@@ -611,14 +611,34 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                 <View style={styles.suggestionIconWrap}>
                   <Ionicons
                     name={
-                      item.type === 'pharmacy'
+                      item.type === 'address'
+                        ? 'home-outline'
+                        : item.type === 'street'
+                        ? 'navigate-circle-outline'
+                        : item.type === 'road'
+                        ? 'speedometer-outline'
+                        : item.type === 'pharmacy'
                         ? 'medical'
                         : item.type === 'police'
                         ? 'shield-sharp'
+                        : item.type === 'school'
+                        ? 'school-outline'
                         : 'location-outline'
                     }
                     size={16}
-                    color="#38BDF8"
+                    color={
+                      item.type === 'address'
+                        ? '#06B6D4'
+                        : item.type === 'street' || item.type === 'road'
+                        ? '#38BDF8'
+                        : item.type === 'pharmacy'
+                        ? '#10B981'
+                        : item.type === 'police'
+                        ? '#3B82F6'
+                        : item.type === 'school'
+                        ? '#8B5CF6'
+                        : '#F59E0B'
+                    }
                   />
                 </View>
                 <View style={{ flex: 1 }}>
