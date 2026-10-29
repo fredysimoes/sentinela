@@ -77,6 +77,7 @@ import { RadarModal } from './src/components/RadarModal';
 import { StalkingActiveModal } from './src/components/StalkingActiveModal';
 import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
 import { TvdeTripModal } from './src/components/TvdeTripModal';
+import { MapLayersModal } from './src/components/MapLayersModal';
 import {
   TvdeTripSession,
   ParsedTvdeDraft,
@@ -173,6 +174,7 @@ export default function App() {
   const [showSchoolsOnMap, setShowSchoolsOnMap] = useState(true);
   const [showHeritageOnMap, setShowHeritageOnMap] = useState(true);
   const [showWheelmapOnMap, setShowWheelmapOnMap] = useState(true);
+  const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
   const [homeAddress, setHomeAddress] = useState<HomeAddress | null>(null);
@@ -199,6 +201,15 @@ export default function App() {
   }, [notificationSettings]);
 
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  const activeLayersCount = [
+    showPoliceOnMap,
+    showPharmaciesOnMap,
+    showHospitalsOnMap,
+    showSchoolsOnMap,
+    showHeritageOnMap,
+    showWheelmapOnMap,
+  ].filter(Boolean).length;
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
     body: string;
@@ -1516,18 +1527,14 @@ export default function App() {
             accessibleRouteOnly={accessibilityRouteOnly}
           />
 
-          {/* Floating Categories Filter Chips Strip (Over the Map) */}
-          <View style={styles.floatingChipsWrapper} pointerEvents="box-none">
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.floatingChipsScroll}
-            >
-              {/* 1. Casa Quick Chip (First position) */}
+          {/* Top Compact Control Strip (Casa on Left, Active Filter Pill, Layers FAB on Right) */}
+          <View style={styles.topControlRow} pointerEvents="box-none">
+            <View style={styles.topControlLeft} pointerEvents="box-none">
+              {/* Casa Quick Pill */}
               <M3Pressable
                 scaleOnPress={0.94}
                 style={[
-                  styles.filterChip,
+                  styles.compactFilterPill,
                   homeAddress && styles.filterChipHomeActive,
                 ]}
                 onPress={handlePressHome}
@@ -1540,7 +1547,7 @@ export default function App() {
                 />
                 <Text
                   style={[
-                    styles.filterChipText,
+                    styles.compactFilterPillText,
                     homeAddress && styles.filterChipTextHomeActive,
                   ]}
                 >
@@ -1548,243 +1555,65 @@ export default function App() {
                 </Text>
               </M3Pressable>
 
-              {/* 2. Todos Quick Chip (Immediately after Casa) */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  selectedFilter !== null && styles.filterChipActive,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setSelectedFilter(null);
-                  setShowPoliceOnMap(true);
-                  setShowPharmaciesOnMap(true);
-                  setShowHospitalsOnMap(true);
-                  setShowSchoolsOnMap(true);
-                  setShowHeritageOnMap(true);
-                  setShowWheelmapOnMap(true);
-                }}
-              >
-                <Ionicons
-                  name="layers-outline"
-                  size={14}
-                  color={selectedFilter !== null ? M3Colors.onSecondaryContainer : M3Colors.onSurfaceVariant}
-                />
-                <Text
+              {/* Active Incident Category Pill (shown only when an alert filter is active) */}
+              {selectedFilter !== null && (
+                <M3Pressable
+                  scaleOnPress={0.94}
                   style={[
-                    styles.filterChipText,
-                    selectedFilter !== null && styles.filterChipTextActive,
+                    styles.compactFilterPill,
+                    styles.activeHazardFilterPill,
+                    {
+                      backgroundColor: CATEGORIES[selectedFilter]?.color || '#3B82F6',
+                      borderColor: CATEGORIES[selectedFilter]?.color || '#3B82F6',
+                    },
                   ]}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setSelectedFilter(null);
+                  }}
                 >
-                  Todos {incidents.length > 0 ? `(${incidents.length})` : ''}
-                </Text>
-              </M3Pressable>
+                  <MaterialCommunityIcons
+                    name={(CATEGORIES[selectedFilter]?.mciIcon as any) || 'alert-circle'}
+                    size={13}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.activeHazardFilterPillText} numberOfLines={1}>
+                    {CATEGORIES[selectedFilter]?.label}
+                  </Text>
+                  <Ionicons name="close-circle" size={14} color="#FFFFFF" />
+                </M3Pressable>
+              )}
+            </View>
 
-              {/* 3. Police Quick Chip (Selected by default, toggles Police markers on/off) */}
-              <M3Pressable
-                scaleOnPress={0.94}
+            {/* Right: Modern Map Layers Button (Google / Apple Maps pattern) */}
+            <M3Pressable
+              scaleOnPress={0.92}
+              style={[
+                styles.layersFab,
+                activeLayersCount < 6 && styles.layersFabModified,
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowLayersModal(true);
+              }}
+            >
+              <Ionicons
+                name="layers"
+                size={16}
+                color={activeLayersCount > 0 ? '#10B981' : '#94A3B8'}
+              />
+              <Text style={styles.layersFabText}>Camadas</Text>
+              <View
                 style={[
-                  styles.filterChip,
-                  showPoliceOnMap && styles.filterChipActivePolice,
+                  styles.layersBadge,
+                  activeLayersCount === 6 ? styles.layersBadgeAll : styles.layersBadgePartial,
                 ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setShowPoliceOnMap((prev) => !prev);
-                }}
               >
-                <MaterialCommunityIcons
-                  name="police-badge"
-                  size={14}
-                  color={showPoliceOnMap ? '#080A0C' : '#F8FAFC'}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    showPoliceOnMap && styles.filterChipTextActiveDark,
-                  ]}
-                >
-                  Polícia (PSP/GNR)
+                <Text style={styles.layersBadgeText}>
+                  {activeLayersCount}/6
                 </Text>
-              </M3Pressable>
-
-              {/* 4. Pharmacy Quick Chip (Selected by default, toggles Pharmacy markers on/off) */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  showPharmaciesOnMap && styles.filterChipActivePharmacy,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setShowPharmaciesOnMap((prev) => !prev);
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="plus-thick"
-                  size={14}
-                  color={showPharmaciesOnMap ? '#06140E' : '#10B981'}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    showPharmaciesOnMap && styles.filterChipTextActiveDark,
-                  ]}
-                >
-                  Farmácias
-                </Text>
-              </M3Pressable>
-
-              {/* 5. Hospitals Quick Chip (Selected by default, toggles Hospital markers on/off) */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  showHospitalsOnMap && styles.filterChipActiveHospital,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setShowHospitalsOnMap((prev) => !prev);
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="hospital-building"
-                  size={14}
-                  color={showHospitalsOnMap ? '#04131D' : '#0EA5E9'}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    showHospitalsOnMap && styles.filterChipTextActiveDark,
-                  ]}
-                >
-                  Hospitais
-                </Text>
-              </M3Pressable>
-
-              {/* 6. Schools Quick Chip (Selected by default, toggles School markers on/off) */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  showSchoolsOnMap && styles.filterChipActiveSchool,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setShowSchoolsOnMap((prev) => !prev);
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="school"
-                  size={14}
-                  color={showSchoolsOnMap ? '#FFFFFF' : '#8B5CF6'}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    showSchoolsOnMap && styles.filterChipTextActiveDark,
-                  ]}
-                >
-                  Escolas
-                </Text>
-              </M3Pressable>
-
-              {/* 7. Heritage Quick Chip (Selected by default, toggles Heritage markers on/off) */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  showHeritageOnMap && styles.filterChipActiveHeritage,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setShowHeritageOnMap((prev) => !prev);
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="castle"
-                  size={14}
-                  color={showHeritageOnMap ? '#FFFFFF' : '#D97706'}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    showHeritageOnMap && styles.filterChipTextActiveDark,
-                  ]}
-                >
-                  Património
-                </Text>
-              </M3Pressable>
-
-              {/* 8. Wheelmap Accessibility Quick Chip (Selected by default, toggles Wheelmap markers on/off) */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.filterChip,
-                  showWheelmapOnMap && styles.filterChipActiveWheelmap,
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setShowWheelmapOnMap((prev) => !prev);
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="wheelchair"
-                  size={14}
-                  color={showWheelmapOnMap ? '#FFFFFF' : '#10B981'}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    showWheelmapOnMap && styles.filterChipTextActiveDark,
-                  ]}
-                >
-                  Acessibilidade
-                </Text>
-              </M3Pressable>
-
-              {/* 6. Hazard Category Chips (Unselected by default) */}
-              {(Object.keys(CATEGORIES) as IncidentCategory[])
-                .filter(
-                  (catKey) =>
-                    catKey !== 'protest_infiltrator' ||
-                    !!notificationSettings.protestMode ||
-                    incidents.some((i) => i.category === 'protest_infiltrator' && isProtestInfiltratorVerified(i, incidents, 300, 3))
-                )
-                .map((catKey) => {
-                const cat = CATEGORIES[catKey];
-                const isSelected = selectedFilter === catKey;
-                const count = incidents.filter((i) => i.category === catKey && (i.category !== 'protest_infiltrator' || isProtestInfiltratorVerified(i, incidents, 300, 3))).length;
-                return (
-                  <M3Pressable
-                    key={catKey}
-                    scaleOnPress={0.94}
-                    style={[
-                      styles.filterChip,
-                      isSelected && { backgroundColor: cat.color, borderColor: cat.color },
-                    ]}
-                    onPress={() => {
-                      Haptics.selectionAsync();
-                      setSelectedFilter(isSelected ? null : catKey);
-                    }}
-                  >
-                    <MaterialCommunityIcons
-                      name={(cat.mciIcon || 'alert-circle') as any}
-                      size={14}
-                      color={isSelected ? '#FFFFFF' : cat.color}
-                    />
-                    <Text
-                      style={[
-                        styles.filterChipText,
-                        isSelected && styles.filterChipTextActiveWhite,
-                      ]}
-                    >
-                      {cat.label} {count > 0 ? `(${count})` : ''}
-                    </Text>
-                  </M3Pressable>
-                );
-              })}
-            </ScrollView>
+              </View>
+            </M3Pressable>
           </View>
 
           {/* Active TVDE Trip Protection Floating Banner */}
@@ -1996,6 +1825,44 @@ export default function App() {
         onOpenAuth={() => setShowAuthModal(true)}
         onOpenSentinels={() => setShowSentinelsModal(true)}
         onSignOut={handleSignOut}
+      />
+
+      {/* Map Layers & Hazards Control Sheet (Google/Apple Maps pattern) */}
+      <MapLayersModal
+        visible={showLayersModal}
+        onClose={() => setShowLayersModal(false)}
+        showPoliceOnMap={showPoliceOnMap}
+        onTogglePolice={() => setShowPoliceOnMap((prev) => !prev)}
+        showPharmaciesOnMap={showPharmaciesOnMap}
+        onTogglePharmacies={() => setShowPharmaciesOnMap((prev) => !prev)}
+        showHospitalsOnMap={showHospitalsOnMap}
+        onToggleHospitals={() => setShowHospitalsOnMap((prev) => !prev)}
+        showSchoolsOnMap={showSchoolsOnMap}
+        onToggleSchools={() => setShowSchoolsOnMap((prev) => !prev)}
+        showHeritageOnMap={showHeritageOnMap}
+        onToggleHeritage={() => setShowHeritageOnMap((prev) => !prev)}
+        showWheelmapOnMap={showWheelmapOnMap}
+        onToggleWheelmap={() => setShowWheelmapOnMap((prev) => !prev)}
+        onActivateAllLayers={() => {
+          setShowPoliceOnMap(true);
+          setShowPharmaciesOnMap(true);
+          setShowHospitalsOnMap(true);
+          setShowSchoolsOnMap(true);
+          setShowHeritageOnMap(true);
+          setShowWheelmapOnMap(true);
+        }}
+        onDeactivateAllLayers={() => {
+          setShowPoliceOnMap(false);
+          setShowPharmaciesOnMap(false);
+          setShowHospitalsOnMap(false);
+          setShowSchoolsOnMap(false);
+          setShowHeritageOnMap(false);
+          setShowWheelmapOnMap(false);
+        }}
+        selectedFilter={selectedFilter}
+        onSelectFilter={setSelectedFilter}
+        incidents={incidents}
+        protestMode={Boolean(notificationSettings.protestMode)}
       />
 
       {/* Auth Modal (Login / Sign Up with Google & Email) */}
@@ -2268,14 +2135,20 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 9999,
   },
-  floatingChipsWrapper: {
+  topControlRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
     marginTop: 6,
   },
-  floatingChipsScroll: {
-    paddingHorizontal: 14,
+  topControlLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+    flex: 1,
   },
-  filterChip: {
+  compactFilterPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -2286,6 +2159,58 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     ...M3Elevation.level2,
+  },
+  compactFilterPillText: {
+    fontSize: 12,
+    color: '#CBD5E1',
+    fontWeight: '600',
+  },
+  activeHazardFilterPill: {
+    paddingHorizontal: 10,
+    gap: 5,
+  },
+  activeHazardFilterPillText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+    maxWidth: 130,
+  },
+  layersFab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: M3Shapes.full,
+    backgroundColor: 'rgba(14, 18, 23, 0.94)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    ...M3Elevation.level2,
+  },
+  layersFabModified: {
+    borderColor: '#F59E0B',
+  },
+  layersFabText: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  layersBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  layersBadgeAll: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  layersBadgePartial: {
+    backgroundColor: 'rgba(245, 158, 11, 0.25)',
+  },
+  layersBadgeText: {
+    color: '#F8FAFC',
+    fontSize: 10,
+    fontWeight: '900',
   },
   filterChipHomeActive: {
     backgroundColor: M3Colors.primaryContainer,
