@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialSymbolIcon, MaterialSymbolName } from './MaterialSymbolIcon';
 import Haptics from '../utils/haptics';
 import { Incident, IncidentCategory } from '../types';
 import { CATEGORIES } from '../constants/categories';
@@ -17,13 +18,15 @@ import { M3BottomSheetWrapper, M3Pressable } from './M3MotionWrapper';
 interface MapLayersModalProps {
   visible: boolean;
   onClose: () => void;
-  // Infrastructure Layers Toggles (Polícia, Farmácias, Hospitais)
+  // Infrastructure Layers Toggles (Polícia, Farmácias, Hospitais, Wheelmap)
   showPoliceOnMap: boolean;
   onTogglePolice: () => void;
   showPharmaciesOnMap: boolean;
   onTogglePharmacies: () => void;
   showHospitalsOnMap: boolean;
   onToggleHospitals: () => void;
+  showWheelmapOnMap: boolean;
+  onToggleWheelmap: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -42,6 +45,8 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onTogglePharmacies,
   showHospitalsOnMap,
   onToggleHospitals,
+  showWheelmapOnMap,
+  onToggleWheelmap,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -53,37 +58,56 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     showPoliceOnMap,
     showPharmaciesOnMap,
     showHospitalsOnMap,
+    showWheelmapOnMap,
   ].filter(Boolean).length;
 
-  const allLayersActive = activeLayersCount === 3;
+  const allLayersActive = activeLayersCount === 4;
 
-  const INFRASTRUCTURE_LAYERS = [
-    {
-      id: 'police',
-      name: 'Polícia (PSP/GNR)',
-      subtitle: 'Esquadras e postos policiais',
-      icon: 'police-badge',
-      color: '#F8FAFC',
-      active: showPoliceOnMap,
-      onToggle: onTogglePolice,
-    },
+  const INFRASTRUCTURE_LAYERS: {
+    id: string;
+    name: string;
+    subtitle: string;
+    symbol?: MaterialSymbolName;
+    icon?: string;
+    color: string;
+    active: boolean;
+    onToggle: () => void;
+  }[] = [
     {
       id: 'pharmacy',
       name: 'Farmácias',
       subtitle: 'Farmácias 24h e serviço de turno',
-      icon: 'plus-thick',
+      symbol: 'health_cross',
       color: '#10B981',
       active: showPharmaciesOnMap,
       onToggle: onTogglePharmacies,
     },
     {
+      id: 'police',
+      name: 'Polícia (PSP/GNR/PJ)',
+      subtitle: 'Esquadras e postos policiais',
+      symbol: 'local_police',
+      color: '#38BDF8',
+      active: showPoliceOnMap,
+      onToggle: onTogglePolice,
+    },
+    {
       id: 'hospital',
       name: 'Hospitais',
       subtitle: 'Urgências e centros hospitalares',
-      icon: 'hospital-building',
+      symbol: 'emergency',
       color: '#0EA5E9',
       active: showHospitalsOnMap,
       onToggle: onToggleHospitals,
+    },
+    {
+      id: 'wheelmap',
+      name: 'Acessibilidade (Wheelmap)',
+      subtitle: 'Locais verificados c/ rampa e elevador',
+      symbol: 'accessible',
+      color: '#10B981',
+      active: showWheelmapOnMap,
+      onToggle: onToggleWheelmap,
     },
   ];
 
@@ -97,12 +121,12 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
             <View style={styles.headerIconCircle}>
-              <Ionicons name="layers" size={20} color="#10B981" />
+              <Ionicons name="options-outline" size={20} color="#10B981" />
             </View>
             <View>
-              <Text style={styles.headerTitle}>Camadas do Mapa</Text>
+              <Text style={styles.headerTitle}>Filtros do Mapa</Text>
               <Text style={styles.headerSubtitle}>
-                {activeLayersCount} de 3 camadas ativas no mapa
+                {activeLayersCount} de 4 filtros ativos no mapa
               </Text>
             </View>
           </View>
@@ -150,7 +174,7 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
                   allLayersActive && styles.quickActionTextActive,
                 ]}
               >
-                {allLayersActive ? 'Todas as Camadas Ativas' : 'Ativar Todas as Camadas'}
+                {allLayersActive ? 'Todos os Filtros Ativos' : 'Ativar Todos os Filtros'}
               </Text>
             </TouchableOpacity>
 
@@ -169,7 +193,7 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
           </View>
 
           {/* Section 1: Infrastructure Layers */}
-          <Text style={styles.sectionTitle}>PONTOS DE APOIO E INFRAESTRUTURAS</Text>
+          <Text style={styles.sectionTitle}>PONTOS DE APOIO E ACESSIBILIDADE</Text>
           <View style={styles.layersGrid}>
             {INFRASTRUCTURE_LAYERS.map((layer) => {
               const isActive = layer.active;
@@ -199,11 +223,19 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
                         },
                       ]}
                     >
-                      <MaterialCommunityIcons
-                        name={layer.icon as any}
-                        size={18}
-                        color={layer.color}
-                      />
+                      {layer.symbol ? (
+                        <MaterialSymbolIcon
+                          name={layer.symbol}
+                          size={19}
+                          color={layer.color}
+                        />
+                      ) : (
+                        <MaterialCommunityIcons
+                          name={layer.icon as any}
+                          size={18}
+                          color={layer.color}
+                        />
+                      )}
                     </View>
                     <View
                       style={[

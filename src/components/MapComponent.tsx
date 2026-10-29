@@ -402,6 +402,7 @@ interface MapComponentProps {
   showPoliceOnMap?: boolean;
   showPharmaciesOnMap?: boolean;
   showHospitalsOnMap?: boolean;
+  showWheelmapOnMap?: boolean;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -435,9 +436,10 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   activeSOSAlerts,
   safePlaces,
   selectedCategoryFilter,
-  showPoliceOnMap = true,
-  showPharmaciesOnMap = true,
-  showHospitalsOnMap = true,
+  showPoliceOnMap = false,
+  showPharmaciesOnMap = false,
+  showHospitalsOnMap = false,
+  showWheelmapOnMap = false,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -766,11 +768,13 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
     result.push(...sortByDistanceToCenter(heritage).slice(0, 15));
 
     // Wheelmap Pontos de Acessibilidade (OpenStreetMap Wheelmap)
-    const wheelmapPlaces = safePlaces.filter((p) => p.type === 'wheelmap');
-    result.push(...sortByDistanceToCenter(wheelmapPlaces).slice(0, 20));
+    if (showWheelmapOnMap) {
+      const wheelmapPlaces = safePlaces.filter((p) => p.type === 'wheelmap');
+      result.push(...sortByDistanceToCenter(wheelmapPlaces).slice(0, 20));
+    }
 
     return result;
-  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, mapCenter, userLocation]);
+  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, showWheelmapOnMap, mapCenter, userLocation]);
 
   // Memoized filter of incidents
   const filteredIncidents = useMemo(() => {
@@ -1340,8 +1344,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   radarFloatingBtn: {
-    borderColor: 'rgba(16, 185, 129, 0.4)',
-    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+    backgroundColor: '#0F1A15',
+    borderColor: '#10B981',
+    borderWidth: 1.5,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 6,
   },
   floatingControlText: {
     color: '#CBD5E1',

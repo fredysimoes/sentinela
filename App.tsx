@@ -169,9 +169,10 @@ export default function App() {
 
   // Filtering & Modal States
   const [selectedFilter, setSelectedFilter] = useState<IncidentCategory | null>(null);
-  const [showPoliceOnMap, setShowPoliceOnMap] = useState(true);
-  const [showPharmaciesOnMap, setShowPharmaciesOnMap] = useState(true);
-  const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(true);
+  const [showPoliceOnMap, setShowPoliceOnMap] = useState(false);
+  const [showPharmaciesOnMap, setShowPharmaciesOnMap] = useState(false);
+  const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(false);
+  const [showWheelmapOnMap, setShowWheelmapOnMap] = useState(false);
   const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
@@ -204,6 +205,7 @@ export default function App() {
     showPoliceOnMap,
     showPharmaciesOnMap,
     showHospitalsOnMap,
+    showWheelmapOnMap,
   ].filter(Boolean).length;
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
@@ -1416,6 +1418,7 @@ export default function App() {
           showPoliceOnMap={showPoliceOnMap}
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
+          showWheelmapOnMap={showWheelmapOnMap}
           activeRoute={
             navState
               ? navState.route
@@ -1524,9 +1527,9 @@ export default function App() {
             accessibleRouteOnly={accessibilityRouteOnly}
           />
 
-          {/* Top Compact Control Strip (Casa on Left, Active Filter Pill, Layers FAB on Right) */}
+          {/* Top Compact Control Strip (Casa on Left with Filtros right underneath, and Active Hazard Pill if active) */}
           <View style={styles.topControlRow} pointerEvents="box-none">
-            <View style={styles.topControlLeft} pointerEvents="box-none">
+            <View style={styles.topControlColumn} pointerEvents="box-none">
               {/* Casa Quick Pill */}
               <M3Pressable
                 scaleOnPress={0.94}
@@ -1552,65 +1555,62 @@ export default function App() {
                 </Text>
               </M3Pressable>
 
-              {/* Active Incident Category Pill (shown only when an alert filter is active) */}
-              {selectedFilter !== null && (
-                <M3Pressable
-                  scaleOnPress={0.94}
-                  style={[
-                    styles.compactFilterPill,
-                    styles.activeHazardFilterPill,
-                    {
-                      backgroundColor: CATEGORIES[selectedFilter]?.color || '#3B82F6',
-                      borderColor: CATEGORIES[selectedFilter]?.color || '#3B82F6',
-                    },
-                  ]}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    setSelectedFilter(null);
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name={(CATEGORIES[selectedFilter]?.mciIcon as any) || 'alert-circle'}
-                    size={13}
-                    color="#FFFFFF"
-                  />
-                  <Text style={styles.activeHazardFilterPillText} numberOfLines={1}>
-                    {CATEGORIES[selectedFilter]?.label}
-                  </Text>
-                  <Ionicons name="close-circle" size={14} color="#FFFFFF" />
-                </M3Pressable>
-              )}
+              {/* Filtros Button (Colocado debaixo do botão Casa) */}
+              <M3Pressable
+                scaleOnPress={0.92}
+                style={[
+                  styles.filtersFab,
+                  activeLayersCount > 0 && styles.filtersFabActive,
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowLayersModal(true);
+                }}
+              >
+                <Ionicons
+                  name="options-outline"
+                  size={15}
+                  color={activeLayersCount > 0 ? '#10B981' : '#94A3B8'}
+                />
+                <Text style={styles.filtersFabText}>Filtros</Text>
+                {activeLayersCount > 0 && (
+                  <View style={styles.filtersBadge}>
+                    <Text style={styles.filtersBadgeText}>
+                      {activeLayersCount}
+                    </Text>
+                  </View>
+                )}
+              </M3Pressable>
             </View>
 
-            {/* Right: Modern Map Layers Button (Google / Apple Maps pattern) */}
-            <M3Pressable
-              scaleOnPress={0.92}
-              style={[
-                styles.layersFab,
-                activeLayersCount < 3 && styles.layersFabModified,
-              ]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setShowLayersModal(true);
-              }}
-            >
-              <Ionicons
-                name="layers"
-                size={16}
-                color={activeLayersCount > 0 ? '#10B981' : '#94A3B8'}
-              />
-              <Text style={styles.layersFabText}>Camadas</Text>
-              <View
+            {/* Active Incident Category Pill (shown only when an alert filter is active) */}
+            {selectedFilter !== null && (
+              <M3Pressable
+                scaleOnPress={0.94}
                 style={[
-                  styles.layersBadge,
-                  activeLayersCount === 3 ? styles.layersBadgeAll : styles.layersBadgePartial,
+                  styles.compactFilterPill,
+                  styles.activeHazardFilterPill,
+                  {
+                    backgroundColor: CATEGORIES[selectedFilter]?.color || '#3B82F6',
+                    borderColor: CATEGORIES[selectedFilter]?.color || '#3B82F6',
+                  },
                 ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setSelectedFilter(null);
+                }}
               >
-                <Text style={styles.layersBadgeText}>
-                  {activeLayersCount}/3
+                <MaterialCommunityIcons
+                  name={(CATEGORIES[selectedFilter]?.mciIcon as any) || 'alert-circle'}
+                  size={13}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.activeHazardFilterPillText} numberOfLines={1}>
+                  {CATEGORIES[selectedFilter]?.label}
                 </Text>
-              </View>
-            </M3Pressable>
+                <Ionicons name="close-circle" size={14} color="#FFFFFF" />
+              </M3Pressable>
+            )}
           </View>
 
           {/* Active TVDE Trip Protection Floating Banner */}
@@ -1834,15 +1834,19 @@ export default function App() {
         onTogglePharmacies={() => setShowPharmaciesOnMap((prev) => !prev)}
         showHospitalsOnMap={showHospitalsOnMap}
         onToggleHospitals={() => setShowHospitalsOnMap((prev) => !prev)}
+        showWheelmapOnMap={showWheelmapOnMap}
+        onToggleWheelmap={() => setShowWheelmapOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
           setShowPharmaciesOnMap(true);
           setShowHospitalsOnMap(true);
+          setShowWheelmapOnMap(true);
         }}
         onDeactivateAllLayers={() => {
           setShowPoliceOnMap(false);
           setShowPharmaciesOnMap(false);
           setShowHospitalsOnMap(false);
+          setShowWheelmapOnMap(false);
         }}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}
@@ -2122,16 +2126,15 @@ const styles = StyleSheet.create({
   },
   topControlRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingHorizontal: 14,
     marginTop: 6,
   },
-  topControlLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
+  topControlColumn: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 6,
   },
   compactFilterPill: {
     flexDirection: 'row',
@@ -2150,6 +2153,42 @@ const styles = StyleSheet.create({
     color: '#CBD5E1',
     fontWeight: '600',
   },
+  filtersFab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: M3Shapes.full,
+    backgroundColor: 'rgba(14, 18, 23, 0.94)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    ...M3Elevation.level2,
+  },
+  filtersFabActive: {
+    borderColor: '#10B981',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  filtersFabText: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  filtersBadge: {
+    backgroundColor: '#10B981',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  filtersBadgeText: {
+    color: '#080A0C',
+    fontSize: 10,
+    fontWeight: '900',
+  },
   activeHazardFilterPill: {
     paddingHorizontal: 10,
     gap: 5,
@@ -2159,43 +2198,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     maxWidth: 130,
-  },
-  layersFab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: M3Shapes.full,
-    backgroundColor: 'rgba(14, 18, 23, 0.94)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(16, 185, 129, 0.4)',
-    ...M3Elevation.level2,
-  },
-  layersFabModified: {
-    borderColor: '#F59E0B',
-  },
-  layersFabText: {
-    color: '#F8FAFC',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-  layersBadge: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 6,
-  },
-  layersBadgeAll: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-  },
-  layersBadgePartial: {
-    backgroundColor: 'rgba(245, 158, 11, 0.25)',
-  },
-  layersBadgeText: {
-    color: '#F8FAFC',
-    fontSize: 10,
-    fontWeight: '900',
   },
   filterChipHomeActive: {
     backgroundColor: M3Colors.primaryContainer,
