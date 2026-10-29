@@ -13,6 +13,7 @@ import {
   Linking,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as Font from 'expo-font';
 import * as Location from 'expo-location';
 import Haptics from './src/utils/haptics';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -769,6 +770,11 @@ export default function App() {
     });
 
     async function initApp() {
+      // 0. Load Google Fonts Material Symbols Outlined
+      Font.loadAsync({
+        MaterialSymbolsOutlined: require('./assets/fonts/MaterialSymbolsOutlined.ttf'),
+      }).catch(() => {});
+
       // 1. Request Push Notification permissions
       await requestNotificationPermissions();
 

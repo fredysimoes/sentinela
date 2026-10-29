@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import MapView, { Marker, Circle, Polyline } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialSymbolIcon } from './MaterialSymbolIcon';
 import { StalkingTrackingSession } from '../services/stalkingService';
 
 const GOOGLE_MAPS_DARK_STYLE = [
@@ -155,10 +156,10 @@ const PharmacyMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
             isOpen ? styles.pharmacyHeadOpen : styles.pharmacyHeadClosed,
           ]}
         >
-          <MaterialCommunityIcons
-            name={isOpen ? 'plus-thick' : 'plus'}
-            size={isOpen ? 19 : 18}
-            color={isOpen ? '#06140E' : '#10B981'}
+          <MaterialSymbolIcon
+            name="health_cross"
+            size={19}
+            color={isOpen ? '#10B981' : '#FFFFFF'}
           />
         </View>
         <View
@@ -195,10 +196,10 @@ const HospitalMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
             isOpen ? styles.hospitalHeadOpen : styles.hospitalHeadClosed,
           ]}
         >
-          <MaterialCommunityIcons
-            name="hospital-building"
-            size={17}
-            color={isOpen ? '#04131D' : '#0EA5E9'}
+          <MaterialSymbolIcon
+            name="emergency"
+            size={18}
+            color="#FFFFFF"
           />
         </View>
         <View
@@ -232,10 +233,10 @@ const PoliceMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; 
     >
       <View style={styles.teardropMarkerWrap}>
         <View style={[styles.teardropHead, styles.policeHead]}>
-          <MaterialCommunityIcons
-            name="police-badge"
-            size={18}
-            color="#080A0C"
+          <MaterialSymbolIcon
+            name="local_police"
+            size={19}
+            color="#38BDF8"
           />
         </View>
         <View style={[styles.teardropTip, styles.policeTip]} />
@@ -330,8 +331,8 @@ const WheelmapMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
     >
       <View style={styles.teardropMarkerWrap}>
         <View style={[styles.teardropHead, { backgroundColor: color, borderColor, borderWidth: 2 }]}>
-          <MaterialCommunityIcons
-            name="wheelchair"
+          <MaterialSymbolIcon
+            name="accessible"
             size={18}
             color="#FFFFFF"
           />
@@ -1598,65 +1599,65 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 
-  // Pharmacy Teardrop: Solid Neon Emerald when Open, Outlined Neon Emerald when Closed
+  // Pharmacy Teardrop: Green health_cross icon (Green when Open, White when Closed)
   pharmacyHeadOpen: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#07160E',
     borderWidth: 2,
-    borderColor: '#6EE7B7',
+    borderColor: '#10B981',
   },
   pharmacyTipOpen: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#07160E',
     borderRightWidth: 1.5,
     borderBottomWidth: 1.5,
-    borderColor: '#6EE7B7',
+    borderColor: '#10B981',
   },
   pharmacyHeadClosed: {
-    backgroundColor: '#0A0D12',
+    backgroundColor: '#10141C',
     borderWidth: 2,
-    borderColor: '#10B981',
+    borderColor: '#475569',
   },
   pharmacyTipClosed: {
-    backgroundColor: '#0A0D12',
+    backgroundColor: '#10141C',
     borderRightWidth: 2,
     borderBottomWidth: 2,
-    borderColor: '#10B981',
+    borderColor: '#475569',
   },
 
-  // Hospital Teardrop: Solid Cyan Neon when Open, Outlined Cyan Neon when Closed
+  // Hospital Teardrop: White emergency Star of Life icon (Solid Cyan/Navy when Open)
   hospitalHeadOpen: {
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0284C7',
     borderWidth: 2,
     borderColor: '#7DD3FC',
   },
   hospitalTipOpen: {
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0284C7',
     borderRightWidth: 1.5,
     borderBottomWidth: 1.5,
     borderColor: '#7DD3FC',
   },
   hospitalHeadClosed: {
-    backgroundColor: '#0A0D12',
+    backgroundColor: '#0B131D',
     borderWidth: 2,
-    borderColor: '#0EA5E9',
+    borderColor: '#0284C7',
   },
   hospitalTipClosed: {
-    backgroundColor: '#0A0D12',
+    backgroundColor: '#0B131D',
     borderRightWidth: 2,
     borderBottomWidth: 2,
-    borderColor: '#0EA5E9',
+    borderColor: '#0284C7',
   },
 
-  // Police (PSP / GNR / PJ) Teardrop: Crisp White with Obsidian Police Badge
+  // Police (PSP / GNR / PJ) Teardrop: Stealth Navy with Blue local_police Shield
   policeHead: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#07101C',
     borderWidth: 2,
-    borderColor: '#CBD5E1',
+    borderColor: '#38BDF8',
   },
   policeTip: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#07101C',
     borderRightWidth: 1.5,
     borderBottomWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderColor: '#38BDF8',
   },
   policeMicroBadge: {
     position: 'absolute',
@@ -1664,14 +1665,14 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#080A0C',
     borderWidth: 1,
-    borderColor: '#F8FAFC',
+    borderColor: '#38BDF8',
     borderRadius: 5,
     paddingHorizontal: 3.5,
     paddingVertical: 0.5,
     zIndex: 3,
   },
   policeMicroBadgeText: {
-    color: '#F8FAFC',
+    color: '#38BDF8',
     fontSize: 6.5,
     fontWeight: '900',
     letterSpacing: 0.3,

@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialSymbolIcon, MaterialSymbolName } from './MaterialSymbolIcon';
 import { SafePlace, UserLocation } from '../types';
 import { calculateDistanceMeters, formatDistance, getGoogleMapsUrl } from '../utils/geo';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
@@ -79,51 +80,54 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
     }
   };
 
-  const getTypeMeta = () => {
+  const getTypeMeta = (): {
+    title: string;
+    color: string;
+    bg: string;
+    symbol?: MaterialSymbolName;
+    icon?: string;
+    isMci?: boolean;
+    badgeText: string;
+  } => {
     switch (place.type) {
       case 'psp':
         return {
           title: 'PSP - Polícia de Segurança Pública',
-          color: '#F8FAFC',
-          bg: 'rgba(248, 250, 252, 0.14)',
-          icon: 'police-badge',
-          isMci: true,
+          color: '#38BDF8',
+          bg: 'rgba(56, 189, 248, 0.14)',
+          symbol: 'local_police',
           badgeText: 'ESQUADRA PSP',
         };
       case 'gnr':
         return {
           title: 'GNR - Guarda Nacional Republicana',
-          color: '#F8FAFC',
-          bg: 'rgba(248, 250, 252, 0.14)',
-          icon: 'police-badge',
-          isMci: true,
+          color: '#38BDF8',
+          bg: 'rgba(56, 189, 248, 0.14)',
+          symbol: 'local_police',
           badgeText: 'POSTO GNR',
         };
       case 'pj':
         return {
           title: 'PJ - Polícia Judiciária',
-          color: '#F8FAFC',
-          bg: 'rgba(248, 250, 252, 0.14)',
-          icon: 'police-badge',
-          isMci: true,
+          color: '#38BDF8',
+          bg: 'rgba(56, 189, 248, 0.14)',
+          symbol: 'local_police',
           badgeText: 'DIRETORIA PJ',
         };
       case 'hospital':
         return {
           title: 'Hospital / Unidade de Urgência',
-          color: placeStatus?.isOpen ? '#0EA5E9' : '#94A3B8',
-          bg: placeStatus?.isOpen ? 'rgba(14, 165, 233, 0.16)' : 'rgba(148, 163, 184, 0.12)',
-          icon: 'hospital-building',
-          isMci: true,
+          color: '#FFFFFF',
+          bg: placeStatus?.isOpen ? 'rgba(14, 165, 233, 0.22)' : 'rgba(148, 163, 184, 0.12)',
+          symbol: 'emergency',
           badgeText: placeStatus?.isOpen ? 'HOSPITAL ABERTO' : 'HOSPITAL FECHADO',
         };
       case 'pharmacy':
         return {
           title: 'Farmácia de Atendimento',
-          color: placeStatus?.isOpen ? '#10B981' : '#94A3B8',
-          bg: placeStatus?.isOpen ? 'rgba(16, 185, 129, 0.16)' : 'rgba(148, 163, 184, 0.12)',
-          icon: placeStatus?.isOpen ? 'plus-thick' : 'plus',
-          isMci: true,
+          color: placeStatus?.isOpen ? '#10B981' : '#FFFFFF',
+          bg: placeStatus?.isOpen ? 'rgba(16, 185, 129, 0.16)' : 'rgba(255, 255, 255, 0.12)',
+          symbol: 'health_cross',
           badgeText: placeStatus?.badgeText || 'FARMÁCIA',
         };
       case 'school':
@@ -159,8 +163,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           title: place.wheelmapCategory ? `Acessibilidade · ${place.wheelmapCategory}` : 'Ponto de Acessibilidade Wheelmap',
           color: wColor,
           bg: wBg,
-          icon: 'wheelchair',
-          isMci: true,
+          symbol: 'accessible',
           badgeText: isYes ? 'ACESSO TOTAL' : isLimited ? 'ACESSO PARCIAL' : 'NÃO ACESSÍVEL',
         };
       default:
@@ -185,7 +188,9 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
       {/* Top row */}
       <View style={styles.topRow}>
         <View style={[styles.typeBadge, { backgroundColor: meta.bg, borderColor: meta.color }]}>
-          {meta.isMci ? (
+          {meta.symbol ? (
+            <MaterialSymbolIcon name={meta.symbol} size={15} color={meta.color} />
+          ) : meta.isMci ? (
             <MaterialCommunityIcons name={meta.icon as any} size={15} color={meta.color} />
           ) : (
             <Ionicons name={meta.icon as any} size={14} color={meta.color} />
