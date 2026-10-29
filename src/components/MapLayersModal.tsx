@@ -29,6 +29,8 @@ interface MapLayersModalProps {
   onToggleWheelmap: () => void;
   showStcpBusesOnMap?: boolean;
   onToggleStcpBuses?: () => void;
+  showUnirBusesOnMap?: boolean;
+  onToggleUnirBuses?: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -51,6 +53,8 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onToggleWheelmap,
   showStcpBusesOnMap = false,
   onToggleStcpBuses,
+  showUnirBusesOnMap = false,
+  onToggleUnirBuses,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -64,9 +68,10 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     showHospitalsOnMap,
     showWheelmapOnMap,
     showStcpBusesOnMap,
+    showUnirBusesOnMap,
   ].filter(Boolean).length;
 
-  const allLayersActive = activeLayersCount === 5;
+  const allLayersActive = activeLayersCount === 6;
 
   const INFRASTRUCTURE_LAYERS: {
     id: string;
@@ -81,11 +86,20 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     {
       id: 'stcp',
       name: 'Autocarros STCP',
-      subtitle: 'Em direto no Grande Porto',
+      subtitle: 'Porto Urbano em direto',
       icon: 'bus-side',
       color: '#0284C7',
       active: showStcpBusesOnMap,
       onToggle: onToggleStcpBuses || (() => {}),
+    },
+    {
+      id: 'unir',
+      name: 'Autocarros UNIR',
+      subtitle: 'Área Metropolitana em direto',
+      icon: 'bus',
+      color: '#0891B2',
+      active: showUnirBusesOnMap,
+      onToggle: onToggleUnirBuses || (() => {}),
     },
     {
       id: 'pharmacy',

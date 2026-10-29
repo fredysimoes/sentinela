@@ -503,10 +503,12 @@ const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSel
   );
 });
 
-// Marcador em Cápsula para Autocarros STCP em Tempo Real
+// Marcador em Cápsula para Autocarros STCP e UNIR em Tempo Real
 const StcpBusCapsuleMarker = memo(({ vehicle, onSelect }: { vehicle: StcpVehicle; onSelect?: (vehicle: StcpVehicle) => void }) => {
-  const color = getStcpLineColor(vehicle.routeId);
+  const color = getStcpLineColor(vehicle.routeId, vehicle.operator);
   const bearing = typeof vehicle.bearing === 'number' && !isNaN(vehicle.bearing) ? vehicle.bearing : null;
+  const isUnir = vehicle.operator === 'unir';
+  const displayLine = vehicle.displayLine || vehicle.routeId || (isUnir ? 'UNIR' : 'STCP');
 
   return (
     <Marker
@@ -519,7 +521,12 @@ const StcpBusCapsuleMarker = memo(({ vehicle, onSelect }: { vehicle: StcpVehicle
     >
       <View style={[styles.busCapsuleWrap, { backgroundColor: color.bg, borderColor: color.border }]}>
         <MaterialCommunityIcons name="bus-side" size={13} color={color.text} style={styles.busCapsuleIcon} />
-        <Text style={[styles.busCapsuleText, { color: color.text }]}>{vehicle.routeId || 'STCP'}</Text>
+        <Text style={[styles.busCapsuleText, { color: color.text }]}>{displayLine}</Text>
+        {isUnir && (
+          <View style={styles.unirMicroBadge}>
+            <Text style={styles.unirMicroBadgeText}>UNIR</Text>
+          </View>
+        )}
         {bearing !== null && (
           <View style={[styles.busBearingIndicator, { transform: [{ rotate: `${bearing}deg` }] }]}>
             <Ionicons name="navigate" size={10} color={color.text} />
@@ -2155,5 +2162,18 @@ const styles = StyleSheet.create({
     marginLeft: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  unirMicroBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    paddingHorizontal: 3.5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    marginLeft: 1,
+  },
+  unirMicroBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 7.5,
+    fontWeight: '900',
+    letterSpacing: 0.2,
   },
 });

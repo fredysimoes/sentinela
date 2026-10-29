@@ -80,7 +80,7 @@ import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerMo
 import { TvdeTripModal } from './src/components/TvdeTripModal';
 import { MapLayersModal } from './src/components/MapLayersModal';
 import { HalloweenAmbientOverlay } from './src/components/HalloweenAmbientOverlay';
-import { StcpVehicle, fetchStcpLiveVehicles } from './src/services/stcpRealtimeService';
+import { StcpVehicle, fetchPortoLiveBuses } from './src/services/stcpRealtimeService';
 import {
   TvdeTripSession,
   ParsedTvdeDraft,
@@ -195,7 +195,8 @@ export default function App() {
   const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(false);
   const [showWheelmapOnMap, setShowWheelmapOnMap] = useState(false);
   const [showStcpBusesOnMap, setShowStcpBusesOnMap] = useState(false);
-  const [stcpVehicles, setStcpVehicles] = useState<StcpVehicle[]>([]);
+  const [showUnirBusesOnMap, setShowUnirBusesOnMap] = useState(false);
+  const [transitVehicles, setTransitVehicles] = useState<StcpVehicle[]>([]);
   const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
@@ -222,22 +223,25 @@ export default function App() {
     notificationSettingsRef.current = notificationSettings;
   }, [notificationSettings]);
 
-  // Polling em Tempo Real de Autocarros STCP (Grande Porto)
+  // Polling em Tempo Real de Autocarros (STCP + UNIR)
   useEffect(() => {
-    if (!showStcpBusesOnMap) {
-      setStcpVehicles([]);
+    if (!showStcpBusesOnMap && !showUnirBusesOnMap) {
+      setTransitVehicles([]);
       return;
     }
 
     let isMounted = true;
     const loadBuses = async () => {
       try {
-        const vehicles = await fetchStcpLiveVehicles();
-        if (isMounted && vehicles.length > 0) {
-          setStcpVehicles(vehicles);
+        const vehicles = await fetchPortoLiveBuses({
+          includeStcp: showStcpBusesOnMap,
+          includeUnir: showUnirBusesOnMap,
+        });
+        if (isMounted) {
+          setTransitVehicles(vehicles);
         }
       } catch (err) {
-        console.warn('Falha ao atualizar autocarros STCP:', err);
+        console.warn('Falha ao atualizar autocarros STCP/UNIR:', err);
       }
     };
 
@@ -247,7 +251,7 @@ export default function App() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [showStcpBusesOnMap]);
+  }, [showStcpBusesOnMap, showUnirBusesOnMap]);
 
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
 
@@ -257,6 +261,7 @@ export default function App() {
     showHospitalsOnMap,
     showWheelmapOnMap,
     showStcpBusesOnMap,
+    showUnirBusesOnMap,
   ].filter(Boolean).length;
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
@@ -1470,13 +1475,15 @@ export default function App() {
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
           showWheelmapOnMap={showWheelmapOnMap}
-          showStcpBusesOnMap={showStcpBusesOnMap}
-          stcpVehicles={stcpVehicles}
+          showStcpBusesOnMap={showStcpBusesOnMap || showUnirBusesOnMap}
+          stcpVehicles={transitVehicles}
           onSelectStcpVehicle={(bus) => {
             Haptics.selectionAsync();
+            const operatorName = bus.operator === 'unir' ? 'UNIR Mobilidade' : 'STCP';
+            const network = bus.operator === 'unir' ? 'Área Metropolitana do Porto' : 'Porto Urbano';
             Alert.alert(
-              `STCP Linha ${bus.routeId}`,
-              `Autocarro em circulação no Grande Porto.\nRumo: ${bus.bearing ? `${bus.bearing}º` : 'Em circulação'}`
+              `${operatorName} · Linha ${bus.displayLine || bus.routeId}`,
+              `Autocarro em circulação (${network}).\nRumo: ${bus.bearing ? `${bus.bearing}º` : 'Em trânsito'}`
             );
           }}
           activeRoute={
@@ -1904,12 +1911,15 @@ export default function App() {
         onToggleWheelmap={() => setShowWheelmapOnMap((prev) => !prev)}
         showStcpBusesOnMap={showStcpBusesOnMap}
         onToggleStcpBuses={() => setShowStcpBusesOnMap((prev) => !prev)}
+        showUnirBusesOnMap={showUnirBusesOnMap}
+        onToggleUnirBuses={() => setShowUnirBusesOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
           setShowPharmaciesOnMap(true);
           setShowHospitalsOnMap(true);
           setShowWheelmapOnMap(true);
           setShowStcpBusesOnMap(true);
+          setShowUnirBusesOnMap(true);
         }}
         onDeactivateAllLayers={() => {
           setShowPoliceOnMap(false);
@@ -1917,6 +1927,7 @@ export default function App() {
           setShowHospitalsOnMap(false);
           setShowWheelmapOnMap(false);
           setShowStcpBusesOnMap(false);
+          setShowUnirBusesOnMap(false);
         }}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}

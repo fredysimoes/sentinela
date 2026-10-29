@@ -11,22 +11,42 @@ import { formatDuration, formatDistance, calculateEstimatedArrival } from './rou
 export interface StcpVehicle {
   id: string;
   routeId: string;
+  displayLine?: string;
   directionId: number;
   lat: number;
   lng: number;
   bearing?: number;
-  operator: string;
+  operator: 'stcp' | 'unir' | string;
   timestamp?: number | null;
   speed?: number | null;
 }
 
 /**
- * Paleta de cores oficiais da rede STCP por família de linhas
+ * Paleta de cores oficiais da rede STCP e UNIR por família de linhas
  */
-export function getStcpLineColor(routeId: string): { bg: string; border: string; text: string } {
+export function getTransitLineColor(routeId: string, operator?: string): { bg: string; border: string; text: string } {
   const clean = String(routeId || '').trim().toUpperCase();
 
-  // Linhas Noturnas (1M a 13M)
+  // Se for operador UNIR ou carreira de 4 dígitos
+  if (operator === 'unir' || /^\d{4}/.test(clean)) {
+    const num = parseInt(clean, 10);
+    // Lote 1 & 3: Linhas 3000, 5000, 6000 (Norte Litoral - Matosinhos / Maia / Póvoa)
+    if ((num >= 3000 && num < 4000) || (num >= 5000 && num < 7000)) {
+      return { bg: '#0891B2', border: '#22D3EE', text: '#FFFFFF' };
+    }
+    // Lote 2: Linhas 7000, 8000 (Norte Nascente - Valongo / Paredes)
+    if (num >= 7000 && num < 9000) {
+      return { bg: '#0D9488', border: '#2DD4BF', text: '#FFFFFF' };
+    }
+    // Lote 4: Linhas 9000 (Sul Poente - Gaia / Espinho)
+    if (num >= 9000) {
+      return { bg: '#0284C7', border: '#38BDF8', text: '#FFFFFF' };
+    }
+    // Lote 5: Linhas 1000, 2000 (Sul Nascente - Feira / Arouca)
+    return { bg: '#0F766E', border: '#5EEAD4', text: '#FFFFFF' };
+  }
+
+  // Linhas Noturnas STCP (1M a 13M)
   if (clean.endsWith('M') || clean.startsWith('M')) {
     return { bg: '#0F172A', border: '#334155', text: '#F8FAFC' };
   }
@@ -68,9 +88,11 @@ export function getStcpLineColor(routeId: string): { bg: string; border: string;
     return { bg: '#B45309', border: '#F59E0B', text: '#FFFFFF' };
   }
 
-  // Padrão / UNIR / Outros
+  // Padrão
   return { bg: '#0284C7', border: '#38BDF8', text: '#FFFFFF' };
 }
+
+export const getStcpLineColor = (routeId: string, operator?: string) => getTransitLineColor(routeId, operator);
 
 /**
  * Obtém a telemetria em tempo real de todos os autocarros STCP ativos no Grande Porto
@@ -132,6 +154,103 @@ export async function fetchStcpLiveVehicles(): Promise<StcpVehicle[]> {
     console.warn('Erro ao consultar autocarros STCP em tempo real:', error);
     return [];
   }
+}
+
+/**
+ * Obtém a telemetria em tempo real dos autocarros da rede UNIR (Área Metropolitana do Porto)
+ */
+export async function fetchUnirLiveVehicles(): Promise<StcpVehicle[]> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const response = await fetch('https://porto-live.tiagoanoliveira.workers.dev/vehicles/unir', {
+      headers: {
+        Origin: 'https://stcp.tiagoanoliveira.pt',
+        Referer: 'https://stcp.tiagoanoliveira.pt/',
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Falha ao obter autocarros UNIR: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data || !Array.isArray(data.vehicles)) {
+      return [];
+    }
+
+    const validVehicles: StcpVehicle[] = [];
+    for (const v of data.vehicles) {
+      if (
+        typeof v.lat === 'number' &&
+        typeof v.lng === 'number' &&
+        !isNaN(v.lat) &&
+        !isNaN(v.lng) &&
+        v.lat >= 40.75 &&
+        v.lat <= 41.55 &&
+        v.lng >= -8.98 &&
+        v.lng <= -8.10
+      ) {
+        // Ex.: "5013:0" -> "5013"
+        const rawRoute = String(v.routeId || v.route_id || '').trim();
+        const displayLine = rawRoute.split(':')[0] || rawRoute;
+
+        validVehicles.push({
+          id: String(v.id || `unir-${rawRoute}-${v.lat}-${v.lng}`),
+          routeId: displayLine,
+          displayLine,
+          directionId: Number(v.directionId ?? v.direction_id ?? 0),
+          lat: v.lat,
+          lng: v.lng,
+          bearing: typeof v.bearing === 'number' && !isNaN(v.bearing) ? v.bearing : undefined,
+          operator: 'unir',
+          timestamp: v.timestamp ? Number(v.timestamp) : null,
+          speed: typeof v.speed === 'number' ? v.speed : null,
+        });
+      }
+    }
+
+    return validVehicles;
+  } catch (error) {
+    console.warn('Erro ao consultar autocarros UNIR em tempo real:', error);
+    return [];
+  }
+}
+
+/**
+ * Obtém todos os autocarros em circulação no Porto (STCP + UNIR em paralelo)
+ */
+export async function fetchPortoLiveBuses(options?: {
+  includeStcp?: boolean;
+  includeUnir?: boolean;
+}): Promise<StcpVehicle[]> {
+  const { includeStcp = true, includeUnir = true } = options || {};
+
+  const promises: Promise<StcpVehicle[]>[] = [];
+  if (includeStcp) promises.push(fetchStcpLiveVehicles());
+  if (includeUnir) promises.push(fetchUnirLiveVehicles());
+
+  const results = await Promise.allSettled(promises);
+  const allVehicles: StcpVehicle[] = [];
+  const seenIds = new Set<string>();
+
+  results.forEach((res) => {
+    if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+      for (const v of res.value) {
+        if (!seenIds.has(v.id)) {
+          seenIds.add(v.id);
+          allVehicles.push(v);
+        }
+      }
+    }
+  });
+
+  return allVehicles;
 }
 
 /**
