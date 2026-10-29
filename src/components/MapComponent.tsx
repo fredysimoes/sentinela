@@ -89,6 +89,21 @@ const GOOGLE_MAPS_DARK_STYLE = [
     stylers: [{ color: '#CBD5E1' }],
   },
   {
+    featureType: 'road.highway.controlled_access',
+    elementType: 'geometry',
+    stylers: [{ color: '#2D3B4E' }],
+  },
+  {
+    featureType: 'road.highway.controlled_access',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#161F2C' }],
+  },
+  {
+    featureType: 'road.highway.controlled_access',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#F1F5F9' }],
+  },
+  {
     featureType: 'transit',
     elementType: 'geometry',
     stylers: [{ color: '#161B23' }],
@@ -362,6 +377,52 @@ const HeritageMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance
   );
 });
 
+const WheelmapMarker = memo(({ place, onSelect }: { place: SafePlaceWithDistance; onSelect: () => void }) => {
+  const isYes = place.wheelchair === 'yes';
+  const isLimited = place.wheelchair === 'limited';
+  const headColor = isYes ? '#10B981' : isLimited ? '#F59E0B' : '#EF4444';
+  const borderColor = isYes ? '#6EE7B7' : isLimited ? '#FDE68A' : '#FCA5A5';
+
+  return (
+    <Marker
+      coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+      onPress={onSelect}
+      tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.92 }}
+    >
+      <View style={styles.teardropMarkerWrap}>
+        {/* Wheelmap Accessibility Teardrop Head */}
+        <View style={[styles.teardropHead, { backgroundColor: headColor, borderColor, borderWidth: 2 }]}>
+          <MaterialCommunityIcons
+            name="wheelchair"
+            size={18}
+            color="#FFFFFF"
+          />
+        </View>
+        <View
+          style={[
+            styles.teardropTip,
+            {
+              backgroundColor: headColor,
+              borderColor,
+              borderRightWidth: 1.5,
+              borderBottomWidth: 1.5,
+            },
+          ]}
+        />
+        <View style={[styles.wheelmapMicroBadge, { borderColor }]}>
+          <Text style={[styles.wheelmapMicroBadgeText, { color: borderColor }]}>WHEELMAP</Text>
+        </View>
+        {place.wheelchairToilet === 'yes' && (
+          <View style={[styles.wheelmapMicroTag, { backgroundColor: '#0284C7' }]}>
+            <MaterialCommunityIcons name="toilet" size={9} color="#FFFFFF" />
+          </View>
+        )}
+      </View>
+    </Marker>
+  );
+});
+
 const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSelect: () => void }) => {
   const meta = CATEGORIES[incident.category] || CATEGORIES.suspicious;
   const isAccess = isAccessibilityCategory(incident.category);
@@ -402,12 +463,13 @@ interface MapComponentProps {
   incidents: Incident[];
   activeSOSAlerts: SOSAlert[];
   safePlaces: SafePlaceWithDistance[];
-  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy' | 'hospital' | 'school' | 'heritage' | null;
+  selectedCategoryFilter: IncidentCategory | 'all' | 'police' | 'pharmacy' | 'hospital' | 'school' | 'heritage' | 'wheelmap' | null;
   showPoliceOnMap?: boolean;
   showPharmaciesOnMap?: boolean;
   showHospitalsOnMap?: boolean;
   showSchoolsOnMap?: boolean;
   showHeritageOnMap?: boolean;
+  showWheelmapOnMap?: boolean;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -446,6 +508,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   showHospitalsOnMap = true,
   showSchoolsOnMap = true,
   showHeritageOnMap = true,
+  showWheelmapOnMap = true,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -760,8 +823,13 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
       result.push(...sortByDistanceToCenter(heritage).slice(0, 40));
     }
 
+    if (showWheelmapOnMap) {
+      const wheelmapPlaces = safePlaces.filter((p) => p.type === 'wheelmap');
+      result.push(...sortByDistanceToCenter(wheelmapPlaces).slice(0, 50));
+    }
+
     return result;
-  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, showSchoolsOnMap, showHeritageOnMap, mapCenter, userLocation]);
+  }, [safePlaces, showPoliceOnMap, showPharmaciesOnMap, showHospitalsOnMap, showSchoolsOnMap, showHeritageOnMap, showWheelmapOnMap, mapCenter, userLocation]);
 
   // Memoized filter of incidents
   const filteredIncidents = useMemo(() => {
@@ -1072,6 +1140,16 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           if (place.type === 'heritage') {
             return (
               <HeritageMarker
+                key={place.id}
+                place={place}
+                onSelect={() => onSelectSafePlace(place)}
+              />
+            );
+          }
+
+          if (place.type === 'wheelmap') {
+            return (
+              <WheelmapMarker
                 key={place.id}
                 place={place}
                 onSelect={() => onSelectSafePlace(place)}
@@ -1733,6 +1811,24 @@ const styles = StyleSheet.create({
   },
   heritageMicroBadgeText: {
     color: '#FDE68A',
+    fontSize: 6,
+    fontWeight: '900',
+    letterSpacing: 0.2,
+  },
+
+  // Wheelmap (Pontos de Acessibilidade) Micro Badge
+  wheelmapMicroBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#080A0C',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 3,
+    paddingVertical: 0.5,
+    zIndex: 3,
+  },
+  wheelmapMicroBadgeText: {
     fontSize: 6,
     fontWeight: '900',
     letterSpacing: 0.2,

@@ -4,6 +4,7 @@ import { FARMACIAS_DISTRITO_PORTO } from './farmaciasDistritoPorto';
 import { PSP_DISTRITO_LISBOA } from './pspDistritoLisboa';
 import { FARMACIAS_DISTRITO_LISBOA } from './farmaciasDistritoLisboa';
 import { HOSPITAIS_PORTUGAL } from './hospitaisPortugal';
+import { WHEELMAP_PORTUGAL } from './wheelmapPortugal';
 
 export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
   // ==========================================
@@ -903,6 +904,7 @@ export const SAFE_PLACES_PORTUGAL: SafePlace[] = [
   // ==========================================
   ...FARMACIAS_DISTRITO_LISBOA,
   ...HOSPITAIS_PORTUGAL,
+  ...WHEELMAP_PORTUGAL,
 
   // Coimbra
   {

@@ -172,6 +172,7 @@ export default function App() {
   const [showHospitalsOnMap, setShowHospitalsOnMap] = useState(true);
   const [showSchoolsOnMap, setShowSchoolsOnMap] = useState(true);
   const [showHeritageOnMap, setShowHeritageOnMap] = useState(true);
+  const [showWheelmapOnMap, setShowWheelmapOnMap] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
   const [homeAddress, setHomeAddress] = useState<HomeAddress | null>(null);
@@ -1406,6 +1407,7 @@ export default function App() {
           showHospitalsOnMap={showHospitalsOnMap}
           showSchoolsOnMap={showSchoolsOnMap}
           showHeritageOnMap={showHeritageOnMap}
+          showWheelmapOnMap={showWheelmapOnMap}
           activeRoute={
             navState
               ? navState.route
@@ -1561,6 +1563,7 @@ export default function App() {
                   setShowHospitalsOnMap(true);
                   setShowSchoolsOnMap(true);
                   setShowHeritageOnMap(true);
+                  setShowWheelmapOnMap(true);
                 }}
               >
                 <Ionicons
@@ -1710,6 +1713,33 @@ export default function App() {
                   ]}
                 >
                   Património
+                </Text>
+              </M3Pressable>
+
+              {/* 8. Wheelmap Accessibility Quick Chip (Selected by default, toggles Wheelmap markers on/off) */}
+              <M3Pressable
+                scaleOnPress={0.94}
+                style={[
+                  styles.filterChip,
+                  showWheelmapOnMap && styles.filterChipActiveWheelmap,
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setShowWheelmapOnMap((prev) => !prev);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="wheelchair"
+                  size={14}
+                  color={showWheelmapOnMap ? '#FFFFFF' : '#10B981'}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    showWheelmapOnMap && styles.filterChipTextActiveDark,
+                  ]}
+                >
+                  Acessibilidade
                 </Text>
               </M3Pressable>
 
@@ -2335,6 +2365,10 @@ const styles = StyleSheet.create({
   filterChipActiveHeritage: {
     backgroundColor: '#D97706',
     borderColor: '#FDE68A',
+  },
+  filterChipActiveWheelmap: {
+    backgroundColor: '#10B981',
+    borderColor: '#6EE7B7',
   },
   filterChipActive: {
     backgroundColor: M3Colors.secondaryContainer,

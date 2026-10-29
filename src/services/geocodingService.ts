@@ -1,5 +1,6 @@
 import { SAFE_PLACES_PORTUGAL } from '../data/safePlaces';
 import { calculateDistanceMeters } from '../utils/geo';
+import { findMatchingRoads } from '../data/estradasPortugal';
 
 export interface AddressSuggestion {
   id: string;
@@ -7,11 +8,13 @@ export interface AddressSuggestion {
   subtitle: string;
   latitude: number;
   longitude: number;
-  type: 'police' | 'pharmacy' | 'street' | 'place' | 'address' | 'school' | 'heritage';
+  type: 'police' | 'pharmacy' | 'street' | 'place' | 'address' | 'school' | 'heritage' | 'road' | 'wheelmap';
   houseNumber?: string;
   streetName?: string;
   postcode?: string;
   distanceMeters?: number;
+  roadClassification?: 'motorway' | 'trunk' | 'primary' | 'secondary' | 'tertiary';
+  roadRef?: string;
 }
 
 function normalizeStr(str: string): string {
@@ -78,8 +81,33 @@ export async function searchAddressSuggestions(
       subtitle: `${p.address ? p.address + ', ' : ''}${p.city || 'Porto'}`,
       latitude: p.latitude,
       longitude: p.longitude,
-      type: p.type === 'pharmacy' ? 'pharmacy' : 'police',
+      type: p.type === 'pharmacy' ? 'pharmacy' : p.type === 'wheelmap' ? 'wheelmap' : 'police',
       distanceMeters: dist,
+    });
+  }
+
+  // 1b. Instant match for Portuguese Road Network (PRN 2000: Autoestradas, Vias Rápidas, Estradas Nacionais)
+  const roadMatches = findMatchingRoads(trimmed);
+  for (const road of roadMatches.slice(0, 3)) {
+    const dist = userLocation
+      ? calculateDistanceMeters(
+          userLocation.latitude,
+          userLocation.longitude,
+          road.latitude,
+          road.longitude
+        )
+      : undefined;
+
+    results.push({
+      id: `road-${road.code}`,
+      title: `${road.ref} · ${road.name}`,
+      subtitle: `${road.categoryLabel} · ${road.startLocation} ➔ ${road.endLocation}`,
+      latitude: road.latitude,
+      longitude: road.longitude,
+      type: 'road',
+      distanceMeters: dist,
+      roadClassification: road.type,
+      roadRef: road.ref,
     });
   }
 
@@ -118,10 +146,22 @@ export async function searchAddressSuggestions(
           const lon = coords[0];
           const lat = coords[1];
 
-          // Determine clean title and address type (incorporating official INE / OSM address imports)
+          // Determine clean title and address type (incorporating official INE / OSM address imports & PRN road standardization)
+          const isRoad =
+            props.osm_key === 'highway' &&
+            (props.osm_value === 'motorway' ||
+              props.osm_value === 'trunk' ||
+              props.osm_value === 'primary' ||
+              props.osm_value === 'secondary' ||
+              props.osm_value === 'tertiary');
+          const roadClassification = isRoad ? (props.osm_value as any) : undefined;
+          const roadRef = props.ref;
+
           const isAddress = !!props.housenumber;
           let title = '';
-          if (props.housenumber && props.street) {
+          if (isRoad && props.ref) {
+            title = `${props.ref}${props.name && props.name !== props.ref ? ' · ' + props.name : ''}`;
+          } else if (props.housenumber && props.street) {
             title = `${props.street}, n.º ${props.housenumber}`;
           } else if (props.name && props.street && props.name !== props.street) {
             title = `${props.name} · ${props.street}${props.housenumber ? ', n.º ' + props.housenumber : ''}`;
@@ -129,14 +169,28 @@ export async function searchAddressSuggestions(
             title = props.name || props.street || trimmed;
           }
 
-          // Build clean subtitle (locality, city, postal code)
-          const parts = [
+          // Build clean subtitle (locality, city, postal code, and road category)
+          const parts: (string | undefined)[] = [];
+          if (isRoad) {
+            const roadBadge =
+              props.osm_value === 'motorway'
+                ? 'Autoestrada (PRN 2000)'
+                : props.osm_value === 'trunk'
+                ? 'Via Rápida (IP/IC)'
+                : props.osm_value === 'primary'
+                ? 'Estrada Nacional (EN)'
+                : props.osm_value === 'secondary'
+                ? 'Estrada Regional (ER)'
+                : 'Estrada Municipal (EM)';
+            parts.push(roadBadge);
+          }
+          parts.push(
             props.locality || props.district,
             props.city || props.town || props.county,
-            props.postcode,
-          ].filter((p) => p && typeof p === 'string');
+            props.postcode
+          );
 
-          const uniqueParts = Array.from(new Set(parts));
+          const uniqueParts = Array.from(new Set(parts.filter((p) => p && typeof p === 'string')));
           const subtitle = uniqueParts.length > 0 ? uniqueParts.join(' · ') : 'Portugal';
 
           // Avoid duplicate coordinates
@@ -163,7 +217,11 @@ export async function searchAddressSuggestions(
               latitude: lat,
               longitude: lon,
               type:
-                props.osm_key === 'historic' || props.osm_key === 'heritage'
+                isRoad
+                  ? 'road'
+                  : props.wheelchair || props.osm_key === 'wheelchair'
+                  ? 'wheelmap'
+                  : props.osm_key === 'historic' || props.osm_key === 'heritage'
                   ? 'heritage'
                   : props.osm_key === 'amenity' &&
                     (props.osm_value === 'school' || props.osm_value === 'university' || props.osm_value === 'college')
@@ -177,6 +235,8 @@ export async function searchAddressSuggestions(
               streetName: props.street,
               postcode: props.postcode,
               distanceMeters: dist,
+              roadClassification,
+              roadRef,
             });
           }
         }

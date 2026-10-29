@@ -146,6 +146,23 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
             ? place.protectionTitle.toUpperCase()
             : 'PATRIMÓNIO CULTURAL',
         };
+      case 'wheelmap':
+        const isYes = place.wheelchair === 'yes';
+        const isLimited = place.wheelchair === 'limited';
+        const wColor = isYes ? '#10B981' : isLimited ? '#F59E0B' : '#EF4444';
+        const wBg = isYes
+          ? 'rgba(16, 185, 129, 0.16)'
+          : isLimited
+          ? 'rgba(245, 158, 11, 0.16)'
+          : 'rgba(239, 68, 68, 0.16)';
+        return {
+          title: place.wheelmapCategory ? `Acessibilidade · ${place.wheelmapCategory}` : 'Ponto de Acessibilidade Wheelmap',
+          color: wColor,
+          bg: wBg,
+          icon: 'wheelchair',
+          isMci: true,
+          badgeText: isYes ? 'ACESSO TOTAL' : isLimited ? 'ACESSO PARCIAL' : 'NÃO ACESSÍVEL',
+        };
     }
   };
 

@@ -156,6 +156,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         return { name: 'school-outline', color: '#8B5CF6', isMci: false };
       case 'heritage':
         return { name: 'castle', color: '#D97706', isMci: true };
+      case 'wheelmap':
+        return { name: 'wheelchair', color: '#10B981', isMci: true };
+      case 'road':
+        return { name: 'highway', color: '#38BDF8', isMci: true };
       case 'street':
         return { name: 'navigate-circle', color: '#38BDF8', isMci: false };
       default:

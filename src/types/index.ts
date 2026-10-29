@@ -51,7 +51,7 @@ export interface UserLocation {
   accuracy?: number | null;
 }
 
-export type SafePlaceType = 'psp' | 'gnr' | 'pj' | 'pharmacy' | 'hospital' | 'school' | 'heritage';
+export type SafePlaceType = 'psp' | 'gnr' | 'pj' | 'pharmacy' | 'hospital' | 'school' | 'heritage' | 'wheelmap';
 
 export interface PharmacyHours {
   is24h?: boolean;
@@ -84,6 +84,9 @@ export interface SafePlace {
   operator?: string;
   heritageProtection?: 'national_monument' | 'public_interest' | 'municipal_interest' | 'unesco' | 'classified';
   protectionTitle?: string;
+  wheelmapCategory?: string;
+  roadRef?: string;
+  roadType?: 'motorway' | 'trunk' | 'primary' | 'secondary' | 'tertiary';
 }
 
 export interface HomeAddress {

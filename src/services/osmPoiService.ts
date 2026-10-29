@@ -28,7 +28,7 @@ export async function fetchOsmPlacesInBoundingBox(params: {
     return CACHED_REGIONS.get(key)!;
   }
 
-  const query = `[out:json][timeout:10];
+  const query = `[out:json][timeout:12];
 (
   node["amenity"="police"](${minLat},${minLon},${maxLat},${maxLon});
   node["amenity"="pharmacy"](${minLat},${minLon},${maxLat},${maxLon});
@@ -41,8 +41,10 @@ export async function fetchOsmPlacesInBoundingBox(params: {
   way["heritage"](${minLat},${minLon},${maxLat},${maxLon});
   node["historic"="castle"](${minLat},${minLon},${maxLat},${maxLon});
   node["historic"="monument"](${minLat},${minLon},${maxLat},${maxLon});
+  node["wheelchair"](${minLat},${minLon},${maxLat},${maxLon});
+  way["wheelchair"](${minLat},${minLon},${maxLat},${maxLon});
 );
-out center 140;`;
+out center 200;`;
 
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
@@ -325,6 +327,55 @@ out center 140;`;
             wheelchairToilet,
             heritageProtection,
             protectionTitle,
+          });
+        } else if (wheelchair || tags['toilets:wheelchair']) {
+          // General Wheelmap Accessibility POI (transport, civic, cultural, commerce, public toilet, etc.)
+          const rawName =
+            tags.name ||
+            tags['name:pt'] ||
+            tags.operator ||
+            (tags.amenity === 'toilets'
+              ? 'Instalação Sanitária Acessível'
+              : tags.railway === 'station' || tags.station === 'subway'
+              ? 'Estação Acessível'
+              : tags.amenity
+              ? `Local Acessível (${tags.amenity})`
+              : tags.shop
+              ? `Estabelecimento (${tags.shop})`
+              : 'Ponto Acessível Wheelmap');
+
+          const street = tags['addr:street']
+            ? `${tags['addr:street']}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`
+            : 'Portugal';
+          const city = tags['addr:city'] || tags['addr:suburb'] || '';
+          const phone = tags.phone || tags['contact:phone'];
+
+          const statusText =
+            wheelchair === 'yes'
+              ? 'Totalmente Acessível a Cadeira de Rodas'
+              : wheelchair === 'limited'
+              ? 'Parcialmente Acessível (Com Apoio/Degrau Baixo)'
+              : wheelchair === 'no'
+              ? 'Não Acessível (Degraus sem Rampa)'
+              : 'Acessibilidade Reportada';
+
+          const categoryDesc = tags.amenity || tags.shop || tags.railway || tags.tourism || 'Acessibilidade';
+
+          places.push({
+            id: `osm-wheelmap-${el.id}`,
+            type: 'wheelmap',
+            name: rawName,
+            address: street,
+            city: city || 'Local',
+            district: '',
+            phone,
+            latitude: lat,
+            longitude: lon,
+            hoursDescription: `${statusText} · Wheelmap / OSM`,
+            wheelchair: wheelchair || 'limited',
+            wheelchairDescription,
+            wheelchairToilet,
+            wheelmapCategory: categoryDesc,
           });
         }
       }
