@@ -80,7 +80,6 @@ export interface SafePlace {
   wheelchair?: WheelchairAccessibility;
   wheelchairDescription?: string;
   wheelchairToilet?: 'yes' | 'limited' | 'no' | 'unknown';
-  hasElevator?: boolean;
   schoolType?: 'basic' | 'secondary' | 'university' | 'kindergarten' | 'integrated';
   operator?: string;
   heritageProtection?: 'national_monument' | 'public_interest' | 'municipal_interest' | 'unesco' | 'classified';

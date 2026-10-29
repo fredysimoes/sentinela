@@ -41,8 +41,6 @@ export async function fetchOsmPlacesInBoundingBox(params: {
   way["heritage"](${minLat},${minLon},${maxLat},${maxLon});
   node["historic"="castle"](${minLat},${minLon},${maxLat},${maxLon});
   node["historic"="monument"](${minLat},${minLon},${maxLat},${maxLon});
-  node["railway"="station"](${minLat},${minLon},${maxLat},${maxLon});
-  node["station"="subway"](${minLat},${minLon},${maxLat},${maxLon});
 );
 out center 160;`;
 
@@ -97,11 +95,6 @@ out center 160;`;
           wheelchairToilet = toiletTag;
         }
 
-        const hasElevator =
-          tags.elevator === 'yes' ||
-          (wheelchairDescription || '').toLowerCase().includes('elevador') ||
-          (tags.description || '').toLowerCase().includes('elevador') ||
-          (tags['description:pt'] || '').toLowerCase().includes('elevador');
 
         if (tags.amenity === 'pharmacy') {
           const rawName = tags.name || tags['name:pt'] || 'Farmácia';
@@ -127,7 +120,6 @@ out center 160;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
-            hasElevator,
           });
         } else if (tags.amenity === 'hospital') {
           const rawName = tags.name || tags['name:pt'];
@@ -162,7 +154,6 @@ out center 160;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
-            hasElevator,
           });
         } else if (tags.amenity === 'police') {
           const nameLower = (tags.name || tags.operator || '').toLowerCase();
@@ -197,7 +188,6 @@ out center 160;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
-            hasElevator,
           });
         } else if (
           tags.amenity === 'school' ||
@@ -274,7 +264,6 @@ out center 160;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
-            hasElevator,
             schoolType,
             operator,
           });
@@ -335,39 +324,8 @@ out center 160;`;
             wheelchair,
             wheelchairDescription,
             wheelchairToilet,
-            hasElevator,
             heritageProtection,
             protectionTitle,
-          });
-        } else if (
-          tags.railway === 'station' ||
-          tags.station === 'subway' ||
-          tags.subway === 'yes'
-        ) {
-          const rawName = tags.name || tags['name:pt'] || 'Estação de Metro / Comboio';
-          const street = tags['addr:street']
-            ? `${tags['addr:street']}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`
-            : 'Portugal';
-          const city = tags['addr:city'] || tags['addr:suburb'] || '';
-          const phone = tags.phone || tags['contact:phone'];
-
-          places.push({
-            id: `osm-metro-${el.id}`,
-            type: 'metro',
-            name: rawName,
-            address: street,
-            city: city || 'Local',
-            district: '',
-            phone,
-            latitude: lat,
-            longitude: lon,
-            hoursDescription: hasElevator
-              ? 'Estação com Elevadores e Acessibilidade · Metro / CP'
-              : 'Estação de Transporte Público',
-            wheelchair,
-            wheelchairDescription,
-            wheelchairToilet,
-            hasElevator,
           });
         }
       }
