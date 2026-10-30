@@ -898,11 +898,119 @@ export async function fetchStopRealtimeArrivals(
   }
 }
 
+interface StopGroupData {
+  group_id: string;
+  group_name: string;
+  latitude: number;
+  longitude: number;
+  stop_ids?: string[];
+  operators?: string[];
+  stops?: Array<{
+    stop_id?: string;
+    operator_id?: string;
+    stop_code?: string;
+    stop_name?: string;
+    stop_lat?: number;
+    stop_lon?: number;
+  }>;
+}
+
+let cachedStopGroups: {
+  stopToGroupMap: Map<string, string>;
+  groupsById: Map<string, StopGroupData>;
+  timestamp: number;
+} | null = null;
+
+let stopGroupsPromise: Promise<{
+  stopToGroupMap: Map<string, string>;
+  groupsById: Map<string, StopGroupData>;
+}> | null = null;
+
+export async function fetchStopGroups(): Promise<{
+  stopToGroupMap: Map<string, string>;
+  groupsById: Map<string, StopGroupData>;
+}> {
+  const now = Date.now();
+  if (cachedStopGroups && now - cachedStopGroups.timestamp < 3600_000) {
+    return cachedStopGroups;
+  }
+
+  if (stopGroupsPromise) {
+    return stopGroupsPromise;
+  }
+
+  stopGroupsPromise = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 9000);
+
+      const response = await fetch('https://gtfs-api.tiagoanoliveira.workers.dev/stops/groups', {
+        headers: {
+          Origin: 'https://stcp.tiagoanoliveira.pt',
+          Referer: 'https://stcp.tiagoanoliveira.pt/',
+          Accept: 'application/json',
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Falha ao obter grupos de paragens: ${response.status}`);
+      }
+
+      const json = await response.json();
+      const groups: StopGroupData[] = Array.isArray(json?.groups) ? json.groups : [];
+
+      const stopToGroupMap = new Map<string, string>();
+      const groupsById = new Map<string, StopGroupData>();
+
+      for (const group of groups) {
+        const gid = String(group.group_id);
+        groupsById.set(gid, group);
+
+        for (const sid of group.stop_ids || []) {
+          stopToGroupMap.set(String(sid).toLowerCase(), gid);
+        }
+
+        for (const member of group.stops || []) {
+          if (member.stop_id) {
+            stopToGroupMap.set(String(member.stop_id).toLowerCase(), gid);
+          }
+          if (member.stop_code) {
+            stopToGroupMap.set(String(member.stop_code).toLowerCase(), gid);
+          }
+        }
+      }
+
+      cachedStopGroups = {
+        stopToGroupMap,
+        groupsById,
+        timestamp: Date.now(),
+      };
+
+      return cachedStopGroups;
+    } catch (err) {
+      console.warn('Erro ao carregar grupos de paragens (fallback em memória):', err);
+      if (cachedStopGroups) return cachedStopGroups;
+      return {
+        stopToGroupMap: new Map(),
+        groupsById: new Map(),
+      };
+    } finally {
+      stopGroupsPromise = null;
+    }
+  })();
+
+  return stopGroupsPromise;
+}
+
 /**
  * Obtém as paragens de autocarro mais próximas da coordenada geográfica
- * com desduplicação espacial inteligente (garante 1 único ícone por paragem,
- * priorizando paragens STCP com previsões em tempo real ativas).
- * Fonte: https://gtfs-api.tiagoanoliveira.workers.dev
+ * com agrupamento oficial GTFS (https://stcp.tiagoanoliveira.pt/stopsmap)
+ * e unificação de postes partilhados (STCP + UNIR no mesmo abrigo <= 8m).
+ * Garante que todas as paragens físicas da base de dados são renderizadas,
+ * preservando sentidos opostos (ex: ASZ1 vs ASZ2, CSSM1 vs CSSM2)
+ * e eliminando apenas registos duplicados de operadoras no mesmo abrigo.
  */
 export async function fetchNearbyBusStops(
   lat: number,
@@ -911,18 +1019,21 @@ export async function fetchNearbyBusStops(
 ): Promise<TransitStop[]> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const timeoutId = setTimeout(() => controller.abort(), 7500);
 
-    const response = await fetch(
-      `https://gtfs-api.tiagoanoliveira.workers.dev/nearby/${lat}/${lon}/${radiusMeters}`,
-      {
-        headers: {
-          Origin: 'https://stcp.tiagoanoliveira.pt',
-          Referer: 'https://stcp.tiagoanoliveira.pt/',
-        },
-        signal: controller.signal,
-      }
-    );
+    const [response, groupsResult] = await Promise.all([
+      fetch(
+        `https://gtfs-api.tiagoanoliveira.workers.dev/nearby/${lat}/${lon}/${radiusMeters}`,
+        {
+          headers: {
+            Origin: 'https://stcp.tiagoanoliveira.pt',
+            Referer: 'https://stcp.tiagoanoliveira.pt/',
+          },
+          signal: controller.signal,
+        }
+      ),
+      fetchStopGroups(),
+    ]);
     clearTimeout(timeoutId);
 
     if (!response.ok) return [];
@@ -931,60 +1042,95 @@ export async function fetchNearbyBusStops(
     const rawStops = json?.stops || (Array.isArray(json) ? json : []);
     if (!Array.isArray(rawStops)) return [];
 
-    const mappedStops: TransitStop[] = rawStops.map((st: any) => {
+    const { stopToGroupMap, groupsById } = groupsResult;
+
+    // Fase 1: Agrupamento oficial GTFS (/stops/groups)
+    const groupedStops: TransitStop[] = [];
+    const seenGroupIds = new Set<string>();
+
+    for (const st of rawStops) {
       const rawCode = String(st.stop_code || st.stop_id || '').trim();
       const rawId = String(st.stop_id || st.stop_code || '').trim();
-      const isStcp =
-        st.operator_id === 'stcp' ||
-        rawId.startsWith('stcp:') ||
-        (!rawCode.includes(':') && /^[A-Z0-9]+$/i.test(rawCode));
+      const lowerId = rawId.toLowerCase();
+      const lowerCode = rawCode.toLowerCase();
 
-      return {
-        id: rawId,
-        code: rawCode.replace(/^stcp:/i, ''),
-        name: st.stop_name || 'Paragem de Autocarro',
-        latitude: Number(st.stop_lat || st.latitude),
-        longitude: Number(st.stop_lon || st.longitude),
-        operator: isStcp ? 'stcp' : 'unir',
-        distanceMeters: st.distance_m ? Math.round(Number(st.distance_m)) : undefined,
-      };
-    });
+      const groupId = stopToGroupMap.get(lowerId) || stopToGroupMap.get(lowerCode);
 
-    // Desduplicação Espacial Inteligente:
-    // Prioriza registos STCP (com chegadas em tempo real) sobre códigos UNIR no mesmo local físico.
-    mappedStops.sort((a, b) => {
+      if (groupId && groupsById.has(groupId)) {
+        if (seenGroupIds.has(groupId)) continue;
+        seenGroupIds.add(groupId);
+
+        const g = groupsById.get(groupId)!;
+        // Priorizar paragem membro da STCP para garantir código compatível com previsões em tempo real
+        const stcpMember = (g.stops || []).find((m) =>
+          String(m.operator_id || m.stop_id).toLowerCase().includes('stcp')
+        );
+        const resolvedCode = stcpMember
+          ? String(stcpMember.stop_code || stcpMember.stop_id).replace(/^stcp:/i, '')
+          : g.group_id;
+
+        groupedStops.push({
+          id: `group:${groupId}`,
+          code: resolvedCode,
+          name: g.group_name || st.stop_name || 'Paragem de Autocarro',
+          latitude: Number(g.latitude),
+          longitude: Number(g.longitude),
+          operator: 'stcp',
+          distanceMeters: st.distance_m ? Math.round(Number(st.distance_m)) : undefined,
+        });
+      } else {
+        const isStcp =
+          st.operator_id === 'stcp' ||
+          rawId.startsWith('stcp:') ||
+          (!rawCode.includes(':') && /^[A-Z0-9]+$/i.test(rawCode));
+
+        groupedStops.push({
+          id: rawId,
+          code: rawCode.replace(/^stcp:/i, ''),
+          name: st.stop_name || 'Paragem de Autocarro',
+          latitude: Number(st.stop_lat || st.latitude),
+          longitude: Number(st.stop_lon || st.longitude),
+          operator: isStcp ? 'stcp' : 'unir',
+          distanceMeters: st.distance_m ? Math.round(Number(st.distance_m)) : undefined,
+        });
+      }
+    }
+
+    // Fase 2: Unificação de abrigo partilhado (apenas para registos redundantes STCP/UNIR no mesmo poste <= 8m)
+    // Ordenamos colocando primeiro as paragens STCP (com previsões ativas)
+    groupedStops.sort((a, b) => {
       const aIsStcp = a.operator === 'stcp' && !a.code.includes(':') ? 1 : 0;
       const bIsStcp = b.operator === 'stcp' && !b.code.includes(':') ? 1 : 0;
       return bIsStcp - aIsStcp;
     });
 
-    const deduplicated: TransitStop[] = [];
-    const seenCodes = new Set<string>();
+    const finalStops: TransitStop[] = [];
 
-    for (const stop of mappedStops) {
+    for (const stop of groupedStops) {
       if (isNaN(stop.latitude) || isNaN(stop.longitude)) continue;
 
-      const cleanCode = stop.code.toUpperCase();
-      if (seenCodes.has(cleanCode)) continue;
-
-      // Verificar se já existe uma paragem muito próxima (< 28 metros)
-      const isDuplicate = deduplicated.some((existing) => {
-        const dist = calculateDistanceMeters(
-          existing.latitude,
-          existing.longitude,
-          stop.latitude,
-          stop.longitude
-        );
-        return dist < 28;
+      // Se for uma paragem UNIR, verifica se já existe uma paragem STCP no mesmo poste físico (distância <= 8 metros)
+      // Nota: Paragens do sentido oposto da rua (ex: ASZ1 vs ASZ2, CSSM1 vs CSSM2) têm códigos STCP distintos
+      // e ficam a mais de 10-15m ou são ambas STCP, pelo que NUNCA são eliminadas.
+      const isDuplicateShelter = finalStops.some((existing) => {
+        if (existing.operator === 'stcp' && stop.operator !== 'stcp') {
+          const dist = calculateDistanceMeters(
+            existing.latitude,
+            existing.longitude,
+            stop.latitude,
+            stop.longitude
+          );
+          return dist <= 8;
+        }
+        return false;
       });
 
-      if (!isDuplicate) {
-        seenCodes.add(cleanCode);
-        deduplicated.push(stop);
+      if (!isDuplicateShelter) {
+        finalStops.push(stop);
       }
     }
 
-    return deduplicated;
+    return finalStops;
   } catch (err) {
     console.warn(`Falha ao pesquisar paragens próximas (${lat}, ${lon}):`, err);
     return [];

@@ -338,15 +338,15 @@ export default function App() {
     showStcpBusesOnMap ||
     showUnirBusesOnMap ||
     showCarrisBusesOnMap ||
-    showCarrisMetroBusesOnMap;
+    showCarrisMetroBusesOnMap ||
+    showCpTrainsOnMap;
 
-  // As paragens de autocarro tornam-se visíveis automaticamente quando filtros de autocarros estão ativos ou em planeamento de rota
+  // As paragens de autocarro tornam-se visíveis automaticamente quando filtros de transportes estão ativos ou em planeamento de rota
   const areBusStopsEffective =
     isAnyTransitFilterActive || (transportMode === 'transit' && showRoutePreview);
 
   const isAnyTransitActive =
     isAnyTransitFilterActive ||
-    showCpTrainsOnMap ||
     isTransitNavigationActive;
 
   // Carregamento de Paragens de Autocarro próximas (com desduplicação espacial e previsões de tempo real ao tocar)
