@@ -231,7 +231,7 @@ const GOOGLE_MAPS_LIGHT_STYLE = [
   },
 ];
 import { Incident, IncidentCategory, SOSAlert, UserLocation, SafePlace, HomeAddress } from '../types';
-import { PedestrianRoute, RouteCoordinate } from '../types/navigation';
+import { PedestrianRoute, RouteCoordinate, TransitStop } from '../types/navigation';
 import { CATEGORIES, isAccessibilityCategory } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
@@ -590,6 +590,9 @@ interface MapComponentProps {
   showStcpBusesOnMap?: boolean;
   stcpVehicles?: StcpVehicle[];
   onSelectStcpVehicle?: (vehicle: StcpVehicle) => void;
+  busStops?: TransitStop[];
+  showBusStopsOnMap?: boolean;
+  onSelectBusStop?: (stop: TransitStop) => void;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -631,6 +634,9 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   showStcpBusesOnMap = false,
   stcpVehicles = [],
   onSelectStcpVehicle,
+  busStops = [],
+  showBusStopsOnMap = false,
+  onSelectBusStop,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -1168,6 +1174,18 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
                       coordinate={step.location}
                       zIndex={1003}
                       anchor={{ x: 0.5, y: 0.5 }}
+                      onPress={() => {
+                        if (onSelectBusStop && step.location) {
+                          onSelectBusStop({
+                            id: step.transitInfo?.departureStopCode || `station-${sIdx}`,
+                            code: step.transitInfo?.departureStopCode || '',
+                            name: step.transitInfo?.departureStop || 'Paragem',
+                            latitude: step.location.latitude,
+                            longitude: step.location.longitude,
+                            operator: step.transitInfo?.operator,
+                          });
+                        }
+                      }}
                     >
                       <View
                         style={[
@@ -1375,6 +1393,23 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             />
           );
         })}
+
+        {/* Paragens de Autocarro (com chegadas em tempo real ao tocar) */}
+        {showBusStopsOnMap &&
+          busStops &&
+          busStops.map((st) => (
+            <Marker
+              key={`bus-stop-poi-${st.id}`}
+              coordinate={{ latitude: st.latitude, longitude: st.longitude }}
+              zIndex={580}
+              anchor={{ x: 0.5, y: 0.5 }}
+              onPress={() => onSelectBusStop?.(st)}
+            >
+              <View style={styles.busStopMarker}>
+                <MaterialCommunityIcons name="bus-stop" size={13} color="#FFFFFF" />
+              </View>
+            </Marker>
+          ))}
 
         {/* Live STCP Realtime Bus Capsule Markers (Grande Porto) */}
         {showStcpBusesOnMap && stcpVehicles.map((vehicle) => (
@@ -2260,6 +2295,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 3,
     elevation: 5,
+  },
+  busStopMarker: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#0284C7',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 3,
+    elevation: 6,
   },
   busBearingIndicator: {
     marginLeft: 1,

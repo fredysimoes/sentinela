@@ -7,6 +7,27 @@ export interface RouteCoordinate {
   longitude: number;
 }
 
+export interface StopArrivalPrediction {
+  routeShortName: string;
+  headsign: string;
+  arrivalMinutes: number;
+  delayMinutes?: number;
+  status?: string;
+  color?: string;
+  textColor?: string;
+  estimatedArrivalTime?: string;
+}
+
+export interface TransitStop {
+  id: string;
+  code: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  operator?: string;
+  distanceMeters?: number;
+}
+
 export interface TransitLegInfo {
   lineName?: string;
   lineShortName?: string;
@@ -14,12 +35,19 @@ export interface TransitLegInfo {
   vehicleType?: 'bus' | 'subway' | 'train' | 'tram' | 'ferry' | 'funicular' | 'transit';
   operator?: string;
   departureStop?: string;
+  departureStopCode?: string;
   arrivalStop?: string;
+  arrivalStopCode?: string;
   departureTime?: string;
   arrivalTime?: string;
   numStops?: number;
   color?: string;
   textColor?: string;
+  waitingMinutes?: number;
+  realtimeArrivalMinutes?: number;
+  delayMinutes?: number;
+  realtimeStatus?: string;
+  upcomingArrivals?: StopArrivalPrediction[];
 }
 
 export interface RouteStep {
@@ -30,6 +58,9 @@ export interface RouteStep {
   maneuverModifier?: string;
   streetName?: string;
   location?: RouteCoordinate;
+  fromLocation?: RouteCoordinate;
+  toLocation?: RouteCoordinate;
+  coordinates?: RouteCoordinate[];
   transitInfo?: TransitLegInfo;
 }
 

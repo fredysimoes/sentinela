@@ -382,6 +382,196 @@ function isHazardAvoidedByRoute(
 }
 
 /**
+ * Aplica a regra de segurança e desvio inteligente aos percursos de transportes públicos:
+ * - O percurso pedonal até à paragem (e transbordos a pé) é verificado contra ocorrências ativas.
+ *   Se houver ocorrências no percurso a pé, calcula um desvio pedonal seguro (via Valhalla com avoidLocations).
+ * - O troço percorrido em transporte público (autocarro, metro, comboio) ignora ocorrências na via,
+ *   já que o utilizador viaja protegido dentro do veículo.
+ */
+async function applySafeWalkingDetourToTransitRoute(
+  transitRoute: PedestrianRoute,
+  incidents: Incident[],
+  avoidAccessibilityBarriers: boolean
+): Promise<{
+  safeRoute: PedestrianRoute;
+  directRoute?: PedestrianRoute;
+}> {
+  const hazardThreshold = 25; // 25 metros para peões
+
+  // 1. Procurar ocorrências exclusivamente nos troços pedonais (maneuverType === 'walk')
+  const walkingHazards: Incident[] = [];
+
+  transitRoute.steps.forEach((step) => {
+    // Troços de transporte são estritamente ignorados
+    if (step.maneuverType !== 'walk') return;
+
+    const coords =
+      step.coordinates && step.coordinates.length > 0
+        ? step.coordinates
+        : step.location
+        ? [step.location]
+        : [];
+
+    if (coords.length > 0) {
+      const hazardsNearStep = findHazardsNearRoute(
+        coords,
+        incidents,
+        hazardThreshold,
+        'walking',
+        avoidAccessibilityBarriers
+      );
+      hazardsNearStep.forEach((h) => {
+        if (!walkingHazards.some((existing) => existing.id === h.id)) {
+          walkingHazards.push(h);
+        }
+      });
+    }
+  });
+
+  // Se nenhum troço pedonal passar por ocorrências, o trajeto é seguro
+  if (walkingHazards.length === 0) {
+    transitRoute.isSafe = true;
+    transitRoute.hazardsOnRoute = [];
+    transitRoute.hazardsAvoided = [];
+    return {
+      safeRoute: ensureStepCoordinates(transitRoute),
+    };
+  }
+
+  // 2. Há ocorrências nos caminhos a pé até à paragem / destino: calcular desvio
+  const avoidCoords = walkingHazards.map((h) => ({
+    latitude: h.latitude,
+    longitude: h.longitude,
+  }));
+
+  let anyDetourApplied = false;
+  const avoidedHazards: Incident[] = [];
+  const updatedSafeSteps: RouteStep[] = [];
+  const allSafeCoords: RouteCoordinate[] = [];
+
+  for (const step of transitRoute.steps) {
+    // Troço de autocarro/metro: ignora ocorrências e mantém-se intacto
+    if (step.maneuverType !== 'walk') {
+      updatedSafeSteps.push(step);
+      if (step.coordinates && step.coordinates.length > 0) {
+        allSafeCoords.push(...step.coordinates);
+      } else if (step.location) {
+        allSafeCoords.push(step.location);
+      }
+      continue;
+    }
+
+    // Troço pedonal: verificar se este troço em particular tem perigos
+    const stepCoords =
+      step.coordinates && step.coordinates.length > 0
+        ? step.coordinates
+        : step.location
+        ? [step.location]
+        : [];
+
+    const hazardsOnThisStep = findHazardsNearRoute(
+      stepCoords,
+      walkingHazards,
+      hazardThreshold,
+      'walking',
+      avoidAccessibilityBarriers
+    );
+
+    const fromPt = step.fromLocation || stepCoords[0];
+    const toPt = step.toLocation || stepCoords[stepCoords.length - 1];
+
+    if (hazardsOnThisStep.length > 0 && fromPt && toPt) {
+      // Calcular desvio pedonal seguro contornando os perigos
+      const detour = await fetchValhallaRoute(
+        [fromPt, toPt],
+        'walking',
+        avoidCoords,
+        avoidAccessibilityBarriers
+      );
+
+      if (detour && detour.coordinates.length > 1) {
+        const stepAvoided = hazardsOnThisStep.filter((h) =>
+          isHazardAvoidedByRoute(h, stepCoords, detour.coordinates, hazardThreshold)
+        );
+
+        if (stepAvoided.length > 0) {
+          anyDetourApplied = true;
+          stepAvoided.forEach((av) => {
+            if (!avoidedHazards.some((ex) => ex.id === av.id)) {
+              avoidedHazards.push(av);
+            }
+          });
+
+          updatedSafeSteps.push({
+            ...step,
+            instruction: `Desvio seguro a pé (contorna ${stepAvoided.length} perigo(s)) até ${step.streetName || 'à paragem'} (${formatDistance(detour.distance)})`,
+            distanceMeters: Math.round(detour.distance),
+            durationSeconds: detour.durationMinutes * 60,
+            coordinates: detour.coordinates,
+          });
+          allSafeCoords.push(...detour.coordinates);
+          continue;
+        }
+      }
+    }
+
+    // Caso não haja perigo ou não tenha sido possível calcular desvio melhor
+    updatedSafeSteps.push(step);
+    if (stepCoords.length > 0) {
+      allSafeCoords.push(...stepCoords);
+    }
+  }
+
+  // Rota Direta (com avisos nos troços a pé que passam perto de perigos)
+  const directRoute: PedestrianRoute = {
+    ...transitRoute,
+    id: `transit-direct-${Date.now()}`,
+    name: 'Transportes Públicos (Com Avisos Pedonais)',
+    isSafe: false,
+    hazardsOnRoute: walkingHazards,
+    hazardsAvoided: [],
+    summary: `⚠️ O percurso a pé até à paragem passa perto de ${walkingHazards.length} reporte(s) de perigo`,
+  };
+
+  if (anyDetourApplied) {
+    const totalSafeDist = updatedSafeSteps.reduce((acc, s) => acc + s.distanceMeters, 0);
+    const totalSafeDurSec = updatedSafeSteps.reduce((acc, s) => acc + s.durationSeconds, 0);
+    const totalSafeMins = Math.max(1, Math.round(totalSafeDurSec / 60));
+
+    const remainingHazards = walkingHazards.filter(
+      (h) => !avoidedHazards.some((av) => av.id === h.id)
+    );
+
+    const safeRoute: PedestrianRoute = {
+      ...transitRoute,
+      id: `transit-safe-detour-${Date.now()}`,
+      name: 'Transportes Públicos (Desvio Protetor no Percurso a Pé)',
+      distanceMeters: totalSafeDist,
+      durationMinutes: totalSafeMins,
+      formattedDuration: formatDuration(totalSafeMins),
+      formattedDistance: formatDistance(totalSafeDist),
+      estimatedArrival: calculateEstimatedArrival(totalSafeMins),
+      coordinates: allSafeCoords.length > 0 ? allSafeCoords : transitRoute.coordinates,
+      steps: updatedSafeSteps,
+      isSafe: remainingHazards.length === 0,
+      hazardsAvoided: avoidedHazards,
+      hazardsOnRoute: remainingHazards,
+      summary: `🛡️ Desvio protetor a pé ativado: contorna ${avoidedHazards.length} perigo(s) até à paragem`,
+    };
+
+    return {
+      safeRoute: ensureStepCoordinates(safeRoute),
+      directRoute: ensureStepCoordinates(directRoute),
+    };
+  }
+
+  return {
+    safeRoute: ensureStepCoordinates(transitRoute),
+    directRoute: ensureStepCoordinates(directRoute),
+  };
+}
+
+/**
  * Calculates both the Direct Route and the Safe Route (avoiding known danger zones)
  * with the Valhalla routing engine and accurate time calculations.
  */
@@ -407,31 +597,15 @@ export async function calculateSafeNavigationRoutes(params: {
   const effectiveAccessibilityAvoidance = mode !== 'driving' && Boolean(avoidAccessibilityBarriers);
 
   // 0. Modo de Transportes Públicos (Porto OTP / Google Routes / CP / Carris / Metro)
+  // Regra estrita: desvio seguro nos troços a pé até à paragem; troços de autocarro ignoram ocorrências
   if (mode === 'transit') {
-    const transitRoute = await fetchUnifiedTransitRoute(origin, destination);
-    if (transitRoute) {
-      const hazardsOnRoute: Incident[] = [];
-      const hazardsAvoided: Incident[] = [];
-
-      incidents.forEach((inc) => {
-        const isNear = transitRoute.coordinates.some(
-          (c) => calculateDistanceMeters(c.latitude, c.longitude, inc.latitude, inc.longitude) < 65
-        );
-        if (isNear) {
-          hazardsOnRoute.push(inc);
-        } else {
-          hazardsAvoided.push(inc);
-        }
-      });
-
-      transitRoute.hazardsOnRoute = hazardsOnRoute;
-      transitRoute.hazardsAvoided = hazardsAvoided;
-      transitRoute.isSafe = hazardsOnRoute.length === 0;
-
-      return {
-        safeRoute: transitRoute,
-        directRoute: transitRoute,
-      };
+    const rawTransitRoute = await fetchUnifiedTransitRoute(origin, destination);
+    if (rawTransitRoute) {
+      return await applySafeWalkingDetourToTransitRoute(
+        rawTransitRoute,
+        incidents,
+        effectiveAccessibilityAvoidance
+      );
     }
   }
 

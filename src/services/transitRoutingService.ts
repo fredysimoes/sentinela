@@ -3,9 +3,13 @@ import {
   RouteCoordinate,
   RouteStep,
   TransitLegInfo,
+  StopArrivalPrediction,
 } from '../types/navigation';
 import { calculateDistanceMeters, formatDistance } from '../utils/geo';
-import { decodeGooglePolyline } from './stcpRealtimeService';
+import {
+  decodeGooglePolyline,
+  fetchStopRealtimeArrivals,
+} from './stcpRealtimeService';
 import {
   formatDuration,
   calculateEstimatedArrival,
@@ -75,8 +79,26 @@ async function fetchPortoOtpTransitRoute(
             distance
             headsign
             legGeometry { points }
-            from { name lat lon }
-            to { name lat lon }
+            from {
+              name
+              lat
+              lon
+              stop {
+                gtfsId
+                code
+                name
+              }
+            }
+            to {
+              name
+              lat
+              lon
+              stop {
+                gtfsId
+                code
+                name
+              }
+            }
             route { shortName longName color textColor }
             agency { name }
           }
@@ -111,34 +133,39 @@ async function fetchPortoOtpTransitRoute(
     }
 
     const durationSeconds = Math.round(Number(itinerary.duration || 0));
-    const durationMinutes = Math.max(1, Math.round(durationSeconds / 60));
-
     let totalDistanceMeters = 0;
+    let accumulatedDurationSeconds = 0;
+    let additionalWaitMinutes = 0;
     const allCoords: RouteCoordinate[] = [];
     const steps: RouteStep[] = [];
     const transitLines: string[] = [];
     let transitLegsCount = 0;
 
-    itinerary.legs.forEach((leg: any, index: number) => {
+    for (let index = 0; index < itinerary.legs.length; index++) {
+      const leg = itinerary.legs[index];
       const legDist = Math.round(Number(leg.distance || 0));
       totalDistanceMeters += legDist;
       const legDurSec = Math.round(Number(leg.duration || 0));
+      accumulatedDurationSeconds += legDurSec;
 
-      if (leg.legGeometry?.points) {
-        const decoded = decodeGooglePolyline(leg.legGeometry.points);
-        allCoords.push(...decoded);
-      } else if (leg.from && leg.to) {
-        allCoords.push(
-          { latitude: leg.from.lat, longitude: leg.from.lon },
-          { latitude: leg.to.lat, longitude: leg.to.lon }
-        );
-      }
+      const legCoords: RouteCoordinate[] = leg.legGeometry?.points
+        ? decodeGooglePolyline(leg.legGeometry.points)
+        : leg.from && leg.to
+        ? [
+            { latitude: leg.from.lat, longitude: leg.from.lon },
+            { latitude: leg.to.lat, longitude: leg.to.lon },
+          ]
+        : [];
+      allCoords.push(...legCoords);
 
       const rawMode = String(leg.mode || '').toUpperCase();
       const fromName =
         leg.from?.name === 'Origin' ? 'Ponto de Partida' : leg.from?.name || 'Paragem';
       const toName =
         leg.to?.name === 'Destination' ? 'Destino Final' : leg.to?.name || 'Paragem seguinte';
+
+      const fromCoord = leg.from ? { latitude: leg.from.lat, longitude: leg.from.lon } : undefined;
+      const toCoord = leg.to ? { latitude: leg.to.lat, longitude: leg.to.lon } : undefined;
 
       if (rawMode === 'WALK') {
         const instruction =
@@ -154,7 +181,10 @@ async function fetchPortoOtpTransitRoute(
           durationSeconds: legDurSec,
           maneuverType: 'walk',
           streetName: toName,
-          location: leg.from ? { latitude: leg.from.lat, longitude: leg.from.lon } : undefined,
+          location: fromCoord,
+          fromLocation: fromCoord,
+          toLocation: toCoord,
+          coordinates: legCoords,
         });
       } else {
         transitLegsCount++;
@@ -173,7 +203,60 @@ async function fetchPortoOtpTransitRoute(
         }
 
         const headsignSuffix = leg.headsign ? ` (sentido ${leg.headsign})` : '';
-        const instruction = `Apanhe o ${lineLabel}${headsignSuffix} em ${fromName} e saia em ${toName}`;
+        const depStopCode =
+          leg.from?.stop?.code ||
+          String(leg.from?.stop?.gtfsId || '')
+            .replace(/^stcp:/i, '')
+            .replace(/^2:/i, '');
+        const arrStopCode =
+          leg.to?.stop?.code ||
+          String(leg.to?.stop?.gtfsId || '')
+            .replace(/^stcp:/i, '')
+            .replace(/^2:/i, '');
+
+        // Consultar chegadas em tempo real da paragem de partida através da API STCP / tiagoanoliveira
+        let realtimeArrivalMinutes: number | undefined;
+        let delayMinutes: number | undefined;
+        let realtimeStatus: string | undefined;
+        let waitingMinutes: number | undefined;
+        let liveArrivals: StopArrivalPrediction[] = [];
+
+        if (depStopCode) {
+          liveArrivals = await fetchStopRealtimeArrivals(depStopCode);
+          if (liveArrivals.length > 0) {
+            const shortNameClean = String(leg.route?.shortName || '').toUpperCase();
+            const matched =
+              liveArrivals.find(
+                (a) => a.routeShortName.toUpperCase() === shortNameClean
+              ) || liveArrivals[0];
+
+            if (matched) {
+              realtimeArrivalMinutes = matched.arrivalMinutes;
+              delayMinutes = matched.delayMinutes;
+              realtimeStatus = matched.status;
+
+              // Tempo de caminhada prévia antes de chegar à paragem
+              const walkTimeToStopMinutes =
+                index > 0 && itinerary.legs[index - 1].mode === 'WALK'
+                  ? Math.round(Number(itinerary.legs[index - 1].duration || 0) / 60)
+                  : 0;
+
+              waitingMinutes = Math.max(0, realtimeArrivalMinutes - walkTimeToStopMinutes);
+              if (waitingMinutes > 0) {
+                additionalWaitMinutes += waitingMinutes;
+              }
+            }
+          }
+        }
+
+        let instruction = `Apanhe o ${lineLabel}${headsignSuffix} em ${fromName} e saia em ${toName}`;
+        if (realtimeArrivalMinutes !== undefined) {
+          const waitTxt =
+            waitingMinutes !== undefined && waitingMinutes > 0
+              ? ` • Chega em ${realtimeArrivalMinutes} min (espera: ~${waitingMinutes} min)`
+              : ` • Chega em ${realtimeArrivalMinutes} min`;
+          instruction = `Apanhe o ${lineLabel}${headsignSuffix} em ${fromName}${waitTxt} e saia em ${toName}`;
+        }
 
         const transitInfo: TransitLegInfo = {
           lineName: leg.route?.longName || leg.route?.shortName || lineLabel,
@@ -188,9 +271,16 @@ async function fetchPortoOtpTransitRoute(
               ? 'CP'
               : 'STCP'),
           departureStop: fromName,
+          departureStopCode: depStopCode || undefined,
           arrivalStop: toName,
+          arrivalStopCode: arrStopCode || undefined,
           color: leg.route?.color ? `#${leg.route.color}` : vehicleType === 'subway' ? '#0284C7' : '#0891B2',
           textColor: leg.route?.textColor ? `#${leg.route.textColor}` : '#FFFFFF',
+          waitingMinutes,
+          realtimeArrivalMinutes,
+          delayMinutes,
+          realtimeStatus,
+          upcomingArrivals: liveArrivals.length > 0 ? liveArrivals : undefined,
         };
 
         if (transitInfo.lineShortName && !transitLines.includes(transitInfo.lineShortName)) {
@@ -203,15 +293,21 @@ async function fetchPortoOtpTransitRoute(
           durationSeconds: legDurSec,
           maneuverType: 'transit',
           streetName: lineLabel,
-          location: leg.from ? { latitude: leg.from.lat, longitude: leg.from.lon } : undefined,
+          location: fromCoord,
+          fromLocation: fromCoord,
+          toLocation: toCoord,
+          coordinates: legCoords,
           transitInfo,
         });
       }
-    });
+    }
 
     if (allCoords.length === 0) {
       allCoords.push(origin, destination);
     }
+
+    const durationMinutes =
+      Math.max(1, Math.round(accumulatedDurationSeconds / 60)) + additionalWaitMinutes;
 
     const summaryText =
       transitLines.length > 0
@@ -329,6 +425,17 @@ async function fetchGoogleTransitRoute(
                 longitude: st.startLocation.latLng.longitude,
               }
             : undefined;
+          const endCoord = st.endLocation?.latLng
+            ? {
+                latitude: st.endLocation.latLng.latitude,
+                longitude: st.endLocation.latLng.longitude,
+              }
+            : undefined;
+          const stepCoords = st.polyline?.encodedPolyline
+            ? decodeGooglePolyline(st.polyline.encodedPolyline)
+            : startCoord && endCoord
+            ? [startCoord, endCoord]
+            : [];
 
           if (travelMode === 'TRANSIT' && st.transitDetails) {
             transitLegsCount++;
@@ -368,6 +475,9 @@ async function fetchGoogleTransitRoute(
               maneuverType: 'transit',
               streetName: lineShortName,
               location: startCoord,
+              fromLocation: startCoord,
+              toLocation: endCoord,
+              coordinates: stepCoords,
               transitInfo,
             });
           } else {
@@ -382,6 +492,9 @@ async function fetchGoogleTransitRoute(
               durationSeconds: stepDurSec,
               maneuverType: 'walk',
               location: startCoord,
+              fromLocation: startCoord,
+              toLocation: endCoord,
+              coordinates: stepCoords,
             });
           }
         });
@@ -456,9 +569,17 @@ async function fetchGoogleTransitRoute(
             const startCoord = st.start_location
               ? { latitude: st.start_location.lat, longitude: st.start_location.lng }
               : undefined;
+            const endCoord = st.end_location
+              ? { latitude: st.end_location.lat, longitude: st.end_location.lng }
+              : undefined;
+            const stepCoords = st.polyline?.points
+              ? decodeGooglePolyline(st.polyline.points)
+              : startCoord && endCoord
+              ? [startCoord, endCoord]
+              : [];
 
             if (st.polyline?.points && allCoords.length === 0) {
-              allCoords.push(...decodeGooglePolyline(st.polyline.points));
+              allCoords.push(...stepCoords);
             }
 
             if (isTransit && st.transit_details) {
@@ -498,6 +619,9 @@ async function fetchGoogleTransitRoute(
                 maneuverType: 'transit',
                 streetName: lineShortName,
                 location: startCoord,
+                fromLocation: startCoord,
+                toLocation: endCoord,
+                coordinates: stepCoords,
                 transitInfo,
               });
             } else {
@@ -512,6 +636,9 @@ async function fetchGoogleTransitRoute(
                 durationSeconds: stepDurSec,
                 maneuverType: 'walk',
                 location: startCoord,
+                fromLocation: startCoord,
+                toLocation: endCoord,
+                coordinates: stepCoords,
               });
             }
           });

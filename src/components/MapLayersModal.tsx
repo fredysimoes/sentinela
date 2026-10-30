@@ -37,6 +37,8 @@ interface MapLayersModalProps {
   onToggleCarrisMetroBuses?: () => void;
   showCpTrainsOnMap?: boolean;
   onToggleCpTrains?: () => void;
+  showBusStopsOnMap?: boolean;
+  onToggleBusStops?: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -67,6 +69,8 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onToggleCarrisMetroBuses,
   showCpTrainsOnMap = false,
   onToggleCpTrains,
+  showBusStopsOnMap = false,
+  onToggleBusStops,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -84,9 +88,10 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     showCarrisBusesOnMap,
     showCarrisMetroBusesOnMap,
     showCpTrainsOnMap,
+    showBusStopsOnMap,
   ].filter(Boolean).length;
 
-  const allLayersActive = activeLayersCount === 9;
+  const allLayersActive = activeLayersCount === 10;
 
   const INFRASTRUCTURE_LAYERS: {
     id: string;
@@ -98,6 +103,15 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     active: boolean;
     onToggle: () => void;
   }[] = [
+    {
+      id: 'bus_stops',
+      name: 'Paragens STCP',
+      subtitle: 'Chegadas ao minuto ao tocar na paragem',
+      icon: 'bus-stop',
+      color: '#38BDF8',
+      active: showBusStopsOnMap,
+      onToggle: onToggleBusStops || (() => {}),
+    },
     {
       id: 'cp_trains',
       name: 'Comboios CP',

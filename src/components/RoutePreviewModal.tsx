@@ -1058,6 +1058,34 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
 
                                 <Text style={styles.previewStepText}>{st.instruction}</Text>
 
+                                {/* Crachá de Tempo Real e Espera na Paragem */}
+                                {isTransitStep && tInfo && (tInfo.realtimeArrivalMinutes !== undefined || tInfo.waitingMinutes !== undefined) ? (
+                                  <View style={styles.realtimeArrivalWaitBadge}>
+                                    <MaterialCommunityIcons name="clock-fast" size={13} color="#38BDF8" />
+                                    <Text style={styles.realtimeArrivalWaitText}>
+                                      Chega em {tInfo.realtimeArrivalMinutes} min
+                                      {tInfo.waitingMinutes && tInfo.waitingMinutes > 0 ? ` (espera: ~${tInfo.waitingMinutes} min)` : ''}
+                                    </Text>
+                                    {tInfo.delayMinutes !== undefined && (
+                                      <View style={[styles.microDelayBadge, tInfo.delayMinutes > 2 ? styles.microDelayWarn : styles.microDelayOk]}>
+                                        <Text style={styles.microDelayText}>
+                                          {tInfo.delayMinutes > 2 ? `+${Math.round(tInfo.delayMinutes)}m atraso` : 'A horas'}
+                                        </Text>
+                                      </View>
+                                    )}
+                                  </View>
+                                ) : null}
+
+                                {/* Alerta de Desvio Protetor no Troço Pedonal */}
+                                {!isTransitStep && st.instruction.includes('Desvio seguro a pé') ? (
+                                  <View style={styles.walkingDetourBadge}>
+                                    <Ionicons name="shield-checkmark" size={12} color="#10B981" />
+                                    <Text style={styles.walkingDetourBadgeText}>
+                                      Desvio pedonal ativado: contorna ocorrências até à paragem
+                                    </Text>
+                                  </View>
+                                ) : null}
+
                                 {isTransitStep && tInfo && (tInfo.departureStop || tInfo.arrivalStop) ? (
                                   <View style={styles.transitStopsDetailsBox}>
                                     {tInfo.departureStop && (
@@ -1906,5 +1934,58 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 10,
     fontStyle: 'italic',
+  },
+  realtimeArrivalWaitBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 5,
+    alignSelf: 'flex-start',
+  },
+  realtimeArrivalWaitText: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  microDelayBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    marginLeft: 2,
+  },
+  microDelayOk: {
+    backgroundColor: '#059669',
+  },
+  microDelayWarn: {
+    backgroundColor: '#D97706',
+  },
+  microDelayText: {
+    color: '#FFFFFF',
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  walkingDetourBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  walkingDetourBadgeText: {
+    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

@@ -5,7 +5,13 @@
  */
 
 import { transit_realtime } from 'gtfs-realtime-bindings';
-import { PedestrianRoute, RouteCoordinate, RouteStep } from '../types/navigation';
+import {
+  PedestrianRoute,
+  RouteCoordinate,
+  RouteStep,
+  StopArrivalPrediction,
+  TransitStop,
+} from '../types/navigation';
 import { calculateDistanceMeters } from '../utils/geo';
 import { formatDuration, formatDistance, calculateEstimatedArrival } from './routingService';
 
@@ -837,5 +843,103 @@ export async function fetchPortoTransitRoute(
   } catch (error) {
     console.warn('Erro ao calcular trajeto de transportes no Porto Digital OTP:', error);
     return null;
+  }
+}
+
+/**
+ * Consulta as próximas chegadas em tempo real de autocarros numa paragem
+ * Fonte: https://stcp.tiagoanoliveira.pt / proxy Cloudflare Worker
+ */
+export async function fetchStopRealtimeArrivals(
+  stopCodeOrId: string
+): Promise<StopArrivalPrediction[]> {
+  const cleanCode = String(stopCodeOrId || '')
+    .trim()
+    .replace(/^stcp:/i, '')
+    .replace(/^2:/i, '');
+
+  if (!cleanCode) return [];
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6500);
+
+    const response = await fetch(
+      `https://porto-live.tiagoanoliveira.workers.dev/${cleanCode}/realtime`,
+      {
+        headers: {
+          Origin: 'https://stcp.tiagoanoliveira.pt',
+          Referer: 'https://stcp.tiagoanoliveira.pt/',
+        },
+        signal: controller.signal,
+      }
+    );
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return [];
+
+    const json = await response.json();
+    const rawArrivals = json?.arrivals;
+    if (!Array.isArray(rawArrivals)) return [];
+
+    return rawArrivals.map((arr: any) => ({
+      routeShortName: arr.route_short_name || '',
+      headsign: arr.trip_headsign || '',
+      arrivalMinutes: Math.max(0, Math.round(Number(arr.arrival_minutes || 0))),
+      delayMinutes: arr.delay_minutes !== null ? Number(arr.delay_minutes) : undefined,
+      status: arr.status || 'ON_TIME',
+      color: arr.route_color ? (arr.route_color.startsWith('#') ? arr.route_color : `#${arr.route_color}`) : undefined,
+      textColor: arr.route_text_color ? (arr.route_text_color.startsWith('#') ? arr.route_text_color : `#${arr.route_text_color}`) : undefined,
+      estimatedArrivalTime: arr.estimated_arrival_time,
+    }));
+  } catch (err) {
+    console.warn(`Falha ao obter chegadas em tempo real para paragem ${cleanCode}:`, err);
+    return [];
+  }
+}
+
+/**
+ * Obtém as paragens de autocarro mais próximas da coordenada geográfica
+ * Fonte: https://gtfs-api.tiagoanoliveira.workers.dev
+ */
+export async function fetchNearbyBusStops(
+  lat: number,
+  lon: number,
+  radiusMeters: number = 800
+): Promise<TransitStop[]> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+    const response = await fetch(
+      `https://gtfs-api.tiagoanoliveira.workers.dev/nearby/${lat}/${lon}/${radiusMeters}`,
+      {
+        headers: {
+          Origin: 'https://stcp.tiagoanoliveira.pt',
+          Referer: 'https://stcp.tiagoanoliveira.pt/',
+        },
+        signal: controller.signal,
+      }
+    );
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return [];
+
+    const json = await response.json();
+    const rawStops = json?.stops || (Array.isArray(json) ? json : []);
+    if (!Array.isArray(rawStops)) return [];
+
+    return rawStops.map((st: any) => ({
+      id: st.stop_id || st.stop_code,
+      code: st.stop_code || String(st.stop_id || '').replace(/^stcp:/i, ''),
+      name: st.stop_name || 'Paragem de Autocarro',
+      latitude: Number(st.stop_lat || st.latitude),
+      longitude: Number(st.stop_lon || st.longitude),
+      operator: 'stcp',
+      distanceMeters: st.distance_m ? Math.round(Number(st.distance_m)) : undefined,
+    }));
+  } catch (err) {
+    console.warn(`Falha ao pesquisar paragens próximas (${lat}, ${lon}):`, err);
+    return [];
   }
 }

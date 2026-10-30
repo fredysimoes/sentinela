@@ -51,13 +51,14 @@ import {
 } from './src/services/navigationBackgroundService';
 import { updateNavigationNotification, dismissNavigationNotification } from './src/services/notifications';
 import { calculateCurrentStepIndex } from './src/utils/navigationHelper';
-import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode, RouteSimulationState } from './src/types/navigation';
+import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode, RouteSimulationState, TransitStop } from './src/types/navigation';
 import { calculateSafeNavigationRoutes } from './src/services/routingService';
 import { NavigationBanner } from './src/components/NavigationBanner';
 import { SimulationController } from './src/components/SimulationController';
 import { RoutePreviewModal } from './src/components/RoutePreviewModal';
 import { SearchBar } from './src/components/SearchBar';
 import { MapComponent } from './src/components/MapComponent';
+import { BusStopDetailSheet } from './src/components/BusStopDetailSheet';
 import { ReportModal } from './src/components/ReportModal';
 import { SOSModal } from './src/components/SOSModal';
 import { IncidentDetailSheet } from './src/components/IncidentDetailSheet';
@@ -80,7 +81,7 @@ import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerMo
 import { TvdeTripModal } from './src/components/TvdeTripModal';
 import { MapLayersModal } from './src/components/MapLayersModal';
 import { HalloweenAmbientOverlay } from './src/components/HalloweenAmbientOverlay';
-import { StcpVehicle, fetchUnifiedTransitBuses } from './src/services/stcpRealtimeService';
+import { StcpVehicle, fetchUnifiedTransitBuses, fetchNearbyBusStops } from './src/services/stcpRealtimeService';
 import {
   TvdeTripSession,
   ParsedTvdeDraft,
@@ -199,6 +200,9 @@ export default function App() {
   const [showCarrisBusesOnMap, setShowCarrisBusesOnMap] = useState(false);
   const [showCarrisMetroBusesOnMap, setShowCarrisMetroBusesOnMap] = useState(false);
   const [showCpTrainsOnMap, setShowCpTrainsOnMap] = useState(false);
+  const [showBusStopsOnMap, setShowBusStopsOnMap] = useState(false);
+  const [nearbyBusStops, setNearbyBusStops] = useState<TransitStop[]>([]);
+  const [selectedBusStop, setSelectedBusStop] = useState<TransitStop | null>(null);
   const [transitVehicles, setTransitVehicles] = useState<StcpVehicle[]>([]);
   const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
@@ -323,7 +327,33 @@ export default function App() {
     showCarrisBusesOnMap,
     showCarrisMetroBusesOnMap,
     showCpTrainsOnMap,
+    showBusStopsOnMap,
   ].filter(Boolean).length;
+
+  // Carregamento de Paragens de Autocarro próximas (com previsões de tempo real ao tocar)
+  useEffect(() => {
+    const shouldLoadStops = showBusStopsOnMap || (transportMode === 'transit' && showRoutePreview);
+    if (!shouldLoadStops) {
+      if (!showBusStopsOnMap) setNearbyBusStops([]);
+      return;
+    }
+
+    const coord = userLocation
+      ? { latitude: userLocation.latitude, longitude: userLocation.longitude }
+      : targetCoordinate;
+    if (!coord) return;
+
+    let isMounted = true;
+    fetchNearbyBusStops(coord.latitude, coord.longitude, 1200).then((stops) => {
+      if (isMounted) {
+        setNearbyBusStops(stops);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [showBusStopsOnMap, transportMode, showRoutePreview, userLocation, targetCoordinate]);
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
     body: string;
@@ -1521,6 +1551,9 @@ export default function App() {
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
           showWheelmapOnMap={showWheelmapOnMap}
+          showBusStopsOnMap={showBusStopsOnMap}
+          busStops={nearbyBusStops}
+          onSelectBusStop={(stop) => setSelectedBusStop(stop)}
           showStcpBusesOnMap={
             showStcpBusesOnMap ||
             showUnirBusesOnMap ||
@@ -1876,6 +1909,32 @@ export default function App() {
         />
       )}
 
+      {/* Paragem de Autocarro e Próximas Chegadas em Tempo Real (STCP / tiagoanoliveira) */}
+      {selectedBusStop && (
+        <BusStopDetailSheet
+          stop={selectedBusStop}
+          userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : null}
+          onClose={() => setSelectedBusStop(null)}
+          onNavigateToStop={(stop) => {
+            setSelectedBusStop(null);
+            handleRequestNavigation(stop.name, { latitude: stop.latitude, longitude: stop.longitude }, 'walking');
+          }}
+          onPlanRouteFromStop={(stop) => {
+            setSelectedBusStop(null);
+            setPreviewOriginName(stop.name);
+            setPreviewOriginCoord({ latitude: stop.latitude, longitude: stop.longitude });
+            if (previewDestCoord) {
+              handleRequestNavigation(previewDestName, previewDestCoord, 'transit', {
+                name: stop.name,
+                coord: { latitude: stop.latitude, longitude: stop.longitude },
+              });
+            } else {
+              setShowRoutePreview(true);
+            }
+          }}
+        />
+      )}
+
       {/* Route Preview Modal with Two-Point Itinerary Controller (Point A ➔ Point B) */}
       <RoutePreviewModal
         visible={showRoutePreview}
@@ -2006,6 +2065,8 @@ export default function App() {
         onToggleCarrisMetroBuses={() => setShowCarrisMetroBusesOnMap((prev) => !prev)}
         showCpTrainsOnMap={showCpTrainsOnMap}
         onToggleCpTrains={() => setShowCpTrainsOnMap((prev) => !prev)}
+        showBusStopsOnMap={showBusStopsOnMap}
+        onToggleBusStops={() => setShowBusStopsOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
           setShowPharmaciesOnMap(true);
@@ -2016,6 +2077,7 @@ export default function App() {
           setShowCarrisBusesOnMap(true);
           setShowCarrisMetroBusesOnMap(true);
           setShowCpTrainsOnMap(true);
+          setShowBusStopsOnMap(true);
         }}
         onDeactivateAllLayers={() => {
           setShowPoliceOnMap(false);
@@ -2027,6 +2089,7 @@ export default function App() {
           setShowCarrisBusesOnMap(false);
           setShowCarrisMetroBusesOnMap(false);
           setShowCpTrainsOnMap(false);
+          setShowBusStopsOnMap(false);
         }}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}
