@@ -333,9 +333,6 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             <View style={{ flex: 1 }}>
               <View style={styles.accessTitleRow}>
                 <Text style={styles.accessTitle}>Acessibilidade e Mobilidade</Text>
-                <View style={styles.accessBadge}>
-                  <Text style={styles.accessBadgeText}>♿ SUBMENU</Text>
-                </View>
               </View>
               <Text style={styles.accessSub}>
                 Degraus sem rampa, elevadores avariados, passeio cortado e calçada perigosa.
