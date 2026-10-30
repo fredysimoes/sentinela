@@ -17,17 +17,44 @@ export interface StcpVehicle {
   lat: number;
   lng: number;
   bearing?: number;
-  operator: 'stcp' | 'unir' | 'carris' | 'carris_metropolitana' | string;
-  vehicleType?: 'bus' | 'tram' | string;
+  operator: 'stcp' | 'unir' | 'carris' | 'carris_metropolitana' | 'cp' | string;
+  vehicleType?: 'bus' | 'tram' | 'train' | string;
+  serviceType?: 'alfa_pendular' | 'intercidades' | 'urbano_porto' | 'urbano_lisboa' | 'regional' | string;
+  serviceName?: string;
+  origin?: string;
+  destination?: string;
+  delayMinutes?: number;
   timestamp?: number | null;
   speed?: number | null;
 }
 
 /**
- * Paleta de cores oficiais das redes STCP, UNIR, Carris e Carris Metropolitana
+ * Paleta de cores oficiais das redes STCP, UNIR, Carris, Carris Metropolitana e CP
  */
-export function getTransitLineColor(routeId: string, operator?: string): { bg: string; border: string; text: string } {
+export function getTransitLineColor(
+  routeId: string,
+  operator?: string,
+  serviceType?: string
+): { bg: string; border: string; text: string } {
   const clean = String(routeId || '').trim().toUpperCase();
+
+  // CP - Comboios de Portugal
+  if (operator === 'cp') {
+    // Alfa Pendular (AP)
+    if (serviceType === 'alfa_pendular' || clean.startsWith('AP')) {
+      return { bg: '#1E3A8A', border: '#38BDF8', text: '#FFFFFF' };
+    }
+    // Intercidades (IC)
+    if (serviceType === 'intercidades' || clean.startsWith('IC')) {
+      return { bg: '#2563EB', border: '#93C5FD', text: '#FFFFFF' };
+    }
+    // Urbanos do Porto e Lisboa
+    if (serviceType === 'urbano_porto' || serviceType === 'urbano_lisboa') {
+      return { bg: '#00824B', border: '#4ADE80', text: '#FFFFFF' };
+    }
+    // Regional / Padrão CP
+    return { bg: '#047857', border: '#34D399', text: '#FFFFFF' };
+  }
 
   // Carris (Lisboa Urbana)
   if (operator === 'carris') {
@@ -130,7 +157,8 @@ export function getTransitLineColor(routeId: string, operator?: string): { bg: s
   return { bg: '#0284C7', border: '#38BDF8', text: '#FFFFFF' };
 }
 
-export const getStcpLineColor = (routeId: string, operator?: string) => getTransitLineColor(routeId, operator);
+export const getStcpLineColor = (routeId: string, operator?: string, serviceType?: string) =>
+  getTransitLineColor(routeId, operator, serviceType);
 
 /**
  * Obtém a telemetria em tempo real de todos os autocarros STCP ativos no Grande Porto
@@ -438,18 +466,149 @@ export async function fetchCarrisMetropolitanaLiveVehicles(): Promise<StcpVehicl
   }
 }
 
+/**
+ * Obtém a telemetria em tempo real dos comboios da CP (Comboios de Portugal)
+ * Suporta Alfa Pendular, Intercidades, Urbanos do Porto e Urbanos de Lisboa.
+ * Regra de visibilidade solicitada:
+ * - Intercidades e Alfa Pendular: visíveis para quem estiver em Lisboa e no Porto mesmo fora da área geográfica.
+ * - Urbanos: apenas visíveis dentro da respetiva área geográfica.
+ */
+export async function fetchCpLiveTrains(options?: {
+  userCoordinate?: { latitude: number; longitude: number } | null;
+}): Promise<StcpVehicle[]> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7500);
+
+    const response = await fetch('https://comboios.live/api/vehicles', {
+      headers: {
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Falha ao obter comboios CP: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data || !Array.isArray(data.vehicles)) {
+      return [];
+    }
+
+    const userCoord = options?.userCoordinate;
+    // Deteção da região de foco do utilizador / mapa
+    const isUserInPorto = userCoord ? userCoord.latitude >= 40.3 : true;
+    const isUserInLisbon = userCoord ? userCoord.latitude <= 39.8 : true;
+
+    const validVehicles: StcpVehicle[] = [];
+
+    for (const v of data.vehicles) {
+      const lat = typeof v.latitude === 'number' ? v.latitude : parseFloat(v.latitude);
+      const lng = typeof v.longitude === 'number' ? v.longitude : parseFloat(v.longitude);
+
+      if (isNaN(lat) || isNaN(lng) || lat < 36.8 || lat > 42.5 || lng < -9.8 || lng > -6.0) {
+        continue;
+      }
+
+      const serviceDesig = String(v.service?.designation || '').trim();
+      const isAP = /Alfa Pendular/i.test(serviceDesig);
+      const isIC = /Intercidades/i.test(serviceDesig);
+      const isLongDistance = isAP || isIC || /InterRegional|Internacional/i.test(serviceDesig);
+      const isUrbanoPorto = /Urbano do Porto/i.test(serviceDesig);
+      const isUrbanoLisboa = /Urbano de Lisboa/i.test(serviceDesig);
+      const isRegional = /Regional/i.test(serviceDesig);
+
+      // Regra de Visibilidade Solicitada:
+      // 1. Intercidades e Alfa Pendular: SEMPRE visíveis em todo o território
+      if (isLongDistance) {
+        // Mantém sempre visível para utilizadores no Porto e Lisboa
+      } else if (isUrbanoPorto) {
+        // Urbanos do Porto: apenas visíveis se o utilizador estiver no Grande Porto ou norte
+        if (userCoord && !isUserInPorto) {
+          continue;
+        }
+      } else if (isUrbanoLisboa) {
+        // Urbanos de Lisboa: apenas visíveis se o utilizador estiver na Grande Lisboa ou centro/sul
+        if (userCoord && !isUserInLisbon) {
+          continue;
+        }
+      } else if (isRegional) {
+        // Regionais: visíveis se estiverem no raio alargado de proximidade (55 km)
+        if (userCoord) {
+          const distM = calculateDistanceMeters(userCoord.latitude, userCoord.longitude, lat, lng);
+          if (distM > 55000) {
+            continue;
+          }
+        }
+      }
+
+      const trainNum = String(v.trainNumber || '');
+      let displayLine = trainNum;
+      let serviceType: StcpVehicle['serviceType'] = 'regional';
+
+      if (isAP) {
+        displayLine = `AP ${trainNum}`;
+        serviceType = 'alfa_pendular';
+      } else if (isIC) {
+        displayLine = `IC ${trainNum}`;
+        serviceType = 'intercidades';
+      } else if (isUrbanoPorto) {
+        displayLine = `U ${trainNum}`;
+        serviceType = 'urbano_porto';
+      } else if (isUrbanoLisboa) {
+        displayLine = `U ${trainNum}`;
+        serviceType = 'urbano_lisboa';
+      } else if (isRegional) {
+        displayLine = `R ${trainNum}`;
+        serviceType = 'regional';
+      }
+
+      const delaySec = typeof v.delay === 'number' ? v.delay : null;
+      const delayMinutes = delaySec !== null ? Math.round(delaySec / 60) : undefined;
+
+      validVehicles.push({
+        id: `cp-${v.agencyId || 'CP'}-${trainNum}-${v.runDate || ''}`,
+        routeId: trainNum,
+        displayLine,
+        directionId: 0,
+        lat,
+        lng,
+        bearing: typeof v.bearing === 'number' && !isNaN(v.bearing) ? v.bearing : undefined,
+        operator: 'cp',
+        vehicleType: 'train',
+        serviceType,
+        serviceName: serviceDesig,
+        origin: v.origin?.designation,
+        destination: v.destination?.designation,
+        delayMinutes,
+        timestamp: v.timestamp ? Number(v.timestamp) : null,
+      });
+    }
+
+    return validVehicles;
+  } catch (error) {
+    console.warn('Erro ao consultar comboios CP em tempo real:', error);
+    return [];
+  }
+}
+
 export interface UnifiedTransitOptions {
   includeStcp?: boolean;
   includeUnir?: boolean;
   includeCarris?: boolean;
   includeCarrisMetropolitana?: boolean;
+  includeCpTrains?: boolean;
   userCoordinate?: { latitude: number; longitude: number } | null;
   maxDistanceKm?: number;
 }
 
 /**
- * Consulta unificada e otimizada de transportes em tempo real (Porto + Lisboa)
- * Permite filtrar por proximidade para poupança de bateria, dados móveis e memória.
+ * Consulta unificada e otimizada de transportes em tempo real (Porto + Lisboa + Comboios CP)
+ * Permite filtrar por proximidade para poupança de bateria, dados móveis e memória,
+ * mantendo o Alfa Pendular e Intercidades visíveis em todo o percurso nacional.
  */
 export async function fetchUnifiedTransitBuses(options: UnifiedTransitOptions): Promise<StcpVehicle[]> {
   const {
@@ -457,6 +616,7 @@ export async function fetchUnifiedTransitBuses(options: UnifiedTransitOptions): 
     includeUnir = false,
     includeCarris = false,
     includeCarrisMetropolitana = false,
+    includeCpTrains = false,
     userCoordinate,
     maxDistanceKm = 40,
   } = options;
@@ -467,6 +627,7 @@ export async function fetchUnifiedTransitBuses(options: UnifiedTransitOptions): 
   if (includeUnir) promises.push(fetchUnirLiveVehicles());
   if (includeCarris) promises.push(fetchCarrisLiveVehicles());
   if (includeCarrisMetropolitana) promises.push(fetchCarrisMetropolitanaLiveVehicles());
+  if (includeCpTrains) promises.push(fetchCpLiveTrains({ userCoordinate }));
 
   if (promises.length === 0) {
     return [];
@@ -482,8 +643,11 @@ export async function fetchUnifiedTransitBuses(options: UnifiedTransitOptions): 
         if (!seenIds.has(v.id)) {
           seenIds.add(v.id);
 
-          // Filtragem de proximidade (se coordenadas do mapa/utilizador fornecidas)
-          if (userCoordinate && maxDistanceKm > 0) {
+          // Filtragem de proximidade (exceto para comboios de longo curso AP e IC que cobrem todo o país)
+          const isFlagshipTrain =
+            v.operator === 'cp' && (v.serviceType === 'alfa_pendular' || v.serviceType === 'intercidades');
+
+          if (userCoordinate && maxDistanceKm > 0 && !isFlagshipTrain) {
             const distM = calculateDistanceMeters(userCoordinate.latitude, userCoordinate.longitude, v.lat, v.lng);
             if (distM > maxDistanceKm * 1000) {
               continue;

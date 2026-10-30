@@ -35,6 +35,8 @@ interface MapLayersModalProps {
   onToggleCarrisBuses?: () => void;
   showCarrisMetroBusesOnMap?: boolean;
   onToggleCarrisMetroBuses?: () => void;
+  showCpTrainsOnMap?: boolean;
+  onToggleCpTrains?: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -63,6 +65,8 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onToggleCarrisBuses,
   showCarrisMetroBusesOnMap = false,
   onToggleCarrisMetroBuses,
+  showCpTrainsOnMap = false,
+  onToggleCpTrains,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -79,9 +83,10 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     showUnirBusesOnMap,
     showCarrisBusesOnMap,
     showCarrisMetroBusesOnMap,
+    showCpTrainsOnMap,
   ].filter(Boolean).length;
 
-  const allLayersActive = activeLayersCount === 8;
+  const allLayersActive = activeLayersCount === 9;
 
   const INFRASTRUCTURE_LAYERS: {
     id: string;
@@ -93,6 +98,15 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     active: boolean;
     onToggle: () => void;
   }[] = [
+    {
+      id: 'cp_trains',
+      name: 'Comboios CP',
+      subtitle: 'Alfa Pendular, IC e Urbanos em direto',
+      icon: 'train',
+      color: '#00824B',
+      active: showCpTrainsOnMap,
+      onToggle: onToggleCpTrains || (() => {}),
+    },
     {
       id: 'stcp',
       name: 'Autocarros STCP',

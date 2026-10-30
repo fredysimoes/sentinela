@@ -198,6 +198,7 @@ export default function App() {
   const [showUnirBusesOnMap, setShowUnirBusesOnMap] = useState(false);
   const [showCarrisBusesOnMap, setShowCarrisBusesOnMap] = useState(false);
   const [showCarrisMetroBusesOnMap, setShowCarrisMetroBusesOnMap] = useState(false);
+  const [showCpTrainsOnMap, setShowCpTrainsOnMap] = useState(false);
   const [transitVehicles, setTransitVehicles] = useState<StcpVehicle[]>([]);
   const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
@@ -227,10 +228,15 @@ export default function App() {
 
   const [targetCoordinate, setTargetCoordinate] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  // Polling em Tempo Real de Transportes Públicos (Porto: STCP + UNIR | Lisboa: Carris + Carris Metropolitana)
+  // Polling em Tempo Real de Transportes Públicos (Porto: STCP + UNIR | Lisboa: Carris + Carris Metropolitana | Nacional: CP)
   // Otimizado para poupança de bateria e dados: pausa em segundo plano e intervalo suave de 12s
   useEffect(() => {
-    const isAnyTransitActive = showStcpBusesOnMap || showUnirBusesOnMap || showCarrisBusesOnMap || showCarrisMetroBusesOnMap;
+    const isAnyTransitActive =
+      showStcpBusesOnMap ||
+      showUnirBusesOnMap ||
+      showCarrisBusesOnMap ||
+      showCarrisMetroBusesOnMap ||
+      showCpTrainsOnMap;
     if (!isAnyTransitActive) {
       setTransitVehicles([]);
       return;
@@ -250,8 +256,9 @@ export default function App() {
           includeUnir: showUnirBusesOnMap,
           includeCarris: showCarrisBusesOnMap,
           includeCarrisMetropolitana: showCarrisMetroBusesOnMap,
+          includeCpTrains: showCpTrainsOnMap,
           userCoordinate: userCoord,
-          maxDistanceKm: 35, // Restringe a 35km para poupança de memória e processamento gráfico
+          maxDistanceKm: 35, // Restringe a 35km para autocarros locais; comboios de longo curso (AP/IC) são mantidos
         });
         if (isMounted) {
           setTransitVehicles(vehicles);
@@ -276,7 +283,15 @@ export default function App() {
       clearInterval(interval);
       appStateSub.remove();
     };
-  }, [showStcpBusesOnMap, showUnirBusesOnMap, showCarrisBusesOnMap, showCarrisMetroBusesOnMap, userLocation, targetCoordinate]);
+  }, [
+    showStcpBusesOnMap,
+    showUnirBusesOnMap,
+    showCarrisBusesOnMap,
+    showCarrisMetroBusesOnMap,
+    showCpTrainsOnMap,
+    userLocation,
+    targetCoordinate,
+  ]);
 
   const activeLayersCount = [
     showPoliceOnMap,
@@ -287,6 +302,7 @@ export default function App() {
     showUnirBusesOnMap,
     showCarrisBusesOnMap,
     showCarrisMetroBusesOnMap,
+    showCpTrainsOnMap,
   ].filter(Boolean).length;
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
@@ -1500,10 +1516,34 @@ export default function App() {
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
           showWheelmapOnMap={showWheelmapOnMap}
-          showStcpBusesOnMap={showStcpBusesOnMap || showUnirBusesOnMap || showCarrisBusesOnMap || showCarrisMetroBusesOnMap}
+          showStcpBusesOnMap={
+            showStcpBusesOnMap ||
+            showUnirBusesOnMap ||
+            showCarrisBusesOnMap ||
+            showCarrisMetroBusesOnMap ||
+            showCpTrainsOnMap
+          }
           stcpVehicles={transitVehicles}
           onSelectStcpVehicle={(bus) => {
             Haptics.selectionAsync();
+
+            if (bus.operator === 'cp') {
+              const serviceName = bus.serviceName || 'Comboio CP';
+              const trainNum = bus.routeId || '';
+              const routeInfo = bus.origin && bus.destination ? `${bus.origin} ➔ ${bus.destination}` : 'Rede Ferroviária Nacional';
+              const delayInfo =
+                bus.delayMinutes && bus.delayMinutes > 0
+                  ? `Atraso: +${bus.delayMinutes} min`
+                  : 'Em circulação a horas';
+              const bearingInfo = bus.bearing ? `${Math.round(bus.bearing)}º` : 'Em marcha';
+
+              Alert.alert(
+                `CP ${serviceName} ${trainNum}`.trim(),
+                `${routeInfo}\n${delayInfo}\nRumo: ${bearingInfo}`
+              );
+              return;
+            }
+
             let operatorName = 'STCP';
             let network = 'Porto Urbano';
             let typeLabel = 'Autocarro';
@@ -1958,6 +1998,8 @@ export default function App() {
         onToggleCarrisBuses={() => setShowCarrisBusesOnMap((prev) => !prev)}
         showCarrisMetroBusesOnMap={showCarrisMetroBusesOnMap}
         onToggleCarrisMetroBuses={() => setShowCarrisMetroBusesOnMap((prev) => !prev)}
+        showCpTrainsOnMap={showCpTrainsOnMap}
+        onToggleCpTrains={() => setShowCpTrainsOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
           setShowPharmaciesOnMap(true);
@@ -1967,6 +2009,7 @@ export default function App() {
           setShowUnirBusesOnMap(true);
           setShowCarrisBusesOnMap(true);
           setShowCarrisMetroBusesOnMap(true);
+          setShowCpTrainsOnMap(true);
         }}
         onDeactivateAllLayers={() => {
           setShowPoliceOnMap(false);
@@ -1977,6 +2020,7 @@ export default function App() {
           setShowUnirBusesOnMap(false);
           setShowCarrisBusesOnMap(false);
           setShowCarrisMetroBusesOnMap(false);
+          setShowCpTrainsOnMap(false);
         }}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}

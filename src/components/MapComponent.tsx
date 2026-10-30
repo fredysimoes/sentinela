@@ -503,15 +503,21 @@ const IncidentMarker = memo(({ incident, onSelect }: { incident: Incident; onSel
   );
 });
 
-// Marcador em Cápsula para Transportes Públicos em Tempo Real (STCP, UNIR, Carris, Carris Metropolitana)
+// Marcador em Cápsula para Transportes Públicos em Tempo Real (STCP, UNIR, Carris, Carris Metropolitana, CP)
 const StcpBusCapsuleMarker = memo(({ vehicle, onSelect }: { vehicle: StcpVehicle; onSelect?: (vehicle: StcpVehicle) => void }) => {
-  const color = getStcpLineColor(vehicle.routeId, vehicle.operator);
+  const color = getStcpLineColor(vehicle.routeId, vehicle.operator, vehicle.serviceType);
   const bearing = typeof vehicle.bearing === 'number' && !isNaN(vehicle.bearing) ? vehicle.bearing : null;
+  const isTrain = vehicle.operator === 'cp' || vehicle.vehicleType === 'train';
   const isUnir = vehicle.operator === 'unir';
   const isCarris = vehicle.operator === 'carris';
   const isCarrisMetro = vehicle.operator === 'carris_metropolitana';
   const isTram = vehicle.vehicleType === 'tram' || /E$/i.test(vehicle.displayLine || vehicle.routeId);
-  const displayLine = vehicle.displayLine || vehicle.routeId || (isUnir ? 'UNIR' : isCarris ? 'CARRIS' : isCarrisMetro ? 'CM' : 'STCP');
+  const isAP = vehicle.serviceType === 'alfa_pendular';
+  const isIC = vehicle.serviceType === 'intercidades';
+  const isUrbano = vehicle.serviceType === 'urbano_porto' || vehicle.serviceType === 'urbano_lisboa';
+
+  const defaultLine = isTrain ? (isAP ? 'AP' : isIC ? 'IC' : 'CP') : isUnir ? 'UNIR' : isCarris ? 'CARRIS' : isCarrisMetro ? 'CM' : 'STCP';
+  const displayLine = vehicle.displayLine || vehicle.routeId || defaultLine;
 
   return (
     <Marker
@@ -520,16 +526,31 @@ const StcpBusCapsuleMarker = memo(({ vehicle, onSelect }: { vehicle: StcpVehicle
       tracksViewChanges={false}
       anchor={{ x: 0.5, y: 0.5 }}
       flat={false}
-      zIndex={600}
+      zIndex={isTrain ? 750 : 600}
     >
       <View style={[styles.busCapsuleWrap, { backgroundColor: color.bg, borderColor: color.border }]}>
         <MaterialCommunityIcons
-          name={isTram ? 'tram' : 'bus-side'}
+          name={isTrain ? 'train' : isTram ? 'tram' : 'bus-side'}
           size={13}
           color={color.text}
           style={styles.busCapsuleIcon}
         />
         <Text style={[styles.busCapsuleText, { color: color.text }]}>{displayLine}</Text>
+        {isAP && (
+          <View style={[styles.unirMicroBadge, { backgroundColor: '#38BDF8' }]}>
+            <Text style={[styles.unirMicroBadgeText, { color: '#0F172A' }]}>AP</Text>
+          </View>
+        )}
+        {isIC && (
+          <View style={[styles.unirMicroBadge, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
+            <Text style={styles.unirMicroBadgeText}>IC</Text>
+          </View>
+        )}
+        {isTrain && !isAP && !isIC && (
+          <View style={[styles.unirMicroBadge, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
+            <Text style={styles.unirMicroBadgeText}>{isUrbano ? 'URB' : 'CP'}</Text>
+          </View>
+        )}
         {isUnir && (
           <View style={styles.unirMicroBadge}>
             <Text style={styles.unirMicroBadgeText}>UNIR</Text>
