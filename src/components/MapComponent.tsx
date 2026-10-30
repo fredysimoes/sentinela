@@ -235,7 +235,7 @@ import { PedestrianRoute, RouteCoordinate, TransitStop } from '../types/navigati
 import { CATEGORIES, isAccessibilityCategory } from '../constants/categories';
 import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
-import { isProtestInfiltratorVerified, isDaylight } from '../utils/geo';
+import { isProtestInfiltratorVerified, isDaylight, calculateDistanceMeters } from '../utils/geo';
 import { StcpVehicle, getStcpLineColor } from '../services/stcpRealtimeService';
 import { CpStation } from '../services/cpStationsService';
 import { SelectedMapPoint } from './SelectedPlaceSheet';
@@ -758,6 +758,80 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
     };
   }, [activeRoute?.id, activeRoute?.coordinates]);
 
+  const lastPassedIndexRef = useRef<number>(0);
+  const lastCameraHeadingRef = useRef<number>(0);
+
+  useEffect(() => {
+    lastPassedIndexRef.current = 0;
+  }, [activeRoute?.id, isNavigating, isSimulating]);
+
+  // Dynamically trim traveled portion of the route behind the user (erasing completed path)
+  const displayRouteCoords = useMemo(() => {
+    if (!activeRoute?.coordinates || activeRoute.coordinates.length < 2) {
+      return [];
+    }
+
+    // When previewing / not navigating or simulating, use progressive neon drawing animation
+    if (!isNavigating && !isSimulating) {
+      return animatedRouteCoords;
+    }
+
+    // Active navigation or simulation: trim traveled portion behind user
+    const fullCoords = activeRoute.coordinates;
+    const currentLoc = isSimulating
+      ? (simulatedLocation || userLocation)
+      : userLocation;
+
+    if (!currentLoc) {
+      return animatedRouteCoords.length >= 2 ? animatedRouteCoords : fullCoords;
+    }
+
+    let minDistance = Infinity;
+    let closestIndex = 0;
+
+    for (let i = 0; i < fullCoords.length; i++) {
+      const d = calculateDistanceMeters(
+        currentLoc.latitude,
+        currentLoc.longitude,
+        fullCoords[i].latitude,
+        fullCoords[i].longitude
+      );
+      if (d < minDistance) {
+        minDistance = d;
+        closestIndex = i;
+      }
+    }
+
+    // Monotonic progression: only advance forward along route
+    if (closestIndex < lastPassedIndexRef.current) {
+      closestIndex = lastPassedIndexRef.current;
+    } else {
+      lastPassedIndexRef.current = closestIndex;
+    }
+
+    const remaining = fullCoords.slice(closestIndex + 1);
+    const startCoord = {
+      latitude: currentLoc.latitude,
+      longitude: currentLoc.longitude,
+    };
+
+    if (remaining.length === 0) {
+      const dest = fullCoords[fullCoords.length - 1];
+      return [startCoord, dest];
+    }
+
+    return [startCoord, ...remaining];
+  }, [
+    isNavigating,
+    isSimulating,
+    animatedRouteCoords,
+    activeRoute?.coordinates,
+    userLocation?.latitude,
+    userLocation?.longitude,
+    simulatedLocation?.latitude,
+    simulatedLocation?.longitude,
+  ]);
+
   // Listen to external recenterSignal from the bottom dock "Mapa" button
   useEffect(() => {
     if (recenterSignal > 0) {
@@ -798,6 +872,10 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
     longitudeDelta: 0.012,
   };
 
+function shortestAngleDiff(target: number, current: number): number {
+  return ((((target - current) % 360) + 540) % 360) - 180;
+}
+
   const isDriving = activeRoute?.mode === 'driving';
   const navZoom = isDriving ? 17.5 : 18.5;
 
@@ -807,6 +885,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
       setIs3DMode(true);
       setFollowHeading(true);
       setIsUserInteracting(false);
+      lastCameraHeadingRef.current = Math.round(userHeading);
 
       if (userLocation && mapRef.current) {
         mapRef.current.animateCamera(
@@ -837,12 +916,26 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
       setIs3DMode(false);
       setFollowHeading(false);
       setIsUserInteracting(false);
+      lastCameraHeadingRef.current = 0;
     }
   }, [isNavigating, navZoom]);
 
   // Dynamic Camera tracking when moving / orienting in navigation mode
   useEffect(() => {
     if (isNavigating && !isUserInteracting && userLocation && mapRef.current) {
+      let targetHeading = lastCameraHeadingRef.current;
+      if (followHeading) {
+        const diff = shortestAngleDiff(userHeading, lastCameraHeadingRef.current);
+        // Deadband hysteresis: ignore micro-wobbles (< 5.5 degrees) from hand/walking vibration
+        if (Math.abs(diff) >= 5.5) {
+          targetHeading = Math.round(userHeading);
+          lastCameraHeadingRef.current = targetHeading;
+        }
+      } else {
+        targetHeading = 0;
+        lastCameraHeadingRef.current = 0;
+      }
+
       mapRef.current.animateCamera(
         {
           center: {
@@ -850,10 +943,10 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             longitude: userLocation.longitude,
           },
           pitch: is3DMode ? 55 : 0,
-          heading: followHeading ? userHeading : 0,
+          heading: targetHeading,
           zoom: navZoom,
         },
-        { duration: isDriving ? 220 : 350 }
+        { duration: isDriving ? 250 : 380 }
       );
     }
   }, [userLocation?.latitude, userLocation?.longitude, userHeading, is3DMode, followHeading, isUserInteracting, isNavigating, navZoom, isDriving]);
@@ -917,6 +1010,8 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   const handleRecenter = () => {
     setIsUserInteracting(false);
     if (userLocation && mapRef.current) {
+      const headingToUse = followHeading ? Math.round(userHeading) : 0;
+      lastCameraHeadingRef.current = headingToUse;
       mapRef.current.animateCamera(
         {
           center: {
@@ -924,7 +1019,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             longitude: userLocation.longitude,
           },
           pitch: is3DMode ? 55 : 0,
-          heading: followHeading ? userHeading : 0,
+          heading: headingToUse,
           zoom: isNavigating ? navZoom : 17,
         },
         { duration: 500 }
@@ -949,10 +1044,12 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   const toggleHeadingFollow = () => {
     const nextFollow = !followHeading;
     setFollowHeading(nextFollow);
+    const targetHeading = nextFollow ? Math.round(userHeading) : 0;
+    lastCameraHeadingRef.current = targetHeading;
     if (userLocation && mapRef.current) {
       mapRef.current.animateCamera(
         {
-          heading: nextFollow ? userHeading : 0,
+          heading: targetHeading,
         },
         { duration: 400 }
       );
@@ -1118,11 +1215,11 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
         )}
 
         {/* Active Pedestrian / Driving / Transit Route with Progressive Neon Animation & 3D Street Illumination */}
-        {activeRoute && animatedRouteCoords.length >= 2 && (
+        {activeRoute && displayRouteCoords.length >= 2 && (
           <>
             {/* 1. Ambient Street & 3D Building Illumination Layer (Wide Translucent Neon Halo) */}
             <Polyline
-              coordinates={animatedRouteCoords}
+              coordinates={displayRouteCoords}
               strokeColor={
                 activeRoute.mode === 'transit'
                   ? 'rgba(2, 132, 199, 0.22)'
@@ -1136,7 +1233,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             />
             {/* 2. Mid Neon Glow Layer */}
             <Polyline
-              coordinates={animatedRouteCoords}
+              coordinates={displayRouteCoords}
               strokeColor={
                 activeRoute.mode === 'transit'
                   ? 'rgba(56, 189, 248, 0.45)'
@@ -1150,7 +1247,7 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             />
             {/* 3. High-Intensity Neon Core Line */}
             <Polyline
-              coordinates={animatedRouteCoords}
+              coordinates={displayRouteCoords}
               strokeColor={
                 activeRoute.mode === 'transit'
                   ? '#38BDF8'

@@ -75,6 +75,7 @@ import { SettingsModal } from './src/components/SettingsModal';
 import { setTorch, setKeepScreenOn } from './src/services/torch';
 import { ProtestLightModal } from './src/components/ProtestLightModal';
 import { ProtestRightsModal } from './src/components/ProtestRightsModal';
+import { ArrivalDestinationModal, ArrivalModalData } from './src/components/ArrivalDestinationModal';
 import { M3Pressable } from './src/components/M3MotionWrapper';
 import { MaterialAlertBanner } from './src/components/MaterialAlertBanner';
 import { FeedbackModal } from './src/components/FeedbackModal';
@@ -247,6 +248,8 @@ export default function App() {
   const routeAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastNavRecalcTimeRef = useRef<number>(0);
   const isNavRecalculatingRef = useRef<boolean>(false);
+  const navStartTimeRef = useRef<number>(Date.now());
+  const [arrivalModalData, setArrivalModalData] = useState<ArrivalModalData | null>(null);
 
   useEffect(() => {
     incidentsRef.current = incidents;
@@ -760,6 +763,7 @@ export default function App() {
       timeRemainingMinutes: chosenRoute.durationMinutes,
     };
 
+    navStartTimeRef.current = Date.now();
     setNavState(newNavState);
     setSimulationState(null);
     setShowRoutePreview(false);
@@ -904,10 +908,26 @@ export default function App() {
       destCoord.longitude
     );
 
-    // If within 15 meters of destination, user has arrived safely!
-    if (distToDest <= 15) {
+    // Standard industry arrival thresholds:
+    // Driving: 40 meters (curbside/street parking margin)
+    // Walking / Transit / Accessibility: 25 meters (pedestrian GPS multipath and building entrance setback)
+    const arrivalThresholdMeters = navState.mode === 'driving' ? 40 : 25;
+
+    // If within arrival threshold of destination, user has arrived safely!
+    if (distToDest <= arrivalThresholdMeters) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Chegou ao Destino', `Chegou com sucesso a ${navState.destinationName}!`);
+      const elapsedMins = Math.max(
+        1,
+        Math.round((Date.now() - navStartTimeRef.current) / 60000)
+      );
+      setArrivalModalData({
+        destinationName: navState.destinationName,
+        durationMinutes: elapsedMins > 0 ? elapsedMins : (navState.route?.durationMinutes || 1),
+        distanceMeters: navState.route?.distanceMeters || Math.round(distToDest),
+        mode: navState.mode,
+        isSafe: navState.route?.isSafe ?? true,
+        hazardsAvoidedCount: navState.route?.hazardsAvoided?.length || 0,
+      });
       setNavState(null);
       stopNavigationBackgroundTracking();
       if (notificationSettings.enabled && notificationSettings.backgroundTracking) {
@@ -1169,6 +1189,10 @@ export default function App() {
       setSafePlaces(places);
 
       // 5. High-frequency GPS watch for zero-lag driving and walking navigation
+      let lastCompassHeadingVal = 0;
+      let smoothedCompassVal = 0;
+      let lastHeadingTime = 0;
+
       try {
         locationSubscription = await Location.watchPositionAsync(
           {
@@ -1184,14 +1208,17 @@ export default function App() {
             };
             setUserLocation(newLoc);
 
-            // If vehicle/pedestrian is moving (> 1.2 m/s ~ 4.3 km/h) and GPS provides course heading, use it for road alignment
+            // If vehicle/pedestrian is moving (> 0.8 m/s ~ 2.9 km/h) and GPS provides course heading, use it for road alignment
             if (
               typeof loc.coords.speed === 'number' &&
-              loc.coords.speed > 1.2 &&
+              loc.coords.speed > 0.8 &&
               typeof loc.coords.heading === 'number' &&
               loc.coords.heading >= 0
             ) {
-              setUserHeading(Math.round(loc.coords.heading));
+              const gpsBearing = Math.round(loc.coords.heading);
+              lastCompassHeadingVal = gpsBearing;
+              smoothedCompassVal = gpsBearing;
+              setUserHeading(gpsBearing);
             }
 
             // Check real-time proximity to hazards using latest incidents and settings
@@ -1207,24 +1234,33 @@ export default function App() {
         console.warn('Erro ao subscrever watchPosition:', err);
       }
 
-      // 6. Watch compass / gyroscope orientation heading (throttled to keep 60 FPS)
+      // 6. Watch compass / gyroscope orientation heading with EMA smoothing and deadband hysteresis
       try {
-        let lastHeadingTime = 0;
-        let lastHeadingVal = 0;
-
         headingSubscription = await Location.watchHeadingAsync((headingData) => {
-          const heading =
+          const rawHeading =
             headingData.trueHeading >= 0 ? headingData.trueHeading : headingData.magHeading;
-          if (typeof heading === 'number' && !isNaN(heading)) {
-            const rounded = Math.round(heading);
+          if (typeof rawHeading === 'number' && !isNaN(rawHeading)) {
             const now = Date.now();
-            const diff = Math.abs(rounded - lastHeadingVal);
-            const wrappedDiff = Math.min(diff, 360 - diff);
 
-            // Throttle: only update state if 150ms has elapsed AND heading changed by at least 2.5 degrees
-            if (now - lastHeadingTime >= 150 && wrappedDiff >= 2.5) {
+            // Low-pass exponential moving average filter (alpha = 0.28)
+            const angleDiff = ((((rawHeading - smoothedCompassVal) % 360) + 540) % 360) - 180;
+            smoothedCompassVal = (smoothedCompassVal + angleDiff * 0.28 + 360) % 360;
+
+            const changeFromLastEmitted = Math.abs(
+              ((((smoothedCompassVal - lastCompassHeadingVal) % 360) + 540) % 360) - 180
+            );
+
+            // Throttle & Deadband:
+            // 1. Deliberate user turn (>= 5.5 deg change) after at least 220ms: emit immediately.
+            // 2. Slow subtle reorientation (>= 2.5 deg) after at least 600ms: emit to stay calibrated.
+            // Micro-oscillations from walking sway (~ 2-4 deg) are filtered out completely.
+            if (
+              (changeFromLastEmitted >= 5.5 && now - lastHeadingTime >= 220) ||
+              (changeFromLastEmitted >= 2.5 && now - lastHeadingTime >= 600)
+            ) {
               lastHeadingTime = now;
-              lastHeadingVal = rounded;
+              const rounded = Math.round(smoothedCompassVal);
+              lastCompassHeadingVal = rounded;
               setUserHeading(rounded);
             }
           }
@@ -2371,6 +2407,13 @@ export default function App() {
       <ProtestRightsModal
         visible={showProtestRightsModal}
         onClose={() => setShowProtestRightsModal(false)}
+      />
+
+      {/* Destination Arrival & Trip Completion Modal */}
+      <ArrivalDestinationModal
+        visible={!!arrivalModalData}
+        data={arrivalModalData}
+        onDismiss={() => setArrivalModalData(null)}
       />
 
       {/* 3. Stealth Floating Pill Bottom Dock Bar (Always Visible & Active Tab Highlighted in White Pill) */}
