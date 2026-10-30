@@ -302,15 +302,72 @@ async function fetchRouteMultiEngine(
 }
 
 /**
- * Checks which incidents are close to a route line (within thresholdMeters)
+ * Helper to calculate the true minimum perpendicular distance from a point to a route's segments (in meters).
+ * This ensures hazards anywhere along straight avenues (between distant polyline vertices) are accurately detected.
  */
-function findHazardsNearRoute(
+export function getRouteMinDistanceToHazard(
+  routeCoords: RouteCoordinate[],
+  hazard: RouteCoordinate
+): number {
+  if (!routeCoords || routeCoords.length === 0) return Infinity;
+  if (routeCoords.length === 1) {
+    return calculateDistanceMeters(
+      routeCoords[0].latitude,
+      routeCoords[0].longitude,
+      hazard.latitude,
+      hazard.longitude
+    );
+  }
+
+  let minDistance = Infinity;
+
+  for (let i = 0; i < routeCoords.length - 1; i++) {
+    const a = routeCoords[i];
+    const b = routeCoords[i + 1];
+
+    const cosLat = Math.cos(((a.latitude + b.latitude) * 0.5 * Math.PI) / 180);
+    const dx = (b.longitude - a.longitude) * 111320 * cosLat;
+    const dy = (b.latitude - a.latitude) * 110540;
+    const px = (hazard.longitude - a.longitude) * 111320 * cosLat;
+    const py = (hazard.latitude - a.latitude) * 110540;
+
+    const segLenSq = dx * dx + dy * dy;
+    let dist: number;
+
+    if (segLenSq === 0) {
+      dist = Math.sqrt(px * px + py * py);
+    } else {
+      const t = Math.max(0, Math.min(1, (px * dx + py * dy) / segLenSq));
+      const projX = t * dx;
+      const projY = t * dy;
+      const diffX = px - projX;
+      const diffY = py - projY;
+      dist = Math.sqrt(diffX * diffX + diffY * diffY);
+    }
+
+    if (dist < minDistance) {
+      minDistance = dist;
+    }
+  }
+
+  return minDistance;
+}
+
+/**
+ * Checks which incidents are close to a route line (within thresholdMeters)
+ * using continuous cross-track segment distance.
+ */
+export function findHazardsNearRoute(
   routeCoords: RouteCoordinate[],
   incidents: Incident[],
-  thresholdMeters: number = 65,
+  thresholdMeters: number = 45,
   mode: TransportMode = 'walking',
   avoidAccessibilityBarriers: boolean = false
 ): Incident[] {
+  if (!routeCoords || routeCoords.length === 0 || !incidents || incidents.length === 0) {
+    return [];
+  }
+
   const dangerousIncidents: Incident[] = [];
 
   for (const inc of incidents) {
@@ -329,13 +386,12 @@ function findHazardsNearRoute(
       }
     }
 
-    const isNear = routeCoords.some(
-      (pt) =>
-        calculateDistanceMeters(pt.latitude, pt.longitude, inc.latitude, inc.longitude) <=
-        thresholdMeters
-    );
+    const dist = getRouteMinDistanceToHazard(routeCoords, {
+      latitude: inc.latitude,
+      longitude: inc.longitude,
+    });
 
-    if (isNear) {
+    if (dist <= thresholdMeters) {
       dangerousIncidents.push(inc);
     }
   }
@@ -344,28 +400,13 @@ function findHazardsNearRoute(
 }
 
 /**
- * Helper to calculate minimum distance from any point of a route to a specific hazard.
- */
-function getRouteMinDistanceToHazard(
-  routeCoords: RouteCoordinate[],
-  hazard: RouteCoordinate
-): number {
-  let min = Infinity;
-  for (const pt of routeCoords) {
-    const d = calculateDistanceMeters(pt.latitude, pt.longitude, hazard.latitude, hazard.longitude);
-    if (d < min) min = d;
-  }
-  return min;
-}
-
-/**
  * Checks if a hazard has been successfully bypassed by a detour.
  * A hazard is considered avoided if:
  * 1. The detour route never passes within thresholdMeters of it, OR
- * 2. If the direct route collided right through it (< 12m) and the detour maintains safe clearance (>= 18m), OR
+ * 2. If the direct route collided right through it (< 15m) and the detour maintains safe clearance (>= 22m), OR
  * 3. The detour increases clearance from the hazard by at least 15m.
  */
-function isHazardAvoidedByRoute(
+export function isHazardAvoidedByRoute(
   hazard: Incident,
   directCoords: RouteCoordinate[],
   detourCoords: RouteCoordinate[],
@@ -375,7 +416,7 @@ function isHazardAvoidedByRoute(
   if (detourMin > thresholdMeters) return true;
 
   const directMin = getRouteMinDistanceToHazard(directCoords, hazard);
-  if (directMin < 12 && detourMin >= 18) return true;
+  if (directMin < 15 && detourMin >= 22) return true;
   if (detourMin - directMin >= 15) return true;
 
   return false;
@@ -396,7 +437,7 @@ async function applySafeWalkingDetourToTransitRoute(
   safeRoute: PedestrianRoute;
   directRoute?: PedestrianRoute;
 }> {
-  const hazardThreshold = 25; // 25 metros para peões
+  const hazardThreshold = avoidAccessibilityBarriers ? 25 : 45; // 45 metros para peões, 25 para barreiras físicas
 
   // 1. Procurar ocorrências exclusivamente nos troços pedonais (maneuverType === 'walk')
   const walkingHazards: Incident[] = [];
@@ -481,13 +522,49 @@ async function applySafeWalkingDetourToTransitRoute(
     const toPt = step.toLocation || stepCoords[stepCoords.length - 1];
 
     if (hazardsOnThisStep.length > 0 && fromPt && toPt) {
-      // Calcular desvio pedonal seguro contornando os perigos
-      const detour = await fetchValhallaRoute(
+      // Estratégia A: Valhalla nativo com avoid_locations
+      let detour = await fetchValhallaRoute(
         [fromPt, toPt],
         'walking',
         avoidCoords,
         avoidAccessibilityBarriers
       );
+
+      // Estratégia B: Se Valhalla avoid_locations não contornar, usar waypoints laterais perpendiculares
+      if (!detour || detour.coordinates.length < 2) {
+        const primaryH = hazardsOnThisStep[0];
+        const dLat = toPt.latitude - fromPt.latitude;
+        const dLon = toPt.longitude - fromPt.longitude;
+        const len = Math.sqrt(dLat * dLat + dLon * dLon) || 1;
+        const cosLat = Math.cos((primaryH.latitude * Math.PI) / 180);
+        const perpLat = -dLon / len;
+        const perpLon = (dLat / len) / Math.max(0.1, cosLat);
+
+        for (const off of [0.0008, 0.0013, 0.0018]) {
+          const c1 = {
+            latitude: primaryH.latitude + perpLat * off,
+            longitude: primaryH.longitude + perpLon * off,
+          };
+          const c2 = {
+            latitude: primaryH.latitude - perpLat * off,
+            longitude: primaryH.longitude - perpLon * off,
+          };
+
+          for (const ev of [c1, c2]) {
+            const safeStepData = await fetchRouteMultiEngine(
+              [fromPt, ev, toPt],
+              'walking',
+              undefined,
+              avoidAccessibilityBarriers
+            );
+            if (safeStepData && safeStepData.coordinates.length > 1) {
+              detour = safeStepData;
+              break;
+            }
+          }
+          if (detour) break;
+        }
+      }
 
       if (detour && detour.coordinates.length > 1) {
         const stepAvoided = hazardsOnThisStep.filter((h) =>
@@ -670,16 +747,16 @@ export async function calculateSafeNavigationRoutes(params: {
     return { safeRoute: ensureStepCoordinates(fallbackRoute) };
   }
 
-  // Threshold for proximity to hazard:
-  // - For driving: 30m (vehicles on roads)
-  // - For walking with accessibility barriers: 20m (sidewalk obstacles are localized; parallel street 30-40m away is safe)
-  // - For standard walking safety hazards: 25m
+  // Threshold for proximity to hazard (using continuous line-segment cross-track distance):
+  // - For driving: 40m (vehicles on roads)
+  // - For walking with accessibility barriers: 25m (sidewalk obstacles are localized; parallel street 35-40m away is safe)
+  // - For standard walking safety hazards: 45m (reliably catches any danger zone on the street or intersection)
   const hazardThreshold =
     mode === 'driving'
-      ? 30
+      ? 40
       : effectiveAccessibilityAvoidance
-      ? 20
-      : 25;
+      ? 25
+      : 45;
 
   const hazardsOnDirect = findHazardsNearRoute(
     directData.coordinates,
@@ -877,7 +954,10 @@ export async function calculateSafeNavigationRoutes(params: {
   }
 
   // If no detour is possible or all detours are blocked, return direct route with warning
-  return { safeRoute: ensureStepCoordinates(directRoute) };
+  return {
+    safeRoute: ensureStepCoordinates(directRoute),
+    directRoute: ensureStepCoordinates(directRoute),
+  };
 }
 
 /**

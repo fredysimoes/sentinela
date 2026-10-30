@@ -53,7 +53,11 @@ import {
 import { updateNavigationNotification, dismissNavigationNotification } from './src/services/notifications';
 import { calculateCurrentStepIndex } from './src/utils/navigationHelper';
 import { PedestrianRoute, NavigationState, RouteCoordinate, TransportMode, RouteSimulationState, TransitStop } from './src/types/navigation';
-import { calculateSafeNavigationRoutes } from './src/services/routingService';
+import {
+  calculateSafeNavigationRoutes,
+  getRouteMinDistanceToHazard,
+  findHazardsNearRoute,
+} from './src/services/routingService';
 import { NavigationBanner } from './src/components/NavigationBanner';
 import { SimulationController } from './src/components/SimulationController';
 import { RoutePreviewModal } from './src/components/RoutePreviewModal';
@@ -241,6 +245,8 @@ export default function App() {
   const [previewDestCoord, setPreviewDestCoord] = useState<RouteCoordinate | null>(null);
   const [accessibilityRouteOnly, setAccessibilityRouteOnly] = useState<boolean>(false);
   const routeAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastNavRecalcTimeRef = useRef<number>(0);
+  const isNavRecalculatingRef = useRef<boolean>(false);
 
   useEffect(() => {
     incidentsRef.current = incidents;
@@ -709,6 +715,34 @@ export default function App() {
     }
   };
 
+  // Recálculo dinâmico da rota de pré-visualização quando a lista de ocorrências é atualizada
+  useEffect(() => {
+    if (!showRoutePreview || !previewDestCoord) return;
+
+    const origin: RouteCoordinate = previewOriginCoord || {
+      latitude: userLocation?.latitude ?? 41.1501,
+      longitude: userLocation?.longitude ?? -8.6112,
+    };
+
+    let isMounted = true;
+    calculateSafeNavigationRoutes({
+      origin,
+      destination: previewDestCoord,
+      incidents,
+      mode: transportMode,
+      avoidAccessibilityBarriers: accessibilityRouteOnly,
+    }).then((routes) => {
+      if (isMounted) {
+        setPreviewSafeRoute(routes.safeRoute);
+        setPreviewDirectRoute(routes.directRoute);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [incidents]);
+
   const startRealNavigation = async (chosenRoute: PedestrianRoute) => {
     if (!previewDestCoord) return;
 
@@ -915,7 +949,66 @@ export default function App() {
         maneuverModifier: currentStep.maneuverModifier,
       });
     }
-  }, [userLocation?.latitude, userLocation?.longitude]);
+
+    // Recálculo dinâmico inteligente durante navegação:
+    // 1. Desvio fora de rota (utilizador afastou-se mais de 45 metros do trajeto planeado)
+    // 2. Deteção de ocorrências no percurso restante à frente do utilizador
+    const now = Date.now();
+    if (now - lastNavRecalcTimeRef.current > 4000 && !isNavRecalculatingRef.current && distToDest > 30) {
+      const routeCoords = navState.route?.coordinates || [];
+      const distToRoute = routeCoords.length > 0
+        ? getRouteMinDistanceToHazard(routeCoords, { latitude: userLocation.latitude, longitude: userLocation.longitude })
+        : 0;
+
+      const isOffRoute = distToRoute > 45;
+
+      const totalSteps = steps.length || 1;
+      const progressFraction = Math.max(0, Math.min(1, stepIndex / totalSteps));
+      const remainingCoords = routeCoords.slice(Math.floor(progressFraction * routeCoords.length));
+      const hazardThreshold = navState.mode === 'driving' ? 40 : 45;
+      const hazardsAhead = findHazardsNearRoute(
+        remainingCoords,
+        incidents,
+        hazardThreshold,
+        navState.mode,
+        accessibilityRouteOnly
+      );
+
+      const hasNewHazardsOnRoute = hazardsAhead.length > 0 && !navState.route?.isSafe;
+
+      if (isOffRoute || hasNewHazardsOnRoute) {
+        lastNavRecalcTimeRef.current = now;
+        isNavRecalculatingRef.current = true;
+
+        calculateSafeNavigationRoutes({
+          origin: { latitude: userLocation.latitude, longitude: userLocation.longitude },
+          destination: destCoord,
+          incidents,
+          mode: navState.mode,
+          avoidAccessibilityBarriers: accessibilityRouteOnly,
+        })
+          .then((newRoutes) => {
+            isNavRecalculatingRef.current = false;
+            if (newRoutes?.safeRoute) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              setNavState((prev) => {
+                if (!prev || !prev.isActive) return null;
+                return {
+                  ...prev,
+                  route: newRoutes.safeRoute,
+                  currentStepIndex: 0,
+                  distanceRemainingMeters: newRoutes.safeRoute.distanceMeters,
+                  timeRemainingMinutes: newRoutes.safeRoute.durationMinutes,
+                };
+              });
+            }
+          })
+          .catch(() => {
+            isNavRecalculatingRef.current = false;
+          });
+      }
+    }
+  }, [userLocation?.latitude, userLocation?.longitude, incidents]);
 
   // Manage persistent navigation notification: ONLY show when minimized / screen locked, dismiss when app is open
   useEffect(() => {
