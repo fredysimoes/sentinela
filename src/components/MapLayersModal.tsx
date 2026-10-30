@@ -37,6 +37,8 @@ interface MapLayersModalProps {
   onToggleCarrisMetroBuses?: () => void;
   showCpTrainsOnMap?: boolean;
   onToggleCpTrains?: () => void;
+  showMetroStationsOnMap?: boolean;
+  onToggleMetroStations?: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -67,6 +69,8 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onToggleCarrisMetroBuses,
   showCpTrainsOnMap = false,
   onToggleCpTrains,
+  showMetroStationsOnMap = false,
+  onToggleMetroStations,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -98,6 +102,15 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     active: boolean;
     onToggle: () => void;
   }[] = [
+    {
+      id: 'metro_porto',
+      name: 'Metro do Porto',
+      subtitle: '85 Estações e Linhas A, B, C, D, E, F',
+      icon: 'subway-variant',
+      color: '#0284C7',
+      active: showMetroStationsOnMap,
+      onToggle: onToggleMetroStations || (() => {}),
+    },
     {
       id: 'cp_trains',
       name: 'Comboios CP',

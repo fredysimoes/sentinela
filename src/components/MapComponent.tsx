@@ -238,6 +238,7 @@ import { getPharmacyStatus } from '../utils/pharmacySchedule';
 import { isProtestInfiltratorVerified, isDaylight, calculateDistanceMeters } from '../utils/geo';
 import { StcpVehicle, getStcpLineColor } from '../services/stcpRealtimeService';
 import { CpStation } from '../services/cpStationsService';
+import { MetroStation, METRO_LINE_COLORS } from '../services/metroStationsService';
 import { SelectedMapPoint } from './SelectedPlaceSheet';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { M3Pressable } from './M3MotionWrapper';
@@ -597,6 +598,9 @@ interface MapComponentProps {
   cpStations?: CpStation[];
   showCpStationsOnMap?: boolean;
   onSelectCpStation?: (station: CpStation) => void;
+  metroStations?: MetroStation[];
+  showMetroStationsOnMap?: boolean;
+  onSelectMetroStation?: (station: MetroStation) => void;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -644,6 +648,9 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   cpStations = [],
   showCpStationsOnMap = false,
   onSelectCpStation,
+  metroStations = [],
+  showMetroStationsOnMap = false,
+  onSelectMetroStation,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -1531,6 +1538,27 @@ function shortestAngleDiff(target: number, current: number): number {
               </View>
             </Marker>
           ))}
+
+        {/* Estações do Metro do Porto */}
+        {showMetroStationsOnMap &&
+          metroStations &&
+          metroStations.map((station) => {
+            const primaryLine = station.lines[0] || 'D';
+            const lineColor = METRO_LINE_COLORS[primaryLine] || '#0284C7';
+            return (
+              <Marker
+                key={`metro-station-poi-${station.id}`}
+                coordinate={{ latitude: station.latitude, longitude: station.longitude }}
+                zIndex={620}
+                anchor={{ x: 0.5, y: 0.5 }}
+                onPress={() => onSelectMetroStation?.(station)}
+              >
+                <View style={[styles.metroStationMarker, { backgroundColor: lineColor }]}>
+                  <MaterialCommunityIcons name="subway-variant" size={14} color="#FFFFFF" />
+                </View>
+              </Marker>
+            );
+          })}
 
         {/* Live STCP Realtime Bus Capsule Markers (Grande Porto) */}
         {showStcpBusesOnMap && stcpVehicles.map((vehicle) => (
@@ -2444,6 +2472,21 @@ const styles = StyleSheet.create({
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
+    shadowRadius: 3.5,
+    elevation: 7,
+  },
+  metroStationMarker: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#0284C7',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.55,
     shadowRadius: 3.5,
     elevation: 7,
   },

@@ -13,6 +13,7 @@ import {
 import {
   formatDuration,
   calculateEstimatedArrival,
+  fetchRouteMultiEngine,
 } from './routingService';
 
 const GOOGLE_API_KEY =
@@ -148,7 +149,7 @@ async function fetchPortoOtpTransitRoute(
       const legDurSec = Math.round(Number(leg.duration || 0));
       accumulatedDurationSeconds += legDurSec;
 
-      const legCoords: RouteCoordinate[] = leg.legGeometry?.points
+      let legCoords: RouteCoordinate[] = leg.legGeometry?.points
         ? decodeGooglePolyline(leg.legGeometry.points)
         : leg.from && leg.to
         ? [
@@ -156,7 +157,6 @@ async function fetchPortoOtpTransitRoute(
             { latitude: leg.to.lat, longitude: leg.to.lon },
           ]
         : [];
-      allCoords.push(...legCoords);
 
       const rawMode = String(leg.mode || '').toUpperCase();
       const fromName =
@@ -166,6 +166,20 @@ async function fetchPortoOtpTransitRoute(
 
       const fromCoord = leg.from ? { latitude: leg.from.lat, longitude: leg.from.lon } : undefined;
       const toCoord = leg.to ? { latitude: leg.to.lat, longitude: leg.to.lon } : undefined;
+
+      // Garantir que os troços a pé (até à estação de metro ou paragem) seguem a geometria real das ruas pedonais
+      if (rawMode === 'WALK' && fromCoord && toCoord) {
+        if (legCoords.length <= 2 && legDist > 20) {
+          try {
+            const streetWalk = await fetchRouteMultiEngine([fromCoord, toCoord], 'walking');
+            if (streetWalk && streetWalk.coordinates && streetWalk.coordinates.length > 2) {
+              legCoords = streetWalk.coordinates;
+            }
+          } catch {}
+        }
+      }
+
+      allCoords.push(...legCoords);
 
       if (rawMode === 'WALK') {
         const instruction =

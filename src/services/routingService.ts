@@ -285,7 +285,7 @@ async function fetchOsrmRoute(
 /**
  * Route Dispatcher: Primary Valhalla -> Fallback OSRM
  */
-async function fetchRouteMultiEngine(
+export async function fetchRouteMultiEngine(
   coords: RouteCoordinate[],
   mode: TransportMode = 'walking',
   avoidLocations?: RouteCoordinate[],

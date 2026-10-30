@@ -88,9 +88,11 @@ import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerMo
 import { TvdeTripModal } from './src/components/TvdeTripModal';
 import { MapLayersModal } from './src/components/MapLayersModal';
 import { CpStationDetailSheet } from './src/components/CpStationDetailSheet';
+import { MetroStationDetailSheet } from './src/components/MetroStationDetailSheet';
 import { HalloweenAmbientOverlay } from './src/components/HalloweenAmbientOverlay';
 import { StcpVehicle, fetchUnifiedTransitBuses, fetchNearbyBusStops } from './src/services/stcpRealtimeService';
 import { CpStation, fetchNearbyCpStations } from './src/services/cpStationsService';
+import { MetroStation, fetchNearbyMetroStations } from './src/services/metroStationsService';
 import {
   TvdeTripSession,
   ParsedTvdeDraft,
@@ -209,10 +211,13 @@ export default function App() {
   const [showCarrisBusesOnMap, setShowCarrisBusesOnMap] = useState(false);
   const [showCarrisMetroBusesOnMap, setShowCarrisMetroBusesOnMap] = useState(false);
   const [showCpTrainsOnMap, setShowCpTrainsOnMap] = useState(false);
+  const [showMetroStationsOnMap, setShowMetroStationsOnMap] = useState(false);
   const [nearbyBusStops, setNearbyBusStops] = useState<TransitStop[]>([]);
   const [selectedBusStop, setSelectedBusStop] = useState<TransitStop | null>(null);
   const [nearbyCpStations, setNearbyCpStations] = useState<CpStation[]>([]);
   const [selectedCpStation, setSelectedCpStation] = useState<CpStation | null>(null);
+  const [nearbyMetroStations, setNearbyMetroStations] = useState<MetroStation[]>([]);
+  const [selectedMetroStation, setSelectedMetroStation] = useState<MetroStation | null>(null);
   const [transitVehicles, setTransitVehicles] = useState<StcpVehicle[]>([]);
   const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
@@ -413,6 +418,37 @@ export default function App() {
     };
   }, [
     showCpTrainsOnMap,
+    userLocation?.latitude,
+    userLocation?.longitude,
+    targetCoordinate?.latitude,
+    targetCoordinate?.longitude,
+  ]);
+
+  // Carregamento de Estações do Metro do Porto
+  const isMetroEffective = showMetroStationsOnMap || transportMode === 'transit';
+  useEffect(() => {
+    if (!isMetroEffective) {
+      setNearbyMetroStations([]);
+      return;
+    }
+
+    const coord = userLocation
+      ? { latitude: userLocation.latitude, longitude: userLocation.longitude }
+      : targetCoordinate;
+    if (!coord) return;
+
+    let isMounted = true;
+    fetchNearbyMetroStations(coord.latitude, coord.longitude, 40).then((stations) => {
+      if (isMounted) {
+        setNearbyMetroStations(stations);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    isMetroEffective,
     userLocation?.latitude,
     userLocation?.longitude,
     targetCoordinate?.latitude,
@@ -1784,6 +1820,9 @@ export default function App() {
           showCpStationsOnMap={showCpTrainsOnMap}
           cpStations={nearbyCpStations}
           onSelectCpStation={(station) => setSelectedCpStation(station)}
+          showMetroStationsOnMap={isMetroEffective}
+          metroStations={nearbyMetroStations}
+          onSelectMetroStation={(station) => setSelectedMetroStation(station)}
           showStcpBusesOnMap={isAnyTransitActive}
           stcpVehicles={transitVehicles}
           onSelectStcpVehicle={(bus) => {
@@ -2170,6 +2209,18 @@ export default function App() {
         />
       )}
 
+      {/* Estação do Metro do Porto (Detalhe e Navegação por Transporte) */}
+      {selectedMetroStation && (
+        <MetroStationDetailSheet
+          station={selectedMetroStation}
+          onClose={() => setSelectedMetroStation(null)}
+          onNavigateToStation={(st) => {
+            setSelectedMetroStation(null);
+            handleRequestNavigation(st.name, { latitude: st.latitude, longitude: st.longitude }, 'transit');
+          }}
+        />
+      )}
+
       {/* Route Preview Modal with Two-Point Itinerary Controller (Point A ➔ Point B) */}
       <RoutePreviewModal
         visible={showRoutePreview}
@@ -2300,6 +2351,8 @@ export default function App() {
         onToggleCarrisMetroBuses={() => setShowCarrisMetroBusesOnMap((prev) => !prev)}
         showCpTrainsOnMap={showCpTrainsOnMap}
         onToggleCpTrains={() => setShowCpTrainsOnMap((prev) => !prev)}
+        showMetroStationsOnMap={showMetroStationsOnMap}
+        onToggleMetroStations={() => setShowMetroStationsOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
           setShowPharmaciesOnMap(true);
@@ -2310,6 +2363,7 @@ export default function App() {
           setShowCarrisBusesOnMap(true);
           setShowCarrisMetroBusesOnMap(true);
           setShowCpTrainsOnMap(true);
+          setShowMetroStationsOnMap(true);
         }}
         onDeactivateAllLayers={() => {
           setShowPoliceOnMap(false);
@@ -2321,6 +2375,7 @@ export default function App() {
           setShowCarrisBusesOnMap(false);
           setShowCarrisMetroBusesOnMap(false);
           setShowCpTrainsOnMap(false);
+          setShowMetroStationsOnMap(false);
         }}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}
