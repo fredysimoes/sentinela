@@ -1,6 +1,8 @@
 import { Linking, Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import Haptics, { NotificationFeedbackType } from '../utils/haptics';
 
 export interface RadarPeer {
   peerId: string;
@@ -199,15 +201,40 @@ export async function leaveRadarRoom(handle: RadarSessionHandle): Promise<void> 
  * Creates standardized share message with deep link for SMS/WhatsApp
  */
 export function createRadarShareMessage(pin: string): string {
-  const deepLink = `sentinela://radar?pin=${pin}`;
-  return `🚨 *SENTINELA - ESTOU AQUI* 🚨\nEstou no meio da multidão e preciso que me encontres!\n\n📲 Toca neste link para abrir o radar na app:\n${deepLink}\n\n🔑 Ou insere manualmente o PIN no radar: *${pin}*`;
+  const webLink = `https://sentinela.app/radar?pin=${pin}`;
+  const appLink = `sentinela://radar?pin=${pin}`;
+  return `Sentinela - Estou aqui na multidão!\nCódigo PIN: ${pin}\n\nLink direto para abrir na app:\n${webLink}\n\n(Ou toca no deep link: ${appLink})`;
+}
+
+/**
+ * Creates message with only the PIN code and instruction
+ */
+export function createRadarPinMessage(pin: string): string {
+  return `Sentinela: Estou no meio da multidão. O meu código PIN de radar é: ${pin}`;
+}
+
+/**
+ * Creates message with only the direct link so it is immediately clickable
+ */
+export function createRadarLinkMessage(pin: string): string {
+  return `https://sentinela.app/radar?pin=${pin}`;
 }
 
 /**
  * Shares Radar PIN directly to WhatsApp with app deep link
  */
-export async function shareRadarWhatsApp(pin: string, phone: string = ''): Promise<void> {
-  const message = createRadarShareMessage(pin);
+export async function shareRadarWhatsApp(
+  pin: string,
+  mode: 'full' | 'code' | 'link' = 'full',
+  phone: string = ''
+): Promise<void> {
+  const message =
+    mode === 'code'
+      ? createRadarPinMessage(pin)
+      : mode === 'link'
+      ? createRadarLinkMessage(pin)
+      : createRadarShareMessage(pin);
+
   const cleanPhone = phone.replace(/[^\d+]/g, '');
   const encodedMsg = encodeURIComponent(message);
   const url = cleanPhone
@@ -226,8 +253,18 @@ export async function shareRadarWhatsApp(pin: string, phone: string = ''): Promi
 /**
  * Shares Radar PIN directly via SMS with app deep link
  */
-export async function shareRadarSMS(pin: string, phone: string = ''): Promise<void> {
-  const message = createRadarShareMessage(pin);
+export async function shareRadarSMS(
+  pin: string,
+  mode: 'full' | 'code' | 'link' = 'full',
+  phone: string = ''
+): Promise<void> {
+  const message =
+    mode === 'code'
+      ? createRadarPinMessage(pin)
+      : mode === 'link'
+      ? createRadarLinkMessage(pin)
+      : createRadarShareMessage(pin);
+
   const cleanPhone = phone.replace(/[^\d+]/g, '');
   const separator = Platform.OS === 'ios' ? '&' : '?';
   const encodedMsg = encodeURIComponent(message);
@@ -240,5 +277,96 @@ export async function shareRadarSMS(pin: string, phone: string = ''): Promise<vo
     await Linking.openURL(url);
   } else {
     await Linking.openURL(`sms:${separator}body=${encodedMsg}`);
+  }
+}
+
+/**
+ * Sends a direct system/realtime notification to a Sentinel contact
+ */
+export async function notifySentinelsOfRadarSession(params: {
+  pin: string;
+  senderName: string;
+  senderId?: string;
+  targetSentinelId?: string;
+  targetSentinelName?: string;
+}): Promise<{ success: boolean; message: string }> {
+  try {
+    // 1. If Supabase is active, broadcast to real-time channel
+    if (isSupabaseConfigured()) {
+      const channel = supabase.channel('sentinels:radar_alerts');
+      await channel.send({
+        type: 'broadcast',
+        event: 'radar_invite',
+        payload: {
+          pin: params.pin,
+          senderName: params.senderName,
+          senderId: params.senderId,
+          targetSentinelId: params.targetSentinelId,
+          timestamp: Date.now(),
+        },
+      });
+    }
+
+    // 2. Schedule system notification with sound & vibration
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Radar Sentinela: Pedido de Ligação',
+        body: `${params.senderName} está à sua espera na multidão. Toque aqui para abrir o radar diretamente.`,
+        data: {
+          type: 'radar_invite',
+          pin: params.pin,
+          senderName: params.senderName,
+        },
+        sound: 'default',
+        color: '#10B981',
+      },
+      trigger: null,
+    });
+
+    Haptics.notificationAsync(NotificationFeedbackType.Success);
+
+    const targetLabel = params.targetSentinelName ? ` para ${params.targetSentinelName}` : ' para os seus Sentinelas';
+    return {
+      success: true,
+      message: `Notificação enviada com sucesso${targetLabel}!`,
+    };
+  } catch (err: any) {
+    console.warn('[RadarService] Erro ao enviar notificação ao Sentinela:', err);
+    return {
+      success: false,
+      message: 'Não foi possível enviar a notificação neste momento.',
+    };
+  }
+}
+
+/**
+ * Subscribes to real-time incoming radar invitations for a given Sentinel
+ */
+export function subscribeToRadarInvitesForSentinel(
+  myUserId: string,
+  onInvite: (data: { pin: string; senderName: string }) => void
+): () => void {
+  if (!isSupabaseConfigured() || !myUserId) {
+    return () => {};
+  }
+
+  try {
+    const channel = supabase.channel('sentinels:radar_alerts');
+    channel.on('broadcast', { event: 'radar_invite' }, ({ payload }) => {
+      if (!payload || payload.senderId === myUserId) return;
+      if (!payload.targetSentinelId || payload.targetSentinelId === myUserId) {
+        onInvite({
+          pin: payload.pin,
+          senderName: payload.senderName || 'Amigo',
+        });
+      }
+    });
+    channel.subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  } catch {
+    return () => {};
   }
 }

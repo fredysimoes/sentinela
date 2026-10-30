@@ -12,6 +12,9 @@ import {
   Animated,
   StatusBar,
   Platform,
+  Keyboard,
+  KeyboardAvoidingView,
+  ScrollView,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Brightness from 'expo-brightness';
@@ -39,7 +42,9 @@ import {
   shareRadarWhatsApp,
   shareRadarSMS,
   createRadarShareMessage,
+  notifySentinelsOfRadarSession,
 } from '../services/radarService';
+import { SentinelContact, getCachedSentinels } from '../services/sentinelsService';
 import {
   startHeartbeatStrobe,
   stopHeartbeatStrobe,
@@ -56,6 +61,8 @@ interface RadarModalProps {
   userHeading?: number;
   initialPin?: string | null;
   onNavigateToFriend?: (name: string, coord: { latitude: number; longitude: number }) => void;
+  sentinels?: SentinelContact[];
+  currentUserProfile?: { id: string; fullName?: string; email?: string } | null;
 }
 
 export const RadarModal: React.FC<RadarModalProps> = ({
@@ -65,12 +72,23 @@ export const RadarModal: React.FC<RadarModalProps> = ({
   userHeading = 0,
   initialPin,
   onNavigateToFriend,
+  sentinels,
+  currentUserProfile,
 }) => {
   // Session State
   const [sessionHandle, setSessionHandle] = useState<RadarSessionHandle | null>(null);
   const [pinInput, setPinInput] = useState('');
   const [targetPeer, setTargetPeer] = useState<RadarPeer | null>(null);
   const [myRole, setMyRole] = useState<'beacon' | 'seeker' | null>(null);
+
+  // Keyboard avoidance and auto-scroll states
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const scrollViewRef = useRef<any>(null);
+
+  // Sentinels and Share split sheet states
+  const [activeSentinels, setActiveSentinels] = useState<SentinelContact[]>(sentinels || []);
+  const [showSentinelPicker, setShowSentinelPicker] = useState(false);
+  const [shareSplitChannel, setShareSplitChannel] = useState<'whatsapp' | 'sms' | null>(null);
 
   // Heartbeat Flashlight & Strobe States
   const [isHeartbeatActive, setIsHeartbeatActive] = useState(false);
@@ -164,6 +182,41 @@ export const RadarModal: React.FC<RadarModalProps> = ({
       handleJoinSeeker(initialPin.trim());
     }
   }, [visible, initialPin]);
+
+  // Sync Sentinels list for direct notifications
+  useEffect(() => {
+    if (!visible) return;
+    if (sentinels && sentinels.length > 0) {
+      setActiveSentinels(sentinels);
+    } else {
+      getCachedSentinels().then((cached) => {
+        if (cached && cached.length > 0) {
+          setActiveSentinels(cached);
+        }
+      });
+    }
+  }, [sentinels, visible]);
+
+  // Auto-scroll and keyboard listener to guarantee input and button visibility
+  useEffect(() => {
+    if (!visible) return;
+
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      setIsKeyboardVisible(true);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 60);
+    });
+
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [visible]);
 
   // Smooth Sonar Pulsing Animations
   useEffect(() => {
@@ -425,23 +478,59 @@ export const RadarModal: React.FC<RadarModalProps> = ({
     setSessionHandle(handle);
   };
 
-  const handleSharePinWhatsApp = async () => {
-    if (!sessionHandle) return;
+  const handleOpenShareSplit = (channel: 'whatsapp' | 'sms') => {
     Haptics.selectionAsync();
+    setShareSplitChannel(channel);
+  };
+
+  const handleExecuteShare = async (mode: 'code' | 'link' | 'full') => {
+    if (!sessionHandle || !shareSplitChannel) return;
+    Haptics.selectionAsync();
+    const pin = sessionHandle.pin;
+    const channel = shareSplitChannel;
+    setShareSplitChannel(null);
+
     try {
-      await shareRadarWhatsApp(sessionHandle.pin);
-    } catch (err) {
-      Alert.alert('Partilha', 'Não foi possível abrir o WhatsApp diretamente.');
+      if (channel === 'whatsapp') {
+        await shareRadarWhatsApp(pin, mode);
+      } else {
+        await shareRadarSMS(pin, mode);
+      }
+    } catch {
+      Alert.alert('Partilha', 'Não foi possível completar o envio da mensagem.');
     }
   };
 
-  const handleSharePinSMS = async () => {
-    if (!sessionHandle) return;
+  const handleOpenSentinelNotifyModal = () => {
     Haptics.selectionAsync();
-    try {
-      await shareRadarSMS(sessionHandle.pin);
-    } catch (err) {
-      Alert.alert('Partilha', 'Não foi possível abrir o cliente de SMS.');
+    if (activeSentinels.length === 0) {
+      Alert.alert(
+        'Sem Sentinelas Adicionados',
+        'Ainda não tem Sentinelas registados no seu círculo. Adicione um contacto no menu Sentinelas para enviar notificações diretas de acesso imediato.'
+      );
+      return;
+    }
+    setShowSentinelPicker(true);
+  };
+
+  const handleSendNotificationToSentinel = async (sentinel?: SentinelContact) => {
+    if (!sessionHandle) return;
+    Haptics.impactAsync(ImpactFeedbackStyle.Medium);
+    setShowSentinelPicker(false);
+
+    const senderName = currentUserProfile?.fullName || 'O seu amigo';
+    const res = await notifySentinelsOfRadarSession({
+      pin: sessionHandle.pin,
+      senderName,
+      senderId: currentUserProfile?.id,
+      targetSentinelId: sentinel?.id,
+      targetSentinelName: sentinel?.name,
+    });
+
+    if (res.success) {
+      Alert.alert('Notificação Enviada', res.message);
+    } else {
+      Alert.alert('Aviso', res.message);
     }
   };
 
@@ -528,73 +617,98 @@ export const RadarModal: React.FC<RadarModalProps> = ({
 
         {/* Screen 1: Start or Join Selection */}
         {!sessionHandle ? (
-          <View style={styles.startSection}>
-            <View style={styles.introCard}>
-              <View style={styles.introIconWrap}>
-                <Ionicons name="scan" size={32} color="#10B981" />
-              </View>
-              <Text style={styles.introTitle}>Encontrar Amigo na Multidão</Text>
-              <Text style={styles.introDesc}>
-                Orientação direcional em tempo real combinando bússola vetorial, giroscópio e sinalizador ótico heartbeat para concertos, shoppings e manifestações.
-              </Text>
-            </View>
-
-            {/* Option A: Create Beacon */}
-            <M3Pressable
-              style={styles.actionCard}
-              scaleOnPress={0.97}
-              onPress={handleStartBeacon}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ flex: 1 }}
+          >
+            <ScrollView
+              ref={scrollViewRef}
+              style={{ flex: 1 }}
+              contentContainerStyle={[
+                styles.startScrollContent,
+                isKeyboardVisible && { paddingBottom: 220 },
+              ]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
-              <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
-                <Ionicons name="radio" size={24} color="#10B981" />
-              </View>
-              <View style={styles.actionCardContent}>
-                <Text style={styles.actionCardTitle}>Partilhar a Minha Posição</Text>
-                <Text style={styles.actionCardSubtitle}>
-                  Gera um PIN e link de acesso direto via SMS / WhatsApp
+              <View style={[styles.introCard, isKeyboardVisible && styles.introCardCompact]}>
+                {!isKeyboardVisible && (
+                  <View style={styles.introIconWrap}>
+                    <Ionicons name="scan" size={28} color="#10B981" />
+                  </View>
+                )}
+                <Text style={[styles.introTitle, isKeyboardVisible && { fontSize: 16, marginBottom: 2 }]}>
+                  Encontrar Amigo na Multidão
                 </Text>
+                {!isKeyboardVisible && (
+                  <Text style={styles.introDesc}>
+                    Orientação direcional em tempo real combinando bússola vetorial, giroscópio e sinalizador ótico heartbeat para concertos, shoppings e manifestações.
+                  </Text>
+                )}
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#64748B" />
-            </M3Pressable>
 
-            {/* Option B: Join Beacon via PIN */}
-            <View style={styles.joinCard}>
-              <View style={styles.joinHeader}>
-                <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
-                  <Ionicons name="locate" size={24} color="#38BDF8" />
+              {/* Option B: Join Beacon via PIN - Posicionado com prioridade para nunca ser tapado pelo teclado */}
+              <View style={[styles.joinCard, isKeyboardVisible && styles.joinCardRaised]}>
+                <View style={styles.joinHeader}>
+                  <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
+                    <Ionicons name="locate" size={22} color="#38BDF8" />
+                  </View>
+                  <View style={styles.actionCardContent}>
+                    <Text style={styles.actionCardTitle}>Seguir um Amigo</Text>
+                    <Text style={styles.actionCardSubtitle}>
+                      Insira o código PIN de 4 dígitos partilhado
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.pinInputRow}>
+                  <TextInput
+                    style={styles.pinInput}
+                    placeholder="PIN (ex: 8492)"
+                    placeholderTextColor="#475569"
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    value={pinInput}
+                    onChangeText={setPinInput}
+                    onFocus={() => {
+                      setTimeout(() => {
+                        scrollViewRef.current?.scrollToEnd({ animated: true });
+                      }, 100);
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.joinBtn,
+                      pinInput.trim().length === 4 && styles.joinBtnActive,
+                    ]}
+                    onPress={() => handleJoinSeeker()}
+                    disabled={pinInput.trim().length !== 4}
+                  >
+                    <Text style={styles.joinBtnText}>Ligar</Text>
+                    <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Option A: Create Beacon */}
+              <M3Pressable
+                style={[styles.actionCard, { marginTop: 14 }]}
+                scaleOnPress={0.97}
+                onPress={handleStartBeacon}
+              >
+                <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                  <Ionicons name="radio" size={22} color="#10B981" />
                 </View>
                 <View style={styles.actionCardContent}>
-                  <Text style={styles.actionCardTitle}>Seguir um Amigo</Text>
+                  <Text style={styles.actionCardTitle}>Partilhar a Minha Posição</Text>
                   <Text style={styles.actionCardSubtitle}>
-                    Insira o código PIN de 4 dígitos partilhado
+                    Gera um PIN e link de acesso direto via SMS, WhatsApp ou Sentinela
                   </Text>
                 </View>
-              </View>
-
-              <View style={styles.pinInputRow}>
-                <TextInput
-                  style={styles.pinInput}
-                  placeholder="PIN (ex: 8492)"
-                  placeholderTextColor="#475569"
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  value={pinInput}
-                  onChangeText={setPinInput}
-                />
-                <TouchableOpacity
-                  style={[
-                    styles.joinBtn,
-                    pinInput.trim().length === 4 && styles.joinBtnActive,
-                  ]}
-                  onPress={() => handleJoinSeeker()}
-                  disabled={pinInput.trim().length !== 4}
-                >
-                  <Text style={styles.joinBtnText}>Ligar</Text>
-                  <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
+                <Ionicons name="chevron-forward" size={20} color="#64748B" />
+              </M3Pressable>
+            </ScrollView>
+          </KeyboardAvoidingView>
         ) : (
           /* Screen 2: Active Sonar Radar Experience */
           <View style={styles.activeRadarSection}>
@@ -607,18 +721,28 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               <View style={styles.shareButtonsGroup}>
                 <TouchableOpacity
                   style={[styles.sharePillBtn, styles.sharePillWhatsApp]}
-                  onPress={handleSharePinWhatsApp}
+                  onPress={() => handleOpenShareSplit('whatsapp')}
                 >
                   <Ionicons name="logo-whatsapp" size={15} color="#FFFFFF" />
                   <Text style={styles.sharePillText}>WhatsApp</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   style={[styles.sharePillBtn, styles.sharePillSMS]}
-                  onPress={handleSharePinSMS}
+                  onPress={() => handleOpenShareSplit('sms')}
                 >
                   <Ionicons name="chatbubble-ellipses" size={15} color="#FFFFFF" />
                   <Text style={styles.sharePillText}>SMS</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.sharePillBtn, styles.sharePillSentinel]}
+                  onPress={handleOpenSentinelNotifyModal}
+                >
+                  <Ionicons name="shield-checkmark" size={15} color="#FFFFFF" />
+                  <Text style={styles.sharePillText}>Sentinela</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity
                   style={[styles.sharePillBtn, styles.sharePillGeneral]}
                   onPress={handleSharePinGeneral}
@@ -782,6 +906,144 @@ export const RadarModal: React.FC<RadarModalProps> = ({
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Share Split Modal (WhatsApp / SMS) */}
+        <Modal
+          visible={shareSplitChannel !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShareSplitChannel(null)}
+        >
+          <TouchableOpacity
+            style={styles.sheetOverlay}
+            activeOpacity={1}
+            onPress={() => setShareSplitChannel(null)}
+          >
+            <View style={styles.sheetContent}>
+              <View style={styles.sheetHeader}>
+                <View style={styles.sheetHeaderBar} />
+                <Text style={styles.sheetTitle}>
+                  {shareSplitChannel === 'whatsapp' ? 'Partilhar via WhatsApp' : 'Partilhar via SMS'}
+                </Text>
+                <Text style={styles.sheetSubtitle}>
+                  Envie em separado para permitir ao seu amigo tocar diretamente no link:
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(56, 189, 248, 0.12)', borderColor: 'rgba(56, 189, 248, 0.3)' }]}
+                onPress={() => handleExecuteShare('code')}
+              >
+                <Ionicons name="key-outline" size={20} color="#38BDF8" />
+                <View style={styles.sheetOptionTextWrap}>
+                  <Text style={styles.sheetOptionTitle}>1. Enviar Código PIN</Text>
+                  <Text style={styles.sheetOptionDesc}>Informa o código PIN ({sessionHandle?.pin})</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)' }]}
+                onPress={() => handleExecuteShare('link')}
+              >
+                <Ionicons name="link-outline" size={20} color="#10B981" />
+                <View style={styles.sheetOptionTextWrap}>
+                  <Text style={styles.sheetOptionTitle}>2. Enviar Link Direto</Text>
+                  <Text style={styles.sheetOptionDesc}>Apenas o link limpo direto (toque único para abrir)</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.08)' }]}
+                onPress={() => handleExecuteShare('full')}
+              >
+                <Ionicons name="document-text-outline" size={20} color="#94A3B8" />
+                <View style={styles.sheetOptionTextWrap}>
+                  <Text style={styles.sheetOptionTitle}>Enviar Mensagem Completa</Text>
+                  <Text style={styles.sheetOptionDesc}>Texto informativo com instruções e código</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.sheetCancelBtn}
+                onPress={() => setShareSplitChannel(null)}
+              >
+                <Text style={styles.sheetCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* Sentinel Direct Notification Picker Modal */}
+        <Modal
+          visible={showSentinelPicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowSentinelPicker(false)}
+        >
+          <TouchableOpacity
+            style={styles.sheetOverlay}
+            activeOpacity={1}
+            onPress={() => setShowSentinelPicker(false)}
+          >
+            <View style={styles.sheetContent}>
+              <View style={styles.sheetHeader}>
+                <View style={styles.sheetHeaderBar} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <Ionicons name="shield-checkmark" size={20} color="#10B981" />
+                  <Text style={styles.sheetTitle}>Notificar Sentinela</Text>
+                </View>
+                <Text style={styles.sheetSubtitle}>
+                  Envia notificação instantânea. Ao tocar na notificação, o seu Sentinela abre o radar diretamente:
+                </Text>
+              </View>
+
+              {activeSentinels.length > 1 && (
+                <TouchableOpacity
+                  style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(16, 185, 129, 0.16)', borderColor: 'rgba(16, 185, 129, 0.4)', marginBottom: 12 }]}
+                  onPress={() => handleSendNotificationToSentinel(undefined)}
+                >
+                  <Ionicons name="notifications" size={20} color="#10B981" />
+                  <View style={styles.sheetOptionTextWrap}>
+                    <Text style={[styles.sheetOptionTitle, { color: '#10B981' }]}>Notificar Todos os Sentinelas</Text>
+                    <Text style={styles.sheetOptionDesc}>Dispara alerta para todos os contactos do seu círculo</Text>
+                  </View>
+                  <Ionicons name="arrow-forward" size={18} color="#10B981" />
+                </TouchableOpacity>
+              )}
+
+              <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
+                {activeSentinels.map((sentinel) => (
+                  <TouchableOpacity
+                    key={`sentinel-${sentinel.id}`}
+                    style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.08)' }]}
+                    onPress={() => handleSendNotificationToSentinel(sentinel)}
+                  >
+                    <View style={styles.sentinelAvatarWrap}>
+                      <Text style={styles.sentinelAvatarLetter}>{sentinel.name.charAt(0).toUpperCase()}</Text>
+                    </View>
+                    <View style={styles.sheetOptionTextWrap}>
+                      <Text style={styles.sheetOptionTitle}>{sentinel.name}</Text>
+                      <Text style={styles.sheetOptionDesc}>Código: {sentinel.sentinelCode || 'ST-????'}</Text>
+                    </View>
+                    <View style={styles.notifyBadge}>
+                      <Text style={styles.notifyBadgeText}>Notificar</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <TouchableOpacity
+                style={styles.sheetCancelBtn}
+                onPress={() => setShowSentinelPicker(false)}
+              >
+                <Text style={styles.sheetCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </Modal>
   );
@@ -862,6 +1124,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 16,
   },
+  startScrollContent: {
+    paddingTop: 12,
+    paddingBottom: 36,
+  },
   introCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderRadius: 20,
@@ -869,7 +1135,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  introCardCompact: {
+    padding: 12,
+    marginBottom: 12,
   },
   introIconWrap: {
     width: 64,
@@ -930,6 +1200,10 @@ const styles = StyleSheet.create({
     padding: 18,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  joinCardRaised: {
+    borderColor: 'rgba(56, 189, 248, 0.45)',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
   },
   joinHeader: {
     flexDirection: 'row',
@@ -1024,6 +1298,11 @@ const styles = StyleSheet.create({
   },
   sharePillSMS: {
     backgroundColor: '#0284C7',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  sharePillSentinel: {
+    backgroundColor: '#0F766E',
     flex: 1,
     justifyContent: 'center',
   },
@@ -1280,5 +1559,107 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
     fontWeight: '600',
+  },
+  sheetOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    justifyContent: 'flex-end',
+  },
+  sheetContent: {
+    backgroundColor: '#0F172A',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  sheetHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sheetHeaderBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#475569',
+    marginBottom: 12,
+  },
+  sheetTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  sheetSubtitle: {
+    fontSize: 13,
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 10,
+  },
+  sheetOptionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 10,
+    gap: 12,
+  },
+  sheetOptionTextWrap: {
+    flex: 1,
+  },
+  sheetOptionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  sheetOptionDesc: {
+    fontSize: 12,
+    color: '#94A3B8',
+  },
+  sheetCancelBtn: {
+    alignItems: 'center',
+    paddingVertical: 14,
+    marginTop: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  sheetCancelText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  sentinelAvatarWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#1E293B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  sentinelAvatarLetter: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#10B981',
+  },
+  notifyBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  notifyBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#10B981',
   },
 });

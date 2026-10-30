@@ -15,6 +15,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import * as Font from 'expo-font';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import Haptics from './src/utils/haptics';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Incident, IncidentCategory, SOSAlert, EmergencyContact, UserLocation, SafePlace, HomeAddress, NotificationSettings } from './src/types';
@@ -76,6 +77,7 @@ import { FeedbackModal } from './src/components/FeedbackModal';
 import { AuthModal } from './src/components/AuthModal';
 import { SentinelsModal } from './src/components/SentinelsModal';
 import { RadarModal } from './src/components/RadarModal';
+import { subscribeToRadarInvitesForSentinel } from './src/services/radarService';
 import { StalkingActiveModal } from './src/components/StalkingActiveModal';
 import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
 import { TvdeTripModal } from './src/components/TvdeTripModal';
@@ -330,11 +332,23 @@ export default function App() {
     showBusStopsOnMap,
   ].filter(Boolean).length;
 
+  const isAnyTransitActive =
+    showStcpBusesOnMap ||
+    showUnirBusesOnMap ||
+    showCarrisBusesOnMap ||
+    showCarrisMetroBusesOnMap ||
+    showCpTrainsOnMap ||
+    isTransitNavigationActive;
+
+  // As paragens tornam-se visíveis automaticamente quando qualquer filtro de transporte está ativo
+  const areBusStopsEffective = showBusStopsOnMap || isAnyTransitActive;
+
   // Carregamento de Paragens de Autocarro próximas (com previsões de tempo real ao tocar)
   useEffect(() => {
-    const shouldLoadStops = showBusStopsOnMap || (transportMode === 'transit' && showRoutePreview);
+    const shouldLoadStops =
+      areBusStopsEffective || (transportMode === 'transit' && showRoutePreview);
     if (!shouldLoadStops) {
-      if (!showBusStopsOnMap) setNearbyBusStops([]);
+      setNearbyBusStops([]);
       return;
     }
 
@@ -353,11 +367,20 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, [showBusStopsOnMap, transportMode, showRoutePreview, userLocation, targetCoordinate]);
+  }, [
+    areBusStopsEffective,
+    transportMode,
+    showRoutePreview,
+    userLocation?.latitude,
+    userLocation?.longitude,
+    targetCoordinate?.latitude,
+    targetCoordinate?.longitude,
+  ]);
   const [activeBanner, setActiveBanner] = useState<{
     title: string;
     body: string;
     type: 'sos_alert' | 'proximity_alert';
+    data?: any;
   } | null>(null);
 
   // User Profile, Sentinelas, & "Estou a ser seguido" Stalking Session States
@@ -1178,16 +1201,50 @@ export default function App() {
     Linking.getInitialURL().then(handleRadarDeepLink);
     const linkingSub = Linking.addEventListener('url', ({ url }: { url: string }) => handleRadarDeepLink(url));
 
+    // 4. Notification Response listener (when user taps on a system notification directly)
+    const notifResponseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data: any = response?.notification?.request?.content?.data;
+      if (data && data.type === 'radar_invite' && data.pin) {
+        setRadarAutoJoinPin(String(data.pin));
+        setShowRadarModal(true);
+      }
+    });
+
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      const data: any = response?.notification?.request?.content?.data;
+      if (data && data.type === 'radar_invite' && data.pin) {
+        setRadarAutoJoinPin(String(data.pin));
+        setShowRadarModal(true);
+      }
+    });
+
     return () => {
       unsubscribeAuth();
       unsubscribeDeepLink();
       linkingSub.remove();
+      notifResponseSub.remove();
     };
   }, []);
 
-  // Subscribe to incoming stalking alerts when user profile is active
+  // Subscribe to incoming stalking alerts and radar invitations when user profile is active
   useEffect(() => {
     if (!currentUserProfile?.id) return;
+
+    const unsubscribeRadar = subscribeToRadarInvitesForSentinel(
+      currentUserProfile.id,
+      (invite) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setActiveBanner({
+          title: 'Radar Sentinela: Pedido de Ligação',
+          body: `${invite.senderName} está à sua espera na multidão. Toque para ligar diretamente.`,
+          type: 'proximity_alert',
+          data: {
+            type: 'radar_invite',
+            pin: invite.pin,
+          },
+        });
+      }
+    );
 
     const unsubscribeStalking = subscribeToStalkingAlertsForSentinel(
       currentUserProfile.id,
@@ -1211,6 +1268,7 @@ export default function App() {
     );
 
     return () => {
+      unsubscribeRadar();
       unsubscribeStalking();
     };
   }, [currentUserProfile?.id]);
@@ -1531,6 +1589,13 @@ export default function App() {
         alert={activeBanner}
         onDismiss={() => setActiveBanner(null)}
         onPress={() => {
+          const bannerData = (activeBanner as any)?.data;
+          if (bannerData?.type === 'radar_invite' && bannerData?.pin) {
+            setRadarAutoJoinPin(bannerData.pin);
+            setShowRadarModal(true);
+            setActiveBanner(null);
+            return;
+          }
           if (incomingStalkingAlert) {
             setShowIncomingTrackerModal(true);
             setActiveBanner(null);
@@ -1551,17 +1616,10 @@ export default function App() {
           showPharmaciesOnMap={showPharmaciesOnMap}
           showHospitalsOnMap={showHospitalsOnMap}
           showWheelmapOnMap={showWheelmapOnMap}
-          showBusStopsOnMap={showBusStopsOnMap}
+          showBusStopsOnMap={areBusStopsEffective}
           busStops={nearbyBusStops}
           onSelectBusStop={(stop) => setSelectedBusStop(stop)}
-          showStcpBusesOnMap={
-            showStcpBusesOnMap ||
-            showUnirBusesOnMap ||
-            showCarrisBusesOnMap ||
-            showCarrisMetroBusesOnMap ||
-            showCpTrainsOnMap ||
-            isTransitNavigationActive
-          }
+          showStcpBusesOnMap={isAnyTransitActive}
           stcpVehicles={transitVehicles}
           onSelectStcpVehicle={(bus) => {
             Haptics.selectionAsync();
@@ -2065,7 +2123,7 @@ export default function App() {
         onToggleCarrisMetroBuses={() => setShowCarrisMetroBusesOnMap((prev) => !prev)}
         showCpTrainsOnMap={showCpTrainsOnMap}
         onToggleCpTrains={() => setShowCpTrainsOnMap((prev) => !prev)}
-        showBusStopsOnMap={showBusStopsOnMap}
+        showBusStopsOnMap={areBusStopsEffective}
         onToggleBusStops={() => setShowBusStopsOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
@@ -2129,6 +2187,8 @@ export default function App() {
         initialPin={radarAutoJoinPin}
         userLocation={userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude, accuracy: userLocation.accuracy } : null}
         userHeading={userHeading}
+        sentinels={mySentinels}
+        currentUserProfile={currentUserProfile}
         onNavigateToFriend={(name, coord) => {
           setShowRadarModal(false);
           setRadarAutoJoinPin(null);
