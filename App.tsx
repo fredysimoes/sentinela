@@ -218,6 +218,21 @@ export default function App() {
   const incidentsRef = useRef<Incident[]>([]);
   const notificationSettingsRef = useRef<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
 
+  // Navigation & Simulation States
+  const [navState, setNavState] = useState<NavigationState | null>(null);
+  const [simulationState, setSimulationState] = useState<RouteSimulationState | null>(null);
+  const [transportMode, setTransportMode] = useState<TransportMode>('walking');
+  const [showRoutePreview, setShowRoutePreview] = useState(false);
+  const [isAnimatingRouteDraw, setIsAnimatingRouteDraw] = useState(false);
+  const [previewSafeRoute, setPreviewSafeRoute] = useState<PedestrianRoute | null>(null);
+  const [previewDirectRoute, setPreviewDirectRoute] = useState<PedestrianRoute | undefined>(undefined);
+  const [previewOriginName, setPreviewOriginName] = useState('A minha localização');
+  const [previewOriginCoord, setPreviewOriginCoord] = useState<RouteCoordinate | null>(null);
+  const [previewDestName, setPreviewDestName] = useState('');
+  const [previewDestCoord, setPreviewDestCoord] = useState<RouteCoordinate | null>(null);
+  const [accessibilityRouteOnly, setAccessibilityRouteOnly] = useState<boolean>(false);
+  const routeAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     incidentsRef.current = incidents;
   }, [incidents]);
@@ -230,13 +245,17 @@ export default function App() {
 
   // Polling em Tempo Real de Transportes Públicos (Porto: STCP + UNIR | Lisboa: Carris + Carris Metropolitana | Nacional: CP)
   // Otimizado para poupança de bateria e dados: pausa em segundo plano e intervalo suave de 12s
+  const isTransitNavigationActive =
+    transportMode === 'transit' && (showRoutePreview || !!navState || !!simulationState);
+
   useEffect(() => {
     const isAnyTransitActive =
       showStcpBusesOnMap ||
       showUnirBusesOnMap ||
       showCarrisBusesOnMap ||
       showCarrisMetroBusesOnMap ||
-      showCpTrainsOnMap;
+      showCpTrainsOnMap ||
+      isTransitNavigationActive;
     if (!isAnyTransitActive) {
       setTransitVehicles([]);
       return;
@@ -252,11 +271,11 @@ export default function App() {
       try {
         const userCoord = userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : targetCoordinate;
         const vehicles = await fetchUnifiedTransitBuses({
-          includeStcp: showStcpBusesOnMap,
-          includeUnir: showUnirBusesOnMap,
-          includeCarris: showCarrisBusesOnMap,
-          includeCarrisMetropolitana: showCarrisMetroBusesOnMap,
-          includeCpTrains: showCpTrainsOnMap,
+          includeStcp: showStcpBusesOnMap || isTransitNavigationActive,
+          includeUnir: showUnirBusesOnMap || isTransitNavigationActive,
+          includeCarris: showCarrisBusesOnMap || isTransitNavigationActive,
+          includeCarrisMetropolitana: showCarrisMetroBusesOnMap || isTransitNavigationActive,
+          includeCpTrains: showCpTrainsOnMap || isTransitNavigationActive,
           userCoordinate: userCoord,
           maxDistanceKm: 35, // Restringe a 35km para autocarros locais; comboios de longo curso (AP/IC) são mantidos
         });
@@ -289,6 +308,7 @@ export default function App() {
     showCarrisBusesOnMap,
     showCarrisMetroBusesOnMap,
     showCpTrainsOnMap,
+    isTransitNavigationActive,
     userLocation,
     targetCoordinate,
   ]);
@@ -495,21 +515,6 @@ export default function App() {
       postcode: geo.postcode,
     });
   };
-
-  // Navigation & Simulation States
-  const [navState, setNavState] = useState<NavigationState | null>(null);
-  const [simulationState, setSimulationState] = useState<RouteSimulationState | null>(null);
-  const [transportMode, setTransportMode] = useState<TransportMode>('walking');
-  const [showRoutePreview, setShowRoutePreview] = useState(false);
-  const [isAnimatingRouteDraw, setIsAnimatingRouteDraw] = useState(false);
-  const [previewSafeRoute, setPreviewSafeRoute] = useState<PedestrianRoute | null>(null);
-  const [previewDirectRoute, setPreviewDirectRoute] = useState<PedestrianRoute | undefined>(undefined);
-  const [previewOriginName, setPreviewOriginName] = useState('A minha localização');
-  const [previewOriginCoord, setPreviewOriginCoord] = useState<RouteCoordinate | null>(null);
-  const [previewDestName, setPreviewDestName] = useState('');
-  const [previewDestCoord, setPreviewDestCoord] = useState<RouteCoordinate | null>(null);
-  const [accessibilityRouteOnly, setAccessibilityRouteOnly] = useState<boolean>(false);
-  const routeAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ensure screen stays awake during navigation, driving, simulation, or TVDE protection
   useEffect(() => {
@@ -1521,7 +1526,8 @@ export default function App() {
             showUnirBusesOnMap ||
             showCarrisBusesOnMap ||
             showCarrisMetroBusesOnMap ||
-            showCpTrainsOnMap
+            showCpTrainsOnMap ||
+            isTransitNavigationActive
           }
           stcpVehicles={transitVehicles}
           onSelectStcpVehicle={(bus) => {

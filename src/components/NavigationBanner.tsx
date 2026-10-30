@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { NavigationState } from '../types/navigation';
 import { formatDistance } from '../utils/geo';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography, M3Motion } from '../theme/m3';
@@ -62,11 +62,22 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
     }
   }, [navState.currentStepIndex]);
 
+  const isTransit = navState.mode === 'transit';
+  const isTransitStep = !!currentStep?.transitInfo || currentStep?.maneuverType === 'transit';
+  const tInfo = currentStep?.transitInfo;
+
   const getManeuverIcon = (modifier?: string, type?: string) => {
     if (type === 'arrive') return 'flag';
     if (modifier?.includes('left')) return 'arrow-undo';
     if (modifier?.includes('right')) return 'arrow-redo';
     return 'arrow-up';
+  };
+
+  const getTransitIcon = (vType?: string) => {
+    if (vType === 'subway') return 'subway';
+    if (vType === 'train') return 'train';
+    if (vType === 'tram') return 'tram';
+    return 'bus';
   };
 
   const isSafe = navState.route.isSafe;
@@ -82,14 +93,31 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
       ]}
     >
       {/* Top status indicator */}
-      <View style={[styles.statusTag, isSafe ? styles.statusSafe : styles.statusWarning]}>
-        <Ionicons
-          name={isSafe ? 'shield-checkmark' : 'warning'}
-          size={14}
-          color="#FFFFFF"
-        />
+      <View
+        style={[
+          styles.statusTag,
+          isTransit
+            ? styles.statusTransit
+            : isSafe
+            ? styles.statusSafe
+            : styles.statusWarning,
+        ]}
+      >
+        {isTransit ? (
+          <MaterialCommunityIcons name="bus" size={14} color="#FFFFFF" />
+        ) : (
+          <Ionicons
+            name={isSafe ? 'shield-checkmark' : 'warning'}
+            size={14}
+            color="#FFFFFF"
+          />
+        )}
         <Text style={styles.statusTagText}>
-          {isSafe
+          {isTransit
+            ? tInfo?.lineShortName
+              ? `TRANSPORTES · LINHA ${tInfo.lineShortName}`
+              : 'TRANSPORTES PÚBLICOS EM CURSO'
+            : isSafe
             ? navState.route.name.includes('Acessível')
               ? `ROTA ACESSÍVEL · ${navState.route.hazardsAvoided.length > 0 ? `Contorna ${navState.route.hazardsAvoided.length} barreira(s)` : 'Sem Degraus / Desimpedida'}`
               : `ROTA SEGURA · ${navState.route.hazardsAvoided.length > 0 ? `Evita ${navState.route.hazardsAvoided.length} perigo(s)` : '0 Ocorrências'}`
@@ -119,17 +147,37 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
           },
         ]}
       >
-        <View style={[styles.turnIconWrap, isSafe ? styles.turnIconSafe : styles.turnIconWarn]}>
-          <Ionicons
-            name={getManeuverIcon(currentStep?.maneuverModifier, currentStep?.maneuverType) as any}
-            size={24}
-            color="#FFFFFF"
-          />
+        <View
+          style={[
+            styles.turnIconWrap,
+            isTransitStep
+              ? [styles.turnIconTransit, tInfo?.color ? { backgroundColor: tInfo.color } : null]
+              : isSafe
+              ? styles.turnIconSafe
+              : styles.turnIconWarn,
+          ]}
+        >
+          {isTransitStep ? (
+            <MaterialCommunityIcons
+              name={getTransitIcon(tInfo?.vehicleType) as any}
+              size={24}
+              color={tInfo?.textColor || '#FFFFFF'}
+            />
+          ) : (
+            <Ionicons
+              name={getManeuverIcon(currentStep?.maneuverModifier, currentStep?.maneuverType) as any}
+              size={24}
+              color="#FFFFFF"
+            />
+          )}
         </View>
 
         <View style={styles.instructionWrap}>
           <Text style={styles.nextDistText}>
             A {formatDistance(currentStep?.distanceMeters || navState.distanceRemainingMeters)}
+            {currentStep?.durationSeconds
+              ? ` • ~${Math.max(1, Math.round(currentStep.durationSeconds / 60))} min`
+              : ''}
           </Text>
           <Text style={styles.instructionText} numberOfLines={2}>
             {currentStep?.instruction || 'Siga o percurso marcado no mapa'}
@@ -192,6 +240,9 @@ const styles = StyleSheet.create({
   statusSafe: {
     backgroundColor: '#0F5132',
   },
+  statusTransit: {
+    backgroundColor: '#0284C7',
+  },
   statusWarning: {
     backgroundColor: '#654100',
   },
@@ -219,6 +270,9 @@ const styles = StyleSheet.create({
   },
   turnIconWarn: {
     backgroundColor: '#B45309',
+  },
+  turnIconTransit: {
+    backgroundColor: '#0284C7',
   },
   instructionWrap: {
     flex: 1,

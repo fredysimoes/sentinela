@@ -1104,14 +1104,16 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
           </Marker>
         )}
 
-        {/* Active Pedestrian / Driving Route with Progressive Neon Animation & 3D Street Illumination */}
+        {/* Active Pedestrian / Driving / Transit Route with Progressive Neon Animation & 3D Street Illumination */}
         {activeRoute && animatedRouteCoords.length >= 2 && (
           <>
             {/* 1. Ambient Street & 3D Building Illumination Layer (Wide Translucent Neon Halo) */}
             <Polyline
               coordinates={animatedRouteCoords}
               strokeColor={
-                activeRoute.isSafe
+                activeRoute.mode === 'transit'
+                  ? 'rgba(2, 132, 199, 0.22)'
+                  : activeRoute.isSafe
                   ? 'rgba(16, 185, 129, 0.16)'
                   : 'rgba(245, 158, 11, 0.16)'
               }
@@ -1123,7 +1125,9 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             <Polyline
               coordinates={animatedRouteCoords}
               strokeColor={
-                activeRoute.isSafe
+                activeRoute.mode === 'transit'
+                  ? 'rgba(56, 189, 248, 0.45)'
+                  : activeRoute.isSafe
                   ? 'rgba(16, 185, 129, 0.42)'
                   : 'rgba(245, 158, 11, 0.42)'
               }
@@ -1134,11 +1138,56 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             {/* 3. High-Intensity Neon Core Line */}
             <Polyline
               coordinates={animatedRouteCoords}
-              strokeColor={activeRoute.isSafe ? '#34D399' : '#FBBF24'}
+              strokeColor={
+                activeRoute.mode === 'transit'
+                  ? '#38BDF8'
+                  : activeRoute.isSafe
+                  ? '#34D399'
+                  : '#FBBF24'
+              }
               strokeWidth={4.5}
               lineCap="round"
               lineJoin="round"
             />
+
+            {/* Transit Boarding & Transfer Station Markers on the Route */}
+            {activeRoute.mode === 'transit' &&
+              activeRoute.steps?.map((step, sIdx) => {
+                if (step.transitInfo && step.location) {
+                  const vIcon =
+                    step.transitInfo.vehicleType === 'subway'
+                      ? 'subway'
+                      : step.transitInfo.vehicleType === 'train'
+                      ? 'train'
+                      : step.transitInfo.vehicleType === 'tram'
+                      ? 'tram'
+                      : 'bus';
+                  return (
+                    <Marker
+                      key={`transit-stop-step-${sIdx}`}
+                      coordinate={step.location}
+                      zIndex={1003}
+                      anchor={{ x: 0.5, y: 0.5 }}
+                    >
+                      <View
+                        style={[
+                          styles.transitStationMarker,
+                          step.transitInfo.color
+                            ? { backgroundColor: step.transitInfo.color }
+                            : null,
+                        ]}
+                      >
+                        <MaterialCommunityIcons
+                          name={vIcon as any}
+                          size={13}
+                          color={step.transitInfo.textColor || '#FFFFFF'}
+                        />
+                      </View>
+                    </Marker>
+                  );
+                }
+                return null;
+              })}
 
             {/* Custom Origin Point A Marker (Preview or Simulation) */}
             {(!isNavigating || isSimulating) && routeOrigin && (
@@ -2196,6 +2245,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.3,
+  },
+  transitStationMarker: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#0284C7',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 5,
   },
   busBearingIndicator: {
     marginLeft: 1,

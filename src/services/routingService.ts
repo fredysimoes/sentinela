@@ -3,6 +3,7 @@ import { PedestrianRoute, RouteCoordinate, RouteStep, TransportMode } from '../t
 import { calculateDistanceMeters } from '../utils/geo';
 import { isAccessibilityCategory } from '../constants/categories';
 import { fetchPortoTransitRoute } from './stcpRealtimeService';
+import { fetchUnifiedTransitRoute } from './transitRoutingService';
 
 export function formatDuration(minutes: number): string {
   if (minutes < 1) return '1 min';
@@ -405,9 +406,9 @@ export async function calculateSafeNavigationRoutes(params: {
   // Accessibility avoidance strictly applies to pedestrian mode, never to driving mode
   const effectiveAccessibilityAvoidance = mode !== 'driving' && Boolean(avoidAccessibilityBarriers);
 
-  // 0. Modo de Transportes Públicos (Porto Digital OTP - STCP / Metro)
+  // 0. Modo de Transportes Públicos (Porto OTP / Google Routes / CP / Carris / Metro)
   if (mode === 'transit') {
-    const transitRoute = await fetchPortoTransitRoute(origin, destination);
+    const transitRoute = await fetchUnifiedTransitRoute(origin, destination);
     if (transitRoute) {
       const hazardsOnRoute: Incident[] = [];
       const hazardsAvoided: Incident[] = [];

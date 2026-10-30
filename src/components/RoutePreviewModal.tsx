@@ -280,7 +280,11 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
 
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>
-            {isDriving ? 'Planeador de Rota Automóvel' : 'Planeador de Rota Pedestre'}
+            {isDriving
+              ? 'Planeador de Rota Automóvel'
+              : isTransit
+              ? 'Planeador de Transportes Públicos'
+              : 'Planeador de Rota Pedestre'}
           </Text>
           <Text style={styles.headerSub} numberOfLines={1}>
             {originText || originName} ➔ {destText || destinationName}
@@ -816,26 +820,38 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   activeOpacity={0.8}
                 >
                   <View style={styles.cardHeader}>
-                    <View style={styles.safeBadge}>
+                    <View style={[styles.safeBadge, isTransit && styles.transitBadge]}>
                       <Ionicons
-                        name={safeRoute.name.includes('Acessível') ? 'shield-checkmark' : 'shield-checkmark'}
+                        name={
+                          isTransit
+                            ? 'bus'
+                            : safeRoute.name.includes('Acessível')
+                            ? 'shield-checkmark'
+                            : 'shield-checkmark'
+                        }
                         size={14}
-                        color="#10B981"
+                        color={isTransit ? '#38BDF8' : '#10B981'}
                       />
-                      <Text style={styles.safeBadgeText}>
-                        {safeRoute.name.includes('Acessível')
+                      <Text style={[styles.safeBadgeText, isTransit && styles.transitBadgeText]}>
+                        {isTransit
+                          ? 'RECOMENDADA · TRANSPORTES PÚBLICOS'
+                          : safeRoute.name.includes('Acessível')
                           ? 'RECOMENDADA · ROTA ACESSÍVEL'
                           : 'RECOMENDADA · ROTA SEGURA'}
                       </Text>
                     </View>
 
                     {selectedRouteId === safeRoute.id && (
-                      <Ionicons name="radio-button-on" size={20} color="#10B981" />
+                      <Ionicons
+                        name="radio-button-on"
+                        size={20}
+                        color={isTransit ? '#38BDF8' : '#10B981'}
+                      />
                     )}
                   </View>
 
                   <View style={styles.metricsRow}>
-                    <Text style={styles.timeText}>
+                    <Text style={[styles.timeText, isTransit && { color: '#38BDF8' }]}>
                       {safeRoute.formattedDuration || `${safeRoute.durationMinutes} min`}
                     </Text>
                     <Text style={styles.distText}>
@@ -849,6 +865,32 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                       </View>
                     )}
                   </View>
+
+                  {safeRoute.transitLines && safeRoute.transitLines.length > 0 && (
+                    <View style={styles.transitLinesPillsRow}>
+                      {safeRoute.transitLines.map((tLine, idx) => (
+                        <React.Fragment key={`safe-transit-pill-${idx}`}>
+                          {idx > 0 && (
+                            <Ionicons
+                              name="arrow-forward"
+                              size={12}
+                              color="#64748B"
+                              style={{ marginHorizontal: 2 }}
+                            />
+                          )}
+                          <View style={styles.transitLinePill}>
+                            <MaterialCommunityIcons
+                              name="bus-side"
+                              size={12}
+                              color="#FFFFFF"
+                              style={{ marginRight: 4 }}
+                            />
+                            <Text style={styles.transitLinePillText}>{tLine}</Text>
+                          </View>
+                        </React.Fragment>
+                      ))}
+                    </View>
+                  )}
 
                   <Text style={styles.summaryText}>{safeRoute.summary}</Text>
 
@@ -949,22 +991,115 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
 
                     {showDetailedSteps && (
                       <View style={styles.stepsAccordionContent}>
-                        {selectedRoute.steps.map((st, i) => (
-                          <View key={`preview-step-${i}`} style={styles.previewStepRow}>
-                            <View style={styles.previewStepBullet}>
-                              <Text style={styles.previewStepBulletText}>{i + 1}</Text>
+                        {selectedRoute.steps.map((st, i) => {
+                          const isTransitStep = !!st.transitInfo || st.maneuverType === 'transit';
+                          const tInfo = st.transitInfo;
+                          const vehicleIcon =
+                            tInfo?.vehicleType === 'subway'
+                              ? 'subway'
+                              : tInfo?.vehicleType === 'train'
+                              ? 'train'
+                              : tInfo?.vehicleType === 'tram'
+                              ? 'tram'
+                              : 'bus';
+
+                          return (
+                            <View
+                              key={`preview-step-${i}`}
+                              style={[
+                                styles.previewStepRow,
+                                isTransitStep && styles.previewStepRowTransit,
+                              ]}
+                            >
+                              <View
+                                style={[
+                                  styles.previewStepBullet,
+                                  isTransitStep && styles.previewStepBulletTransit,
+                                  isTransitStep && tInfo?.color
+                                    ? { backgroundColor: tInfo.color }
+                                    : null,
+                                ]}
+                              >
+                                {isTransitStep ? (
+                                  <MaterialCommunityIcons
+                                    name={vehicleIcon as any}
+                                    size={13}
+                                    color={tInfo?.textColor || '#FFFFFF'}
+                                  />
+                                ) : (
+                                  <Text style={styles.previewStepBulletText}>{i + 1}</Text>
+                                )}
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                {isTransitStep && tInfo ? (
+                                  <View style={styles.transitStepHeader}>
+                                    <View
+                                      style={[
+                                        styles.transitStepLineBadge,
+                                        tInfo.color ? { backgroundColor: tInfo.color } : null,
+                                      ]}
+                                    >
+                                      <Text
+                                        style={[
+                                          styles.transitStepLineBadgeText,
+                                          tInfo.textColor ? { color: tInfo.textColor } : null,
+                                        ]}
+                                      >
+                                        {tInfo.lineShortName || tInfo.lineName || 'Linha'}
+                                      </Text>
+                                    </View>
+                                    {tInfo.operator && (
+                                      <Text style={styles.transitStepOperatorText}>
+                                        {tInfo.operator}
+                                      </Text>
+                                    )}
+                                  </View>
+                                ) : null}
+
+                                <Text style={styles.previewStepText}>{st.instruction}</Text>
+
+                                {isTransitStep && tInfo && (tInfo.departureStop || tInfo.arrivalStop) ? (
+                                  <View style={styles.transitStopsDetailsBox}>
+                                    {tInfo.departureStop && (
+                                      <View style={styles.transitStopPointRow}>
+                                        <View style={[styles.stopDot, { borderColor: '#10B981' }]} />
+                                        <Text style={styles.transitStopPointText}>
+                                          Embarque: <Text style={{ color: '#F8FAFC' }}>{tInfo.departureStop}</Text>
+                                        </Text>
+                                      </View>
+                                    )}
+                                    {tInfo.numStops && tInfo.numStops > 0 ? (
+                                      <View style={styles.transitStopStopsCountRow}>
+                                        <View style={styles.stopVerticalLine} />
+                                        <Text style={styles.transitStopStopsCountText}>
+                                          {tInfo.numStops} paragens intermédias
+                                        </Text>
+                                      </View>
+                                    ) : null}
+                                    {tInfo.arrivalStop && (
+                                      <View style={styles.transitStopPointRow}>
+                                        <View style={[styles.stopDot, { borderColor: '#EF4444' }]} />
+                                        <Text style={styles.transitStopPointText}>
+                                          Desembarque: <Text style={{ color: '#F8FAFC' }}>{tInfo.arrivalStop}</Text>
+                                        </Text>
+                                      </View>
+                                    )}
+                                  </View>
+                                ) : null}
+
+                                {st.distanceMeters > 0 && (
+                                  <Text style={styles.previewStepSubText}>
+                                    {formatDistance(st.distanceMeters)}
+                                    {st.durationSeconds > 0
+                                      ? ` • ~${Math.max(1, Math.round(st.durationSeconds / 60))} min`
+                                      : ''}
+                                    {st.streetName && !isTransitStep ? ` • ${st.streetName}` : ''}
+                                  </Text>
+                                )}
+                              </View>
                             </View>
-                            <View style={{ flex: 1 }}>
-                              <Text style={styles.previewStepText}>{st.instruction}</Text>
-                              {st.distanceMeters > 0 && (
-                                <Text style={styles.previewStepSubText}>
-                                  {formatDistance(st.distanceMeters)}
-                                  {st.streetName ? ` • ${st.streetName}` : ''}
-                                </Text>
-                              )}
-                            </View>
-                          </View>
-                        ))}
+                          );
+                        })}
                       </View>
                     )}
                   </View>
@@ -1669,5 +1804,107 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 11,
     marginTop: 2,
+  },
+  // Transit-specific preview styles
+  transitBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  transitBadgeText: {
+    color: '#38BDF8',
+  },
+  transitLinesPillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 8,
+    marginBottom: 4,
+    gap: 4,
+  },
+  transitLinePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0284C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  transitLinePillText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  previewStepRowTransit: {
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginVertical: 4,
+    borderBottomWidth: 0,
+    borderLeftWidth: 3,
+    borderLeftColor: '#38BDF8',
+  },
+  previewStepBulletTransit: {
+    backgroundColor: '#0284C7',
+  },
+  transitStepHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  transitStepLineBadge: {
+    backgroundColor: '#0284C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  transitStepLineBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  transitStepOperatorText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  transitStopsDetailsBox: {
+    marginTop: 6,
+    marginBottom: 6,
+    paddingLeft: 4,
+  },
+  transitStopPointRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 2,
+  },
+  stopDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 2,
+    backgroundColor: '#0F172A',
+  },
+  transitStopPointText: {
+    color: '#94A3B8',
+    fontSize: 11,
+  },
+  transitStopStopsCountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 1,
+  },
+  stopVerticalLine: {
+    width: 2,
+    height: 14,
+    backgroundColor: '#334155',
+    marginLeft: 3,
+    marginRight: 11,
+  },
+  transitStopStopsCountText: {
+    color: '#64748B',
+    fontSize: 10,
+    fontStyle: 'italic',
   },
 });

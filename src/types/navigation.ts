@@ -7,6 +7,21 @@ export interface RouteCoordinate {
   longitude: number;
 }
 
+export interface TransitLegInfo {
+  lineName?: string;
+  lineShortName?: string;
+  headsign?: string;
+  vehicleType?: 'bus' | 'subway' | 'train' | 'tram' | 'ferry' | 'funicular' | 'transit';
+  operator?: string;
+  departureStop?: string;
+  arrivalStop?: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  numStops?: number;
+  color?: string;
+  textColor?: string;
+}
+
 export interface RouteStep {
   instruction: string;
   distanceMeters: number;
@@ -15,6 +30,7 @@ export interface RouteStep {
   maneuverModifier?: string;
   streetName?: string;
   location?: RouteCoordinate;
+  transitInfo?: TransitLegInfo;
 }
 
 export interface PedestrianRoute {
@@ -32,6 +48,8 @@ export interface PedestrianRoute {
   hazardsAvoided: Incident[];
   hazardsOnRoute: Incident[];
   summary: string;
+  transitLegsCount?: number;
+  transitLines?: string[];
 }
 
 export type NavigationRoute = PedestrianRoute;
