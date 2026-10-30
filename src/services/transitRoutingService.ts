@@ -449,7 +449,10 @@ async function fetchGoogleTransitRoute(
             const headsign = td.headsign ? ` (sentido ${td.headsign})` : '';
             const stopsCountInfo = td.stopCount ? ` · ${td.stopCount} paragens` : '';
 
-            const instruction = `Apanhe ${lineShortName}${headsign} em ${departureStop} e saia em ${arrivalStop}${stopsCountInfo}`;
+            const isTrainMode = vehicleType === 'train';
+            const instruction = isTrainMode
+              ? `Apanhe Comboio CP ${lineShortName}${headsign} na estação ${departureStop} e saia em ${arrivalStop}${stopsCountInfo}`
+              : `Apanhe ${lineShortName}${headsign} em ${departureStop} e saia em ${arrivalStop}${stopsCountInfo}`;
 
             const transitInfo: TransitLegInfo = {
               lineName: line.name || lineShortName,
@@ -593,7 +596,10 @@ async function fetchGoogleTransitRoute(
               const headsign = td.headsign ? ` (sentido ${td.headsign})` : '';
               const stopsCountInfo = td.num_stops ? ` · ${td.num_stops} paragens` : '';
 
-              const instruction = `Apanhe ${lineShortName}${headsign} em ${departureStop} e saia em ${arrivalStop}${stopsCountInfo}`;
+              const isTrainMode = vehicleType === 'train';
+            const instruction = isTrainMode
+              ? `Apanhe Comboio CP ${lineShortName}${headsign} na estação ${departureStop} e saia em ${arrivalStop}${stopsCountInfo}`
+              : `Apanhe ${lineShortName}${headsign} em ${departureStop} e saia em ${arrivalStop}${stopsCountInfo}`;
 
               const transitInfo: TransitLegInfo = {
                 lineName: line.name || lineShortName,

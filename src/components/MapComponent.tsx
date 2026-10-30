@@ -237,6 +237,7 @@ import { SafePlaceWithDistance } from '../services/safePlacesService';
 import { getPharmacyStatus } from '../utils/pharmacySchedule';
 import { isProtestInfiltratorVerified, isDaylight } from '../utils/geo';
 import { StcpVehicle, getStcpLineColor } from '../services/stcpRealtimeService';
+import { CpStation } from '../services/cpStationsService';
 import { SelectedMapPoint } from './SelectedPlaceSheet';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { M3Pressable } from './M3MotionWrapper';
@@ -593,6 +594,9 @@ interface MapComponentProps {
   busStops?: TransitStop[];
   showBusStopsOnMap?: boolean;
   onSelectBusStop?: (stop: TransitStop) => void;
+  cpStations?: CpStation[];
+  showCpStationsOnMap?: boolean;
+  onSelectCpStation?: (station: CpStation) => void;
   activeRoute?: PedestrianRoute | null;
   isNavigating?: boolean;
   selectedMapPoint?: SelectedMapPoint | null;
@@ -637,6 +641,9 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
   busStops = [],
   showBusStopsOnMap = false,
   onSelectBusStop,
+  cpStations = [],
+  showCpStationsOnMap = false,
+  onSelectCpStation,
   activeRoute,
   isNavigating = false,
   selectedMapPoint = null,
@@ -1407,6 +1414,23 @@ export const MapComponent: React.FC<MapComponentProps> = memo(({
             >
               <View style={styles.busStopMarker}>
                 <MaterialCommunityIcons name="bus-stop" size={13} color="#FFFFFF" />
+              </View>
+            </Marker>
+          ))}
+
+        {/* Estações e Apeadeiros de Comboio CP (apenas visíveis quando o filtro Comboios CP está ativo) */}
+        {showCpStationsOnMap &&
+          cpStations &&
+          cpStations.map((station) => (
+            <Marker
+              key={`cp-station-poi-${station.id}`}
+              coordinate={{ latitude: station.latitude, longitude: station.longitude }}
+              zIndex={600}
+              anchor={{ x: 0.5, y: 0.5 }}
+              onPress={() => onSelectCpStation?.(station)}
+            >
+              <View style={styles.cpStationMarker}>
+                <MaterialCommunityIcons name="train" size={13} color="#FFFFFF" />
               </View>
             </Marker>
           ))}
@@ -2310,6 +2334,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.45,
     shadowRadius: 3,
     elevation: 6,
+  },
+  cpStationMarker: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#059669',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3.5,
+    elevation: 7,
   },
   busBearingIndicator: {
     marginLeft: 1,

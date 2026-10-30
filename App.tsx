@@ -82,8 +82,10 @@ import { StalkingActiveModal } from './src/components/StalkingActiveModal';
 import { LiveSentinelTrackerModal } from './src/components/LiveSentinelTrackerModal';
 import { TvdeTripModal } from './src/components/TvdeTripModal';
 import { MapLayersModal } from './src/components/MapLayersModal';
+import { CpStationDetailSheet } from './src/components/CpStationDetailSheet';
 import { HalloweenAmbientOverlay } from './src/components/HalloweenAmbientOverlay';
 import { StcpVehicle, fetchUnifiedTransitBuses, fetchNearbyBusStops } from './src/services/stcpRealtimeService';
+import { CpStation, fetchNearbyCpStations } from './src/services/cpStationsService';
 import {
   TvdeTripSession,
   ParsedTvdeDraft,
@@ -202,9 +204,10 @@ export default function App() {
   const [showCarrisBusesOnMap, setShowCarrisBusesOnMap] = useState(false);
   const [showCarrisMetroBusesOnMap, setShowCarrisMetroBusesOnMap] = useState(false);
   const [showCpTrainsOnMap, setShowCpTrainsOnMap] = useState(false);
-  const [showBusStopsOnMap, setShowBusStopsOnMap] = useState(false);
   const [nearbyBusStops, setNearbyBusStops] = useState<TransitStop[]>([]);
   const [selectedBusStop, setSelectedBusStop] = useState<TransitStop | null>(null);
+  const [nearbyCpStations, setNearbyCpStations] = useState<CpStation[]>([]);
+  const [selectedCpStation, setSelectedCpStation] = useState<CpStation | null>(null);
   const [transitVehicles, setTransitVehicles] = useState<StcpVehicle[]>([]);
   const [showLayersModal, setShowLayersModal] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
@@ -329,24 +332,26 @@ export default function App() {
     showCarrisBusesOnMap,
     showCarrisMetroBusesOnMap,
     showCpTrainsOnMap,
-    showBusStopsOnMap,
   ].filter(Boolean).length;
 
-  const isAnyTransitActive =
+  const isAnyTransitFilterActive =
     showStcpBusesOnMap ||
     showUnirBusesOnMap ||
     showCarrisBusesOnMap ||
-    showCarrisMetroBusesOnMap ||
+    showCarrisMetroBusesOnMap;
+
+  // As paragens de autocarro tornam-se visíveis automaticamente quando filtros de autocarros estão ativos ou em planeamento de rota
+  const areBusStopsEffective =
+    isAnyTransitFilterActive || (transportMode === 'transit' && showRoutePreview);
+
+  const isAnyTransitActive =
+    isAnyTransitFilterActive ||
     showCpTrainsOnMap ||
     isTransitNavigationActive;
 
-  // As paragens tornam-se visíveis automaticamente quando qualquer filtro de transporte está ativo
-  const areBusStopsEffective = showBusStopsOnMap || isAnyTransitActive;
-
-  // Carregamento de Paragens de Autocarro próximas (com previsões de tempo real ao tocar)
+  // Carregamento de Paragens de Autocarro próximas (com desduplicação espacial e previsões de tempo real ao tocar)
   useEffect(() => {
-    const shouldLoadStops =
-      areBusStopsEffective || (transportMode === 'transit' && showRoutePreview);
+    const shouldLoadStops = areBusStopsEffective;
     if (!shouldLoadStops) {
       setNearbyBusStops([]);
       return;
@@ -369,8 +374,36 @@ export default function App() {
     };
   }, [
     areBusStopsEffective,
-    transportMode,
-    showRoutePreview,
+    userLocation?.latitude,
+    userLocation?.longitude,
+    targetCoordinate?.latitude,
+    targetCoordinate?.longitude,
+  ]);
+
+  // Carregamento de Estações e Apeadeiros CP (visíveis única e exclusivamente quando o filtro Comboios CP está ativo)
+  useEffect(() => {
+    if (!showCpTrainsOnMap) {
+      setNearbyCpStations([]);
+      return;
+    }
+
+    const coord = userLocation
+      ? { latitude: userLocation.latitude, longitude: userLocation.longitude }
+      : targetCoordinate;
+    if (!coord) return;
+
+    let isMounted = true;
+    fetchNearbyCpStations(coord.latitude, coord.longitude, 40).then((stations) => {
+      if (isMounted) {
+        setNearbyCpStations(stations);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    showCpTrainsOnMap,
     userLocation?.latitude,
     userLocation?.longitude,
     targetCoordinate?.latitude,
@@ -1619,6 +1652,9 @@ export default function App() {
           showBusStopsOnMap={areBusStopsEffective}
           busStops={nearbyBusStops}
           onSelectBusStop={(stop) => setSelectedBusStop(stop)}
+          showCpStationsOnMap={showCpTrainsOnMap}
+          cpStations={nearbyCpStations}
+          onSelectCpStation={(station) => setSelectedCpStation(station)}
           showStcpBusesOnMap={isAnyTransitActive}
           stcpVehicles={transitVehicles}
           onSelectStcpVehicle={(bus) => {
@@ -1993,6 +2029,18 @@ export default function App() {
         />
       )}
 
+      {/* Estação e Apeadeiro de Comboio CP (Detalhe e Navegação por Transporte) */}
+      {selectedCpStation && (
+        <CpStationDetailSheet
+          station={selectedCpStation}
+          onClose={() => setSelectedCpStation(null)}
+          onNavigateToStation={(st) => {
+            setSelectedCpStation(null);
+            handleRequestNavigation(st.name, { latitude: st.latitude, longitude: st.longitude }, 'transit');
+          }}
+        />
+      )}
+
       {/* Route Preview Modal with Two-Point Itinerary Controller (Point A ➔ Point B) */}
       <RoutePreviewModal
         visible={showRoutePreview}
@@ -2123,8 +2171,6 @@ export default function App() {
         onToggleCarrisMetroBuses={() => setShowCarrisMetroBusesOnMap((prev) => !prev)}
         showCpTrainsOnMap={showCpTrainsOnMap}
         onToggleCpTrains={() => setShowCpTrainsOnMap((prev) => !prev)}
-        showBusStopsOnMap={areBusStopsEffective}
-        onToggleBusStops={() => setShowBusStopsOnMap((prev) => !prev)}
         onActivateAllLayers={() => {
           setShowPoliceOnMap(true);
           setShowPharmaciesOnMap(true);
@@ -2135,7 +2181,6 @@ export default function App() {
           setShowCarrisBusesOnMap(true);
           setShowCarrisMetroBusesOnMap(true);
           setShowCpTrainsOnMap(true);
-          setShowBusStopsOnMap(true);
         }}
         onDeactivateAllLayers={() => {
           setShowPoliceOnMap(false);
@@ -2147,7 +2192,6 @@ export default function App() {
           setShowCarrisBusesOnMap(false);
           setShowCarrisMetroBusesOnMap(false);
           setShowCpTrainsOnMap(false);
-          setShowBusStopsOnMap(false);
         }}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}

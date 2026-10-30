@@ -37,8 +37,6 @@ interface MapLayersModalProps {
   onToggleCarrisMetroBuses?: () => void;
   showCpTrainsOnMap?: boolean;
   onToggleCpTrains?: () => void;
-  showBusStopsOnMap?: boolean;
-  onToggleBusStops?: () => void;
   onActivateAllLayers: () => void;
   onDeactivateAllLayers: () => void;
   // Hazard / Incidents Filter
@@ -69,8 +67,6 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
   onToggleCarrisMetroBuses,
   showCpTrainsOnMap = false,
   onToggleCpTrains,
-  showBusStopsOnMap = false,
-  onToggleBusStops,
   onActivateAllLayers,
   onDeactivateAllLayers,
   selectedFilter,
@@ -88,10 +84,9 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     showCarrisBusesOnMap,
     showCarrisMetroBusesOnMap,
     showCpTrainsOnMap,
-    showBusStopsOnMap,
   ].filter(Boolean).length;
 
-  const allLayersActive = activeLayersCount === 10;
+  const allLayersActive = activeLayersCount === 9;
 
   const INFRASTRUCTURE_LAYERS: {
     id: string;
@@ -104,18 +99,9 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     onToggle: () => void;
   }[] = [
     {
-      id: 'bus_stops',
-      name: 'Paragens STCP',
-      subtitle: 'Chegadas ao minuto ao tocar na paragem',
-      icon: 'bus-stop',
-      color: '#38BDF8',
-      active: showBusStopsOnMap,
-      onToggle: onToggleBusStops || (() => {}),
-    },
-    {
       id: 'cp_trains',
       name: 'Comboios CP',
-      subtitle: 'Alfa Pendular, IC e Urbanos em direto',
+      subtitle: 'Alfa Pendular, IC, Urbanos e Estações em direto',
       icon: 'train',
       color: '#00824B',
       active: showCpTrainsOnMap,
@@ -124,7 +110,7 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     {
       id: 'stcp',
       name: 'Autocarros STCP',
-      subtitle: 'Porto Urbano em direto',
+      subtitle: 'Porto Urbano e Paragens em direto',
       icon: 'bus-side',
       color: '#0284C7',
       active: showStcpBusesOnMap,
@@ -133,7 +119,7 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     {
       id: 'unir',
       name: 'Autocarros UNIR',
-      subtitle: 'Porto Metropolitano em direto',
+      subtitle: 'Porto Metropolitano e Paragens em direto',
       icon: 'bus',
       color: '#0891B2',
       active: showUnirBusesOnMap,
@@ -142,7 +128,7 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     {
       id: 'carris',
       name: 'Carris Lisboa',
-      subtitle: 'Lisboa Urbana e Elétricos em direto',
+      subtitle: 'Lisboa Urbana e Paragens em direto',
       icon: 'bus-side',
       color: '#EAB308',
       active: showCarrisBusesOnMap,
@@ -151,7 +137,7 @@ export const MapLayersModal: React.FC<MapLayersModalProps> = ({
     {
       id: 'carris_metro',
       name: 'Carris Metropolitana',
-      subtitle: 'Grande Lisboa e Margem Sul em direto',
+      subtitle: 'Grande Lisboa e Paragens em direto',
       icon: 'bus',
       color: '#F59E0B',
       active: showCarrisMetroBusesOnMap,

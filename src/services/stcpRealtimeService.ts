@@ -900,12 +900,14 @@ export async function fetchStopRealtimeArrivals(
 
 /**
  * Obtém as paragens de autocarro mais próximas da coordenada geográfica
+ * com desduplicação espacial inteligente (garante 1 único ícone por paragem,
+ * priorizando paragens STCP com previsões em tempo real ativas).
  * Fonte: https://gtfs-api.tiagoanoliveira.workers.dev
  */
 export async function fetchNearbyBusStops(
   lat: number,
   lon: number,
-  radiusMeters: number = 800
+  radiusMeters: number = 900
 ): Promise<TransitStop[]> {
   try {
     const controller = new AbortController();
@@ -929,15 +931,60 @@ export async function fetchNearbyBusStops(
     const rawStops = json?.stops || (Array.isArray(json) ? json : []);
     if (!Array.isArray(rawStops)) return [];
 
-    return rawStops.map((st: any) => ({
-      id: st.stop_id || st.stop_code,
-      code: st.stop_code || String(st.stop_id || '').replace(/^stcp:/i, ''),
-      name: st.stop_name || 'Paragem de Autocarro',
-      latitude: Number(st.stop_lat || st.latitude),
-      longitude: Number(st.stop_lon || st.longitude),
-      operator: 'stcp',
-      distanceMeters: st.distance_m ? Math.round(Number(st.distance_m)) : undefined,
-    }));
+    const mappedStops: TransitStop[] = rawStops.map((st: any) => {
+      const rawCode = String(st.stop_code || st.stop_id || '').trim();
+      const rawId = String(st.stop_id || st.stop_code || '').trim();
+      const isStcp =
+        st.operator_id === 'stcp' ||
+        rawId.startsWith('stcp:') ||
+        (!rawCode.includes(':') && /^[A-Z0-9]+$/i.test(rawCode));
+
+      return {
+        id: rawId,
+        code: rawCode.replace(/^stcp:/i, ''),
+        name: st.stop_name || 'Paragem de Autocarro',
+        latitude: Number(st.stop_lat || st.latitude),
+        longitude: Number(st.stop_lon || st.longitude),
+        operator: isStcp ? 'stcp' : 'unir',
+        distanceMeters: st.distance_m ? Math.round(Number(st.distance_m)) : undefined,
+      };
+    });
+
+    // Desduplicação Espacial Inteligente:
+    // Prioriza registos STCP (com chegadas em tempo real) sobre códigos UNIR no mesmo local físico.
+    mappedStops.sort((a, b) => {
+      const aIsStcp = a.operator === 'stcp' && !a.code.includes(':') ? 1 : 0;
+      const bIsStcp = b.operator === 'stcp' && !b.code.includes(':') ? 1 : 0;
+      return bIsStcp - aIsStcp;
+    });
+
+    const deduplicated: TransitStop[] = [];
+    const seenCodes = new Set<string>();
+
+    for (const stop of mappedStops) {
+      if (isNaN(stop.latitude) || isNaN(stop.longitude)) continue;
+
+      const cleanCode = stop.code.toUpperCase();
+      if (seenCodes.has(cleanCode)) continue;
+
+      // Verificar se já existe uma paragem muito próxima (< 28 metros)
+      const isDuplicate = deduplicated.some((existing) => {
+        const dist = calculateDistanceMeters(
+          existing.latitude,
+          existing.longitude,
+          stop.latitude,
+          stop.longitude
+        );
+        return dist < 28;
+      });
+
+      if (!isDuplicate) {
+        seenCodes.add(cleanCode);
+        deduplicated.push(stop);
+      }
+    }
+
+    return deduplicated;
   } catch (err) {
     console.warn(`Falha ao pesquisar paragens próximas (${lat}, ${lon}):`, err);
     return [];
