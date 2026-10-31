@@ -1054,6 +1054,16 @@ export async function fetchNearbyBusStops(
       const lowerId = rawId.toLowerCase();
       const lowerCode = rawCode.toLowerCase();
 
+      // Excluir expressamente paragens/estações de metro da lista de paragens de autocarro
+      const isMetroStop =
+        st.operator_id === 'metro' ||
+        st.operator_id === 'metroporto' ||
+        st.route_type === 1 ||
+        lowerId.startsWith('metro') ||
+        lowerCode.startsWith('metro') ||
+        (st.stop_name && st.stop_name.toLowerCase().startsWith('metro '));
+      if (isMetroStop) continue;
+
       const groupId = stopToGroupMap.get(lowerId) || stopToGroupMap.get(lowerCode);
 
       if (groupId && groupsById.has(groupId)) {

@@ -304,7 +304,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               <View style={styles.stalkingTitleRow}>
                 <Text style={styles.stalkingTitle}>Estou a ser seguido(a)</Text>
                 <View style={styles.privateBadge}>
-                  <Ionicons name="lock-closed" size={10} color="#10B981" style={{ marginRight: 3 }} />
+                  <Ionicons name="lock-closed" size={10} color="#FFFFFF" style={{ marginRight: 3 }} />
                   <Text style={styles.privateBadgeText}>Privado</Text>
                 </View>
               </View>
@@ -312,7 +312,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 Ativar gravação discreta e rastro ao vivo apenas para os seus Sentinelas.
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#EF4444" />
+            <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         )}
 
@@ -325,10 +325,10 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               setSubmenuMode('accessibility');
               setSelectedCategory('no_ramp_barrier');
             }}
-            activeOpacity={0.82}
+            activeOpacity={0.85}
           >
             <View style={styles.accessIconCircle}>
-              <MaterialCommunityIcons name="wheelchair" size={24} color="#06B6D4" />
+              <MaterialCommunityIcons name="wheelchair" size={24} color="#06140E" />
             </View>
             <View style={{ flex: 1 }}>
               <View style={styles.accessTitleRow}>
@@ -338,7 +338,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 Degraus sem rampa, elevadores avariados, passeio cortado e calçada perigosa.
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#06B6D4" />
+            <Ionicons name="chevron-forward" size={20} color="#06140E" />
           </TouchableOpacity>
         )}
 
@@ -484,35 +484,39 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         )}
 
         {/* Custom Title Input */}
-        <Text style={styles.sectionLabel}>TÍTULO DO REPORTE (OPCIONAL)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder={meta.label}
-          placeholderTextColor="#64748B"
-          value={title}
-          onChangeText={setTitle}
-          maxLength={60}
-        />
+        <View style={styles.inputFieldGroup}>
+          <Text style={styles.fieldLabel}>TÍTULO DO REPORTE (OPCIONAL)</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder={meta.label}
+            placeholderTextColor="#64748B"
+            value={title}
+            onChangeText={setTitle}
+            maxLength={60}
+          />
+        </View>
 
         {/* Description Input */}
-        <Text style={styles.sectionLabel}>DETALHES OU RECOMENDAÇÕES</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder={
-            isAccessibility
-              ? 'Ex: Escadaria com cerca de 10 degraus sem rampa ou elevador alternativo...'
-              : selectedCategory === 'protest_infiltrator'
-              ? 'Ex: Grupo vestido de preto a arremessar garrafas contra montras...'
-              : 'Ex: Evitar passar pelo lado esquerdo da rua, muito escuro e sem saída...'
-          }
-          placeholderTextColor="#64748B"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-          maxLength={200}
-        />
+        <View style={styles.inputFieldGroup}>
+          <Text style={styles.fieldLabel}>DETALHES OU RECOMENDAÇÕES</Text>
+          <TextInput
+            style={[styles.textInput, styles.textAreaInput]}
+            placeholder={
+              isAccessibility
+                ? 'Ex: Escadaria com cerca de 10 degraus sem rampa ou elevador alternativo...'
+                : selectedCategory === 'protest_infiltrator'
+                ? 'Ex: Grupo vestido de preto a arremessar garrafas contra montras...'
+                : 'Ex: Evitar passar pelo lado esquerdo da rua, muito escuro e sem saída...'
+            }
+            placeholderTextColor="#64748B"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            maxLength={200}
+          />
+        </View>
 
         {/* Location Coordinate indicator */}
         <View style={styles.locationIndicator}>
@@ -643,19 +647,18 @@ const styles = StyleSheet.create({
   stalkingAlertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(220, 38, 38, 0.14)',
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-    borderRadius: 18,
+    backgroundColor: '#DC2626',
+    borderRadius: 16,
     padding: 14,
     marginBottom: 12,
     gap: 12,
+    ...M3Elevation.level3,
   },
   stalkingIconCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EF4444',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -666,46 +669,43 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   stalkingTitle: {
-    color: '#F8FAFC',
-    fontSize: 15,
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '800',
   },
   privateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
     borderRadius: M3Shapes.full,
   },
   privateBadgeText: {
-    color: '#10B981',
+    color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   stalkingSub: {
-    color: '#CBD5E1',
-    fontSize: 11,
-    lineHeight: 15,
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontSize: 12,
+    lineHeight: 16,
   },
   accessibilityEntryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(6, 182, 212, 0.08)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(6, 182, 212, 0.45)',
-    borderRadius: 18,
+    backgroundColor: '#38BDF8',
+    borderRadius: 16,
     padding: 14,
     marginBottom: 14,
     gap: 12,
+    ...M3Elevation.level3,
   },
   accessIconCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(6, 182, 212, 0.16)',
-    borderWidth: 1,
-    borderColor: '#06B6D4',
+    backgroundColor: 'rgba(255, 255, 255, 0.40)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -716,30 +716,15 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   accessTitle: {
-    color: '#F8FAFC',
-    fontSize: 15,
+    color: '#06140E',
+    fontSize: 16,
     fontWeight: '800',
-  },
-  accessBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(6, 182, 212, 0.2)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: M3Shapes.full,
-    borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.4)',
-  },
-  accessBadgeText: {
-    color: '#06B6D4',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.5,
   },
   accessSub: {
-    color: '#CBD5E1',
-    fontSize: 11,
-    lineHeight: 15,
+    color: '#06140E',
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500',
   },
   accessNoticeBanner: {
     flexDirection: 'row',
@@ -976,18 +961,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-  input: {
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: M3Colors.onSurface,
-    fontSize: 14,
+  inputFieldGroup: {
+    marginBottom: 16,
   },
-  textArea: {
-    height: 75,
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: M3Colors.onSurfaceVariant,
+    marginBottom: 8,
+    letterSpacing: 0.6,
+  },
+  textInput: {
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: '#F8FAFC',
+    fontSize: 15,
+    height: 56,
+    ...M3Elevation.level1,
+  },
+  textAreaInput: {
+    height: 110,
+    textAlignVertical: 'top',
   },
   locationIndicator: {
     flexDirection: 'row',

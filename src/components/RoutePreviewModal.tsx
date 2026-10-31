@@ -696,8 +696,8 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   >
                     <Ionicons
                       name="walk"
-                      size={14}
-                      color={activeMode === 'walking' ? '#0F172A' : '#94A3B8'}
+                      size={15}
+                      color={activeMode === 'walking' ? '#080A0C' : '#64748B'}
                     />
                     <Text
                       style={[
@@ -719,8 +719,8 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   >
                     <MaterialCommunityIcons
                       name="bus-side"
-                      size={15}
-                      color={activeMode === 'transit' ? '#0F172A' : '#94A3B8'}
+                      size={16}
+                      color={activeMode === 'transit' ? '#0284C7' : '#64748B'}
                     />
                     <Text
                       style={[
@@ -742,8 +742,8 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   >
                     <Ionicons
                       name="car-sport"
-                      size={14}
-                      color={activeMode === 'driving' ? '#0F172A' : '#94A3B8'}
+                      size={15}
+                      color={activeMode === 'driving' ? '#080A0C' : '#64748B'}
                     />
                     <Text
                       style={[
@@ -768,7 +768,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     Haptics.impactAsync(ImpactFeedbackStyle.Medium);
                     onToggleAccessibilityRoute(!accessibleRouteOnly);
                   }}
-                  activeOpacity={0.82}
+                  activeOpacity={0.85}
                 >
                   <View
                     style={[
@@ -778,36 +778,19 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   >
                     <MaterialCommunityIcons
                       name="wheelchair"
-                      size={18}
-                      color={accessibleRouteOnly ? '#FFFFFF' : '#06B6D4'}
+                      size={20}
+                      color={accessibleRouteOnly ? '#0284C7' : '#64748B'}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <View style={styles.accessToggleTitleRow}>
-                      <Text
-                        style={[
-                          styles.accessToggleTitle,
-                          accessibleRouteOnly && styles.accessToggleTitleActive,
-                        ]}
-                      >
-                        Percurso com Acessibilidade
-                      </Text>
-                      <View
-                        style={[
-                          styles.accessToggleBadge,
-                          accessibleRouteOnly && styles.accessToggleBadgeActive,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.accessToggleBadgeText,
-                            accessibleRouteOnly && styles.accessToggleBadgeTextActive,
-                          ]}
-                        >
-                          {accessibleRouteOnly ? 'ATIVO' : 'DESLIGADO'}
-                        </Text>
-                      </View>
-                    </View>
+                    <Text
+                      style={[
+                        styles.accessToggleTitle,
+                        accessibleRouteOnly && styles.accessToggleTitleActive,
+                      ]}
+                    >
+                      Percurso com Acessibilidade
+                    </Text>
                     <Text style={styles.accessToggleSub}>
                       {accessibleRouteOnly
                         ? 'A contornar escadas, calçadas danificadas e obras registadas.'
@@ -817,7 +800,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   <Ionicons
                     name={accessibleRouteOnly ? 'checkmark-circle' : 'ellipse-outline'}
                     size={22}
-                    color={accessibleRouteOnly ? '#06B6D4' : '#64748B'}
+                    color={accessibleRouteOnly ? '#0284C7' : '#94A3B8'}
                   />
                 </TouchableOpacity>
               )}
@@ -1241,21 +1224,17 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   <M3Pressable
                     style={[
                       styles.startBtn,
-                      selectedRoute.isSafe ? styles.startBtnSafe : styles.startBtnWarn,
                       onSimulateRoute ? { flex: 1.6 } : { flex: 1 },
                     ]}
                     onPress={handleStart}
                   >
                     <Ionicons
-                      name={selectedRoute.isSafe ? 'navigate' : 'navigate-outline'}
+                      name="navigate"
                       size={18}
-                      color={selectedRoute.isSafe ? '#06140E' : '#FFFFFF'}
+                      color="#080A0C"
                     />
                     <Text
-                      style={[
-                        styles.startBtnText,
-                        selectedRoute.isSafe && { color: '#06140E', fontWeight: '800' },
-                      ]}
+                      style={styles.startBtnText}
                       numberOfLines={1}
                     >
                       {selectedRoute.isSafe
@@ -1270,7 +1249,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                       onPress={handleSimulate}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="game-controller" size={18} color="#38BDF8" />
+                      <Ionicons name="game-controller" size={18} color="#0284C7" />
                       <Text style={styles.simulateBtnText}>Simular</Text>
                     </TouchableOpacity>
                   )}
@@ -1602,10 +1581,11 @@ const styles = StyleSheet.create({
   // Mode switcher bar
   modeSwitcherBar: {
     flexDirection: 'row',
-    paddingHorizontal: 18,
-    paddingTop: 6,
-    gap: 10,
-    backgroundColor: M3Colors.surfaceContainer,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 10,
+    gap: 8,
+    backgroundColor: 'transparent',
   },
   modeSwitchBtn: {
     flex: 1,
@@ -1613,95 +1593,71 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 8,
-    borderRadius: M3Shapes.full,
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    ...M3Elevation.level1,
   },
   modeSwitchBtnActive: {
-    backgroundColor: M3Colors.secondaryContainer,
-    borderColor: M3Colors.secondary,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#0284C7',
+    borderWidth: 2.5,
+    ...M3Elevation.level3,
   },
   modeSwitchText: {
-    color: M3Colors.onSurfaceVariant,
+    color: '#475569',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   modeSwitchTextActive: {
-    color: M3Colors.onSecondaryContainer,
-    fontWeight: '700',
+    color: '#080A0C',
+    fontWeight: '800',
   },
   accessibilityRouteToggleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(6, 182, 212, 0.06)',
+    backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    marginBottom: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 14,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: 'rgba(6, 182, 212, 0.25)',
-    gap: 10,
+    borderColor: '#E2E8F0',
+    gap: 12,
+    ...M3Elevation.level2,
   },
   accessibilityRouteToggleBtnActive: {
-    backgroundColor: 'rgba(6, 182, 212, 0.14)',
-    borderColor: '#06B6D4',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#0284C7',
+    borderWidth: 2.5,
   },
   accessToggleIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(6, 182, 212, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.4)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   accessToggleIconCircleActive: {
-    backgroundColor: '#06B6D4',
-    borderColor: '#38BDF8',
-  },
-  accessToggleTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
+    backgroundColor: '#E0F2FE',
   },
   accessToggleTitle: {
-    color: '#E2E8F0',
-    fontSize: 13,
+    color: '#080A0C',
+    fontSize: 14,
     fontWeight: '700',
   },
   accessToggleTitleActive: {
-    color: '#FFFFFF',
-  },
-  accessToggleBadge: {
-    backgroundColor: 'rgba(148, 163, 184, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.25)',
-  },
-  accessToggleBadgeActive: {
-    backgroundColor: 'rgba(6, 182, 212, 0.25)',
-    borderColor: '#06B6D4',
-  },
-  accessToggleBadgeText: {
-    color: '#94A3B8',
-    fontSize: 9,
+    color: '#080A0C',
     fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  accessToggleBadgeTextActive: {
-    color: '#06B6D4',
   },
   accessToggleSub: {
-    color: '#94A3B8',
-    fontSize: 11,
-    lineHeight: 14,
+    color: '#475569',
+    fontSize: 11.5,
+    lineHeight: 15,
   },
   arrivalBadge: {
     backgroundColor: 'rgba(109, 213, 140, 0.15)',
@@ -1832,38 +1788,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: M3Shapes.full,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     gap: 8,
-    ...M3Elevation.level2,
+    ...M3Elevation.level3,
   },
   startBtnSafe: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
   },
   startBtnWarn: {
-    backgroundColor: M3Colors.warningContainer,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#F59E0B',
   },
   startBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
+    color: '#080A0C',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.1,
   },
   simulateBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: M3Shapes.full,
-    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#38BDF8',
+    borderColor: '#E2E8F0',
     gap: 6,
+    ...M3Elevation.level2,
   },
   simulateBtnText: {
-    color: '#38BDF8',
+    color: '#0284C7',
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 
   // Steps Accordion

@@ -442,8 +442,8 @@ export default function App() {
     targetCoordinate?.longitude,
   ]);
 
-  // Carregamento de Estações do Metro do Porto
-  const isMetroEffective = showMetroStationsOnMap || transportMode === 'transit';
+  // Carregamento de Estações do Metro do Porto (apenas quando o filtro do Metro está ativado)
+  const isMetroEffective = showMetroStationsOnMap;
   useEffect(() => {
     if (!isMetroEffective) {
       setNearbyMetroStations([]);
@@ -2113,7 +2113,7 @@ export default function App() {
                   <Ionicons
                     name={homeAddress ? 'home' : 'home-outline'}
                     size={14}
-                    color={homeAddress ? M3Colors.onPrimaryContainer : M3Colors.onSurfaceVariant}
+                    color={homeAddress ? '#10B981' : '#080A0C'}
                   />
                   <Text
                     style={[
@@ -2138,7 +2138,7 @@ export default function App() {
                   <Ionicons
                     name={workAddress ? 'briefcase' : 'briefcase-outline'}
                     size={14}
-                    color={workAddress ? '#F59E0B' : M3Colors.onSurfaceVariant}
+                    color={workAddress ? '#D97706' : '#080A0C'}
                   />
                   <Text
                     style={[
@@ -2166,7 +2166,7 @@ export default function App() {
                 <Ionicons
                   name="options-outline"
                   size={15}
-                  color={activeLayersCount > 0 ? '#10B981' : '#94A3B8'}
+                  color={activeLayersCount > 0 ? '#10B981' : '#080A0C'}
                 />
                 <Text style={styles.filtersFabText}>Filtros</Text>
                 {activeLayersCount > 0 && (
@@ -2868,46 +2868,47 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   compactFilterPill: {
-    height: 32,
+    height: 34,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
     borderRadius: M3Shapes.small,
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-    ...M3Elevation.level1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    ...M3Elevation.level2,
   },
   compactFilterPillText: {
     fontSize: 12,
-    color: M3Colors.onSurfaceVariant,
-    fontWeight: '600',
+    color: '#080A0C',
+    fontWeight: '700',
   },
   filtersFab: {
-    height: 32,
+    height: 34,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
     borderRadius: M3Shapes.small,
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-    ...M3Elevation.level1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    ...M3Elevation.level2,
   },
   filtersFabActive: {
-    borderColor: M3Colors.primary,
-    backgroundColor: M3Colors.primaryContainer,
+    borderColor: '#10B981',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
   },
   filtersFabText: {
-    color: M3Colors.onSurface,
+    color: '#080A0C',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0.2,
   },
   filtersBadge: {
-    backgroundColor: M3Colors.primary,
+    backgroundColor: '#10B981',
     minWidth: 18,
     height: 18,
     borderRadius: 9,
@@ -2916,12 +2917,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   filtersBadgeText: {
-    color: M3Colors.onPrimary,
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '900',
   },
   activeHazardFilterPill: {
-    height: 32,
+    height: 34,
     paddingHorizontal: 10,
     borderRadius: M3Shapes.small,
     gap: 5,
@@ -2933,20 +2934,22 @@ const styles = StyleSheet.create({
     maxWidth: 130,
   },
   filterChipHomeActive: {
-    backgroundColor: M3Colors.primaryContainer,
-    borderColor: M3Colors.primary,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#10B981',
+    borderWidth: 2,
   },
   filterChipTextHomeActive: {
-    color: M3Colors.onPrimaryContainer,
-    fontWeight: '700',
+    color: '#059669',
+    fontWeight: '800',
   },
   filterChipWorkActive: {
-    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    backgroundColor: '#FFFFFF',
     borderColor: '#F59E0B',
+    borderWidth: 2,
   },
   filterChipTextWorkActive: {
-    color: '#F59E0B',
-    fontWeight: '700',
+    color: '#D97706',
+    fontWeight: '800',
   },
   tvdeActiveBanner: {
     flexDirection: 'row',
@@ -3076,19 +3079,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 64,
+    borderRadius: 16,
     gap: 3,
   },
   dockActiveIndicator: {
-    width: 52,
-    height: 28,
-    borderRadius: 14,
+    width: 58,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    overflow: 'hidden',
   },
   dockActiveIndicatorSelected: {
-    backgroundColor: '#F8FAFC',
-    ...M3Elevation.level1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...M3Elevation.level2,
   },
   dockPillItemText: {
     color: M3Colors.onSurfaceVariant,
