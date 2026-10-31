@@ -1755,16 +1755,16 @@ const styles = StyleSheet.create({
   floatingControlsStack: {
     position: 'absolute',
     right: 16,
-    bottom: 102,
+    bottom: 104,
     gap: 10,
     alignItems: 'center',
     zIndex: 100,
   },
   floatingControlBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: 'rgba(18, 22, 29, 0.94)',
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: M3Colors.surfaceContainerHigh,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     justifyContent: 'center',
@@ -1772,8 +1772,8 @@ const styles = StyleSheet.create({
     ...M3Elevation.level3,
   },
   floatingControlBtnActive: {
-    borderColor: '#10B981',
-    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    borderColor: M3Colors.primary,
+    backgroundColor: M3Colors.primaryContainer,
   },
   protestExitBtn: {
     backgroundColor: 'rgba(239, 68, 68, 0.92)',

@@ -9,7 +9,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Haptics, { ImpactFeedbackStyle } from '../utils/haptics';
 import { TransportMode } from '../types/navigation';
 import { M3Colors, M3Shapes } from '../theme/m3';
-import { M3BottomSheetWrapper, M3Pressable } from './M3MotionWrapper';
+import { M3BottomSheetWrapper, M3Button, M3DragHandle, M3Pressable } from './M3MotionWrapper';
 
 interface QuickTransportModeModalProps {
   visible: boolean;
@@ -51,6 +51,9 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
   return (
     <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
       <View style={styles.sheetContent}>
+        {/* M3 Official Drag Handle */}
+        <M3DragHandle />
+
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerTitleWrap}>
@@ -166,14 +169,13 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
         </View>
 
         {/* Start Button */}
-        <M3Pressable
-          scaleOnPress={0.96}
+        <M3Button
+          title="Iniciar Percurso"
+          variant="filled"
+          icon={<Ionicons name="navigate" size={18} color="#06140E" />}
           style={styles.startBtn}
           onPress={handleStart}
-        >
-          <Ionicons name="navigate" size={20} color="#FFFFFF" />
-          <Text style={styles.startBtnText}>Iniciar Percurso</Text>
-        </M3Pressable>
+        />
       </View>
     </M3BottomSheetWrapper>
   );
@@ -182,8 +184,8 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
 const styles = StyleSheet.create({
   sheetContainer: {
     backgroundColor: '#0F172A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     borderTopWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },

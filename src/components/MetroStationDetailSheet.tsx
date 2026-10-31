@@ -10,7 +10,7 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { MetroStation, METRO_LINE_COLORS, METRO_LINE_NAMES } from '../services/metroStationsService';
 import { formatDistance } from '../utils/geo';
 import { M3Colors, M3Shapes } from '../theme/m3';
-import { M3BottomSheetWrapper, M3Pressable } from './M3MotionWrapper';
+import { M3BottomSheetWrapper, M3Button, M3DragHandle } from './M3MotionWrapper';
 
 interface MetroStationDetailSheetProps {
   station: MetroStation | null;
@@ -36,8 +36,8 @@ export const MetroStationDetailSheet: React.FC<MetroStationDetailSheetProps> = (
   return (
     <M3BottomSheetWrapper visible={Boolean(station)} onClose={onClose}>
       <View style={styles.sheetContent}>
-        {/* Handle bar */}
-        <View style={styles.handleBar} />
+        {/* M3 Official Drag handle */}
+        <M3DragHandle />
 
         {/* Top Header */}
         <View style={styles.headerRow}>
@@ -83,13 +83,13 @@ export const MetroStationDetailSheet: React.FC<MetroStationDetailSheetProps> = (
 
         {/* Botão de Navegação por Transportes */}
         {onNavigateToStation && (
-          <M3Pressable
+          <M3Button
+            title="Navegar até à Estação"
+            variant="filled"
+            icon={<Ionicons name="navigate" size={18} color="#06140E" />}
             style={styles.navigateBtn}
             onPress={() => onNavigateToStation(station)}
-          >
-            <Ionicons name="navigate" size={18} color="#FFFFFF" />
-            <Text style={styles.navigateBtnText}>Navegar até à Estação</Text>
-          </M3Pressable>
+          />
         )}
       </View>
     </M3BottomSheetWrapper>
@@ -99,10 +99,10 @@ export const MetroStationDetailSheet: React.FC<MetroStationDetailSheetProps> = (
 const styles = StyleSheet.create({
   sheetContent: {
     backgroundColor: '#0F172A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 8,
     paddingBottom: 28,
     borderTopWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -199,12 +199,6 @@ const styles = StyleSheet.create({
   navigateBtn: {
     marginTop: 20,
     backgroundColor: '#0284C7',
-    paddingVertical: 14,
-    borderRadius: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
   },
   navigateBtnText: {
     color: '#FFFFFF',

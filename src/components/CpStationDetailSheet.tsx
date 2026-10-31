@@ -10,7 +10,7 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { CpStation } from '../services/cpStationsService';
 import { formatDistance } from '../utils/geo';
 import { M3Colors, M3Shapes } from '../theme/m3';
-import { M3BottomSheetWrapper, M3Pressable } from './M3MotionWrapper';
+import { M3BottomSheetWrapper, M3Button, M3DragHandle, M3Pressable } from './M3MotionWrapper';
 
 interface CpStationDetailSheetProps {
   station: CpStation | null;
@@ -33,8 +33,8 @@ export const CpStationDetailSheet: React.FC<CpStationDetailSheetProps> = ({
   return (
     <M3BottomSheetWrapper visible={Boolean(station)} onClose={onClose}>
       <View style={styles.sheetContent}>
-        {/* Handle bar */}
-        <View style={styles.handleBar} />
+        {/* M3 Official Drag handle */}
+        <M3DragHandle />
 
         {/* Top Header */}
         <View style={styles.headerRow}>
@@ -112,8 +112,8 @@ export const CpStationDetailSheet: React.FC<CpStationDetailSheetProps> = ({
 const styles = StyleSheet.create({
   sheetContent: {
     backgroundColor: '#0F172A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 28,

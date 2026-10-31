@@ -169,3 +169,178 @@ export const M3Motion = {
     linear: Easing.linear,
   },
 };
+
+/**
+ * Canonical Google Material Design 3 (M3) Component Presets
+ * Conforming strictly to: https://m3.material.io/components
+ */
+export const M3ComponentStyles = {
+  // M3 Bottom Sheet standard geometry (28dp corners, surfaceContainerLow)
+  sheet: {
+    backgroundColor: M3Colors.surfaceContainerLow,
+    borderTopLeftRadius: M3Shapes.extraLarge,
+    borderTopRightRadius: M3Shapes.extraLarge,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    ...M3Elevation.level4,
+  },
+
+  // M3 Drag Handle (32x4dp pill, centered)
+  dragHandle: {
+    width: 32,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(203, 213, 225, 0.40)',
+    alignSelf: 'center' as const,
+    marginTop: 12,
+    marginBottom: 16,
+  },
+
+  // M3 Canonical Search Bar (56dp height, 28dp radius pill)
+  searchBar: {
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    ...M3Elevation.level2,
+  },
+
+  // M3 Buttons (Height 48dp, 24dp pill shape)
+  buttonFilled: {
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: M3Colors.primary,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 24,
+    gap: 8,
+    ...M3Elevation.level1,
+  },
+  buttonFilledText: {
+    color: M3Colors.onPrimary,
+    fontSize: 15,
+    fontWeight: '700' as const,
+    letterSpacing: 0.1,
+  },
+
+  buttonTonal: {
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: M3Colors.primaryContainer,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  buttonTonalText: {
+    color: M3Colors.onPrimaryContainer,
+    fontSize: 15,
+    fontWeight: '700' as const,
+  },
+
+  buttonOutlined: {
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+    backgroundColor: 'transparent',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  buttonOutlinedText: {
+    color: M3Colors.primary,
+    fontSize: 15,
+    fontWeight: '600' as const,
+  },
+
+  // M3 Floating Action Button (FAB) (56x56dp, 16dp squircle)
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: M3Shapes.large,
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    ...M3Elevation.level3,
+  },
+
+  // M3 Small FAB (44x44dp, 12dp squircle)
+  fabSmall: {
+    width: 44,
+    height: 44,
+    borderRadius: M3Shapes.medium,
+    backgroundColor: M3Colors.surfaceContainerHigh,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.10)',
+    ...M3Elevation.level2,
+  },
+
+  // M3 Filter / Assist Chip (32dp height, 8dp radius)
+  chip: {
+    height: 32,
+    borderRadius: M3Shapes.small,
+    backgroundColor: M3Colors.surfaceContainerLow,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+    gap: 6,
+  },
+  chipText: {
+    color: M3Colors.onSurfaceVariant,
+    fontSize: 13,
+    fontWeight: '600' as const,
+  },
+  chipSelected: {
+    backgroundColor: M3Colors.primaryContainer,
+    borderColor: M3Colors.primary,
+  },
+  chipSelectedText: {
+    color: M3Colors.onPrimaryContainer,
+    fontWeight: '700' as const,
+  },
+
+  // M3 Card (16dp rounded card, surfaceContainer)
+  card: {
+    borderRadius: M3Shapes.large,
+    backgroundColor: M3Colors.surfaceContainer,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+    padding: 16,
+    ...M3Elevation.level1,
+  },
+
+  // M3 Navigation Bar (80dp height, active indicator pill)
+  navBar: {
+    height: 80,
+    backgroundColor: M3Colors.surfaceContainer,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-around' as const,
+    paddingBottom: 8,
+  },
+  navBarActiveIndicator: {
+    width: 64,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: M3Colors.secondaryContainer,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+};

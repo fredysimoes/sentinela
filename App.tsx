@@ -2648,7 +2648,7 @@ export default function App() {
         onDismiss={() => setArrivalModalData(null)}
       />
 
-      {/* 3. Stealth Floating Pill Bottom Dock Bar (Always Visible & Active Tab Highlighted in White Pill) */}
+      {/* 3. Stealth Floating M3 Navigation Bar (Google Material Design 3 Spec) */}
       {!navState && !simulationState && (
         <View style={styles.bottomDockContainer} pointerEvents="box-none">
           <View style={styles.bottomPillDock}>
@@ -2658,10 +2658,7 @@ export default function App() {
               return (
                 <M3Pressable
                   scaleOnPress={0.94}
-                  style={[
-                    styles.dockPillItem,
-                    isMapActive && styles.dockPillItemSelectedWhite,
-                  ]}
+                  style={styles.dockPillItem}
                   onPress={() => {
                     Haptics.selectionAsync();
                     setShowReportModal(false);
@@ -2676,15 +2673,22 @@ export default function App() {
                     setMapRecenterSignal((prev) => prev + 1);
                   }}
                 >
-                  <Ionicons
-                    name={isMapActive ? 'home' : 'home-outline'}
-                    size={17}
-                    color={isMapActive ? '#080A0C' : '#CBD5E1'}
-                  />
+                  <View
+                    style={[
+                      styles.dockActiveIndicator,
+                      isMapActive && styles.dockActiveIndicatorSelected,
+                    ]}
+                  >
+                    <Ionicons
+                      name={isMapActive ? 'home' : 'home-outline'}
+                      size={18}
+                      color={isMapActive ? '#080A0C' : '#CBD5E1'}
+                    />
+                  </View>
                   <Text
                     style={[
                       styles.dockPillItemText,
-                      isMapActive && styles.dockPillItemTextSelectedDark,
+                      isMapActive && styles.dockPillItemTextSelected,
                     ]}
                   >
                     Mapa
@@ -2696,10 +2700,7 @@ export default function App() {
             {/* 2. Sinalizar (Community Report & "Estou a ser seguido") */}
             <M3Pressable
               scaleOnPress={0.93}
-              style={[
-                styles.dockPillItem,
-                showReportModal && styles.dockPillItemSelectedWhite,
-              ]}
+              style={styles.dockPillItem}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setShowTvdeModal(false);
@@ -2711,18 +2712,25 @@ export default function App() {
                 setShowReportModal((prev) => !prev);
               }}
             >
-              <View style={styles.dockIconWrap}>
-                <Ionicons
-                  name={showReportModal ? 'warning' : 'warning-outline'}
-                  size={16}
-                  color={showReportModal ? '#080A0C' : '#CBD5E1'}
-                />
-                {activeStalkingSession && <View style={styles.dockLiveBadgeDotRed} />}
+              <View
+                style={[
+                  styles.dockActiveIndicator,
+                  showReportModal && styles.dockActiveIndicatorSelected,
+                ]}
+              >
+                <View style={styles.dockIconWrap}>
+                  <Ionicons
+                    name={showReportModal ? 'warning' : 'warning-outline'}
+                    size={18}
+                    color={showReportModal ? '#080A0C' : '#CBD5E1'}
+                  />
+                  {activeStalkingSession && <View style={styles.dockLiveBadgeDotRed} />}
+                </View>
               </View>
               <Text
                 style={[
                   styles.dockPillItemText,
-                  showReportModal && styles.dockPillItemTextSelectedDark,
+                  showReportModal && styles.dockPillItemTextSelected,
                 ]}
               >
                 Sinalizar
@@ -2732,10 +2740,7 @@ export default function App() {
             {/* 3. TVDE (Uber / Bolt / Táxi Ride Protection) */}
             <M3Pressable
               scaleOnPress={0.93}
-              style={[
-                styles.dockPillItem,
-                showTvdeModal && styles.dockPillItemSelectedWhite,
-              ]}
+              style={styles.dockPillItem}
               onPress={() => {
                 Haptics.selectionAsync();
                 setShowReportModal(false);
@@ -2746,19 +2751,26 @@ export default function App() {
                 setShowTvdeModal((prev) => !prev);
               }}
             >
-              <View style={styles.dockIconWrap}>
-                <Ionicons
-                  name={showTvdeModal ? 'car-sport' : 'car-sport-outline'}
-                  size={17}
-                  color={showTvdeModal ? '#080A0C' : activeTvdeTrip ? '#10B981' : '#CBD5E1'}
-                />
-                {activeTvdeTrip && <View style={styles.dockLiveBadgeDotNeon} />}
+              <View
+                style={[
+                  styles.dockActiveIndicator,
+                  showTvdeModal && styles.dockActiveIndicatorSelected,
+                ]}
+              >
+                <View style={styles.dockIconWrap}>
+                  <Ionicons
+                    name={showTvdeModal ? 'car-sport' : 'car-sport-outline'}
+                    size={18}
+                    color={showTvdeModal ? '#080A0C' : activeTvdeTrip ? '#10B981' : '#CBD5E1'}
+                  />
+                  {activeTvdeTrip && <View style={styles.dockLiveBadgeDotNeon} />}
+                </View>
               </View>
               <Text
                 style={[
                   styles.dockPillItemText,
                   !showTvdeModal && activeTvdeTrip && { color: '#10B981', fontWeight: '800' },
-                  showTvdeModal && styles.dockPillItemTextSelectedDark,
+                  showTvdeModal && styles.dockPillItemTextSelected,
                 ]}
               >
                 TVDE
@@ -2768,10 +2780,7 @@ export default function App() {
             {/* 4. Sentinelas (Trusted Circle & Live Tracking) */}
             <M3Pressable
               scaleOnPress={0.93}
-              style={[
-                styles.dockPillItem,
-                showSentinelsModal && styles.dockPillItemSelectedWhite,
-              ]}
+              style={styles.dockPillItem}
               onPress={() => {
                 Haptics.selectionAsync();
                 setShowReportModal(false);
@@ -2786,29 +2795,36 @@ export default function App() {
                 }
               }}
             >
-              <View style={styles.dockIconWrap}>
-                <Ionicons
-                  name={showSentinelsModal ? 'shield-checkmark' : 'shield-checkmark-outline'}
-                  size={16}
-                  color={showSentinelsModal ? '#080A0C' : '#CBD5E1'}
-                />
-                {mySentinels.length > 0 && (
-                  <View style={styles.dockCountBadge}>
-                    <Text style={styles.dockCountBadgeText}>{mySentinels.length}</Text>
-                  </View>
-                )}
+              <View
+                style={[
+                  styles.dockActiveIndicator,
+                  showSentinelsModal && styles.dockActiveIndicatorSelected,
+                ]}
+              >
+                <View style={styles.dockIconWrap}>
+                  <Ionicons
+                    name={showSentinelsModal ? 'shield-checkmark' : 'shield-checkmark-outline'}
+                    size={18}
+                    color={showSentinelsModal ? '#080A0C' : '#CBD5E1'}
+                  />
+                  {mySentinels.length > 0 && (
+                    <View style={styles.dockCountBadge}>
+                      <Text style={styles.dockCountBadgeText}>{mySentinels.length}</Text>
+                    </View>
+                  )}
+                </View>
               </View>
               <Text
                 style={[
                   styles.dockPillItemText,
-                  showSentinelsModal && styles.dockPillItemTextSelectedDark,
+                  showSentinelsModal && styles.dockPillItemTextSelected,
                 ]}
               >
                 Sentinelas
               </Text>
             </M3Pressable>
 
-            {/* 5. SOS (Emergency Pill Button on the Right Edge) */}
+            {/* 5. SOS (Google M3 High-Emphasis Action Button) */}
             <M3Pressable
               scaleOnPress={0.91}
               style={styles.dockSosPill}
@@ -2817,7 +2833,7 @@ export default function App() {
                 setShowSOSModal(true);
               }}
             >
-              <Ionicons name="megaphone" size={14} color="#FFFFFF" />
+              <Ionicons name="megaphone" size={16} color="#FFFFFF" />
               <Text style={styles.dockSosPillText}>SOS</Text>
             </M3Pressable>
           </View>
@@ -2852,46 +2868,46 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   compactFilterPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 13,
-    paddingVertical: 7,
-    borderRadius: M3Shapes.full,
-    backgroundColor: 'rgba(14, 18, 23, 0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    ...M3Elevation.level2,
-  },
-  compactFilterPillText: {
-    fontSize: 12,
-    color: '#CBD5E1',
-    fontWeight: '600',
-  },
-  filtersFab: {
+    height: 32,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: M3Shapes.full,
-    backgroundColor: 'rgba(14, 18, 23, 0.94)',
+    borderRadius: M3Shapes.small,
+    backgroundColor: M3Colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-    ...M3Elevation.level2,
+    borderColor: M3Colors.outlineVariant,
+    ...M3Elevation.level1,
+  },
+  compactFilterPillText: {
+    fontSize: 12,
+    color: M3Colors.onSurfaceVariant,
+    fontWeight: '600',
+  },
+  filtersFab: {
+    height: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    borderRadius: M3Shapes.small,
+    backgroundColor: M3Colors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+    ...M3Elevation.level1,
   },
   filtersFabActive: {
-    borderColor: '#10B981',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: M3Colors.primary,
+    backgroundColor: M3Colors.primaryContainer,
   },
   filtersFabText: {
-    color: '#F8FAFC',
+    color: M3Colors.onSurface,
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: 0.2,
   },
   filtersBadge: {
-    backgroundColor: '#10B981',
+    backgroundColor: M3Colors.primary,
     minWidth: 18,
     height: 18,
     borderRadius: 9,
@@ -2900,12 +2916,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   filtersBadgeText: {
-    color: '#080A0C',
+    color: M3Colors.onPrimary,
     fontSize: 10,
     fontWeight: '900',
   },
   activeHazardFilterPill: {
+    height: 32,
     paddingHorizontal: 10,
+    borderRadius: M3Shapes.small,
     gap: 5,
   },
   activeHazardFilterPillText: {
@@ -3031,9 +3049,9 @@ const styles = StyleSheet.create({
   },
   bottomDockContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'android' ? 20 : 18,
-    left: 10,
-    right: 10,
+    bottom: Platform.OS === 'android' ? 16 : 14,
+    left: 12,
+    right: 12,
     alignItems: 'center',
     zIndex: 10000,
     elevation: 28,
@@ -3043,50 +3061,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    backgroundColor: 'rgba(14, 18, 25, 0.98)',
-    borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 4,
+    height: 76,
+    backgroundColor: M3Colors.surfaceContainer,
+    borderRadius: 24,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.16)',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
-    elevation: 28,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    ...M3Elevation.level4,
   },
   dockPillItem: {
     flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
-    borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 2,
-    gap: 2,
+    height: 64,
+    gap: 3,
   },
-  dockPillItemSelectedWhite: {
+  dockActiveIndicator: {
+    width: 52,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  dockActiveIndicatorSelected: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 999,
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    ...M3Elevation.level1,
   },
   dockPillItemText: {
-    color: '#CBD5E1',
-    fontSize: 9.5,
+    color: M3Colors.onSurfaceVariant,
+    fontSize: 10,
     fontWeight: '600',
     textAlign: 'center',
-    letterSpacing: -0.1,
+    letterSpacing: 0.1,
   },
-  dockPillItemTextSelectedDark: {
-    color: '#080A0C',
-    fontSize: 9.5,
-    fontWeight: '900',
-    letterSpacing: -0.1,
+  dockPillItemTextSelected: {
+    color: '#F8FAFC',
+    fontWeight: '800',
   },
   dockIconWrap: {
     position: 'relative',
@@ -3141,16 +3154,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#DC2626',
     paddingHorizontal: 12,
-    height: 48,
-    borderRadius: 999,
-    borderWidth: 1.5,
+    height: 52,
+    borderRadius: 16,
+    borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.35)',
-    shadowColor: '#EF4444',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
-    elevation: 6,
-    gap: 1,
+    ...M3Elevation.level3,
+    gap: 2,
   },
   dockSosPillText: {
     color: '#FFFFFF',

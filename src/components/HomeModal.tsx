@@ -19,7 +19,7 @@ import { calculateDistanceMeters, formatDistance } from '../utils/geo';
 import { formatDuration } from '../services/routingService';
 import { searchAddressSuggestions, reverseGeocodeCoordinate, AddressSuggestion } from '../services/geocodingService';
 import { M3Colors, M3Shapes, M3Elevation, M3Typography } from '../theme/m3';
-import { M3BottomSheetWrapper } from './M3MotionWrapper';
+import { M3BottomSheetWrapper, M3DragHandle } from './M3MotionWrapper';
 
 interface HomeModalProps {
   visible: boolean;
@@ -168,6 +168,9 @@ export const HomeModal: React.FC<HomeModalProps> = ({
 
   return (
     <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
+      {/* M3 Official Drag Handle */}
+      <M3DragHandle />
+
       {/* Header */}
       <View style={styles.header}>
             <View style={styles.headerTitleWrap}>

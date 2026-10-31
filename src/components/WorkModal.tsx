@@ -16,7 +16,7 @@ import { calculateDistanceMeters, formatDistance } from '../utils/geo';
 import { formatDuration } from '../services/routingService';
 import { searchAddressSuggestions, reverseGeocodeCoordinate, AddressSuggestion } from '../services/geocodingService';
 import { M3Colors, M3Shapes } from '../theme/m3';
-import { M3BottomSheetWrapper } from './M3MotionWrapper';
+import { M3BottomSheetWrapper, M3DragHandle } from './M3MotionWrapper';
 
 interface WorkModalProps {
   visible: boolean;
@@ -165,6 +165,9 @@ export const WorkModal: React.FC<WorkModalProps> = ({
   return (
     <M3BottomSheetWrapper visible={visible} onClose={onClose} style={styles.sheetContainer}>
       <View style={styles.sheetContent}>
+        {/* M3 Official Drag Handle */}
+        <M3DragHandle />
+
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerTitleWrap}>
@@ -364,8 +367,8 @@ export const WorkModal: React.FC<WorkModalProps> = ({
 const styles = StyleSheet.create({
   sheetContainer: {
     backgroundColor: '#0F172A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: M3Shapes.extraLarge,
+    borderTopRightRadius: M3Shapes.extraLarge,
     borderTopWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },

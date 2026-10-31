@@ -17,7 +17,7 @@ import { PedestrianRoute, RouteCoordinate, TransportMode } from '../types/naviga
 import { formatDistance } from '../utils/geo';
 import { M3Colors, M3Shapes, M3Elevation } from '../theme/m3';
 import { searchAddressSuggestions, AddressSuggestion } from '../services/geocodingService';
-import { M3BottomSheetWrapper, M3Pressable } from './M3MotionWrapper';
+import { M3BottomSheetWrapper, M3DragHandle, M3Pressable } from './M3MotionWrapper';
 
 export interface RouteEndpoint {
   name: string;
@@ -276,6 +276,9 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
         (isExpanded || activeInput !== null) && styles.sheetContainerExpanded,
       ]}
     >
+      {/* M3 Official Drag Handle */}
+      <M3DragHandle />
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.modeIconCircle}>

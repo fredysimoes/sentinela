@@ -2,21 +2,30 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
+  Text,
   Animated,
   Modal,
   TouchableWithoutFeedback,
   Pressable,
   PressableProps,
   ViewStyle,
+  TextStyle,
   StyleProp,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { M3Motion, M3Colors } from '../theme/m3';
+import { M3Motion, M3Colors, M3Shapes, M3Elevation, M3Typography, M3ComponentStyles } from '../theme/m3';
 import Haptics from '../utils/haptics';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+/**
+ * Official Google M3 Drag Handle for Bottom Sheets (32x4dp pill)
+ */
+export const M3DragHandle: React.FC<{ style?: StyleProp<ViewStyle> }> = ({ style }) => (
+  <View style={[styles.m3DragHandle, style]} />
+);
 
 interface M3DialogProps {
   visible: boolean;
@@ -311,7 +320,193 @@ export const M3Pressable: React.FC<M3PressableProps> = ({
   );
 };
 
+export interface M3ButtonProps {
+  onPress: () => void;
+  title: string;
+  variant?: 'filled' | 'tonal' | 'outlined' | 'text' | 'danger';
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+  scaleOnPress?: number;
+}
+
+/**
+ * Google Material Design 3 Button conforming to official guidelines
+ * Variants: filled, tonal, outlined, text, danger
+ */
+export const M3Button: React.FC<M3ButtonProps> = ({
+  onPress,
+  title,
+  variant = 'filled',
+  icon,
+  disabled = false,
+  style,
+  textStyle,
+  scaleOnPress = 0.94,
+}) => {
+  const getContainerStyle = () => {
+    switch (variant) {
+      case 'tonal':
+        return styles.btnTonal;
+      case 'outlined':
+        return styles.btnOutlined;
+      case 'text':
+        return styles.btnTextOnly;
+      case 'danger':
+        return styles.btnDanger;
+      case 'filled':
+      default:
+        return styles.btnFilled;
+    }
+  };
+
+  const getTextStyle = () => {
+    switch (variant) {
+      case 'tonal':
+        return styles.btnTonalText;
+      case 'outlined':
+        return styles.btnOutlinedText;
+      case 'text':
+        return styles.btnTextOnlyText;
+      case 'danger':
+        return styles.btnDangerText;
+      case 'filled':
+      default:
+        return styles.btnFilledText;
+    }
+  };
+
+  return (
+    <M3Pressable
+      onPress={onPress}
+      disabled={disabled}
+      scaleOnPress={scaleOnPress}
+      style={[
+        styles.btnBase,
+        getContainerStyle(),
+        disabled && styles.btnDisabled,
+        style,
+      ]}
+    >
+      {icon && <View style={styles.btnIconWrap}>{icon}</View>}
+      <Text style={[getTextStyle(), disabled && styles.btnDisabledText, textStyle]}>
+        {title}
+      </Text>
+    </M3Pressable>
+  );
+};
+
+export interface M3FabProps {
+  onPress: () => void;
+  icon: React.ReactNode;
+  label?: string;
+  size?: 'standard' | 'small' | 'extended';
+  variant?: 'primary' | 'surface' | 'secondary' | 'error';
+  style?: StyleProp<ViewStyle>;
+  scaleOnPress?: number;
+}
+
+/**
+ * Google Material Design 3 Floating Action Button (FAB)
+ * Standard: 56x56 squircle (16dp radius), Small: 44x44 (12dp radius), Extended: 56dp height pill
+ */
+export const M3Fab: React.FC<M3FabProps> = ({
+  onPress,
+  icon,
+  label,
+  size = label ? 'extended' : 'standard',
+  variant = 'surface',
+  style,
+  scaleOnPress = 0.90,
+}) => {
+  const getContainerStyle = () => {
+    const sizeStyle =
+      size === 'small'
+        ? styles.fabSmall
+        : size === 'extended'
+        ? styles.fabExtended
+        : styles.fabStandard;
+
+    const variantStyle =
+      variant === 'primary'
+        ? styles.fabPrimary
+        : variant === 'secondary'
+        ? styles.fabSecondary
+        : variant === 'error'
+        ? styles.fabError
+        : styles.fabSurface;
+
+    return [sizeStyle, variantStyle];
+  };
+
+  return (
+    <M3Pressable
+      onPress={onPress}
+      scaleOnPress={scaleOnPress}
+      style={[styles.fabBase, ...getContainerStyle(), style]}
+    >
+      {icon}
+      {label && size === 'extended' && (
+        <Text style={styles.fabExtendedText}>{label}</Text>
+      )}
+    </M3Pressable>
+  );
+};
+
+export interface M3ChipProps {
+  label: string;
+  selected?: boolean;
+  onPress: () => void;
+  onLongPress?: () => void;
+  icon?: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+  selectedColor?: string;
+}
+
+/**
+ * Google Material Design 3 Filter / Assist Chip (32dp height, 8dp radius)
+ */
+export const M3Chip: React.FC<M3ChipProps> = ({
+  label,
+  selected = false,
+  onPress,
+  onLongPress,
+  icon,
+  style,
+  textStyle,
+  selectedColor,
+}) => {
+  return (
+    <M3Pressable
+      scaleOnPress={0.93}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={[
+        styles.chipBase,
+        selected && (selectedColor ? { backgroundColor: selectedColor, borderColor: selectedColor } : styles.chipSelected),
+        style,
+      ]}
+    >
+      {icon}
+      <Text style={[styles.chipText, selected && styles.chipSelectedText, textStyle]}>
+        {label}
+      </Text>
+    </M3Pressable>
+  );
+};
+
 const styles = StyleSheet.create({
+  m3DragHandle: {
+    width: 32,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(203, 213, 225, 0.40)',
+    alignSelf: 'center',
+    marginTop: 10,
+    marginBottom: 14,
+  },
   dialogContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -325,6 +520,8 @@ const styles = StyleSheet.create({
     width: '90%',
     maxWidth: 420,
     zIndex: 10,
+    borderRadius: M3Shapes.extraLarge,
+    overflow: 'hidden',
   },
   sheetOverlay: {
     ...StyleSheet.absoluteFill,
@@ -338,6 +535,145 @@ const styles = StyleSheet.create({
   },
   sheetCard: {
     width: '100%',
+    backgroundColor: M3Colors.surfaceContainerLow,
+    borderTopLeftRadius: M3Shapes.extraLarge,
+    borderTopRightRadius: M3Shapes.extraLarge,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    ...M3Elevation.level4,
     zIndex: 10,
+  },
+  btnBase: {
+    height: 48,
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    gap: 8,
+  },
+  btnFilled: {
+    backgroundColor: M3Colors.primary,
+    ...M3Elevation.level1,
+  },
+  btnFilledText: {
+    color: M3Colors.onPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+  },
+  btnTonal: {
+    backgroundColor: M3Colors.primaryContainer,
+  },
+  btnTonalText: {
+    color: M3Colors.onPrimaryContainer,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  btnOutlined: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: M3Colors.outlineVariant,
+  },
+  btnOutlinedText: {
+    color: M3Colors.primary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  btnTextOnly: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 12,
+  },
+  btnTextOnlyText: {
+    color: M3Colors.secondary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  btnDanger: {
+    backgroundColor: M3Colors.error,
+    ...M3Elevation.level1,
+  },
+  btnDangerText: {
+    color: M3Colors.onError,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  btnDisabled: {
+    opacity: 0.45,
+  },
+  btnDisabledText: {
+    color: M3Colors.outline,
+  },
+  btnIconWrap: {
+    marginRight: 2,
+  },
+  fabBase: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...M3Elevation.level3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  fabStandard: {
+    width: 56,
+    height: 56,
+    borderRadius: M3Shapes.large,
+  },
+  fabSmall: {
+    width: 44,
+    height: 44,
+    borderRadius: M3Shapes.medium,
+  },
+  fabExtended: {
+    height: 56,
+    borderRadius: M3Shapes.large,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  fabSurface: {
+    backgroundColor: M3Colors.surfaceContainerHigh,
+  },
+  fabPrimary: {
+    backgroundColor: M3Colors.primary,
+    borderColor: M3Colors.primary,
+  },
+  fabSecondary: {
+    backgroundColor: M3Colors.secondaryContainer,
+    borderColor: M3Colors.secondary,
+  },
+  fabError: {
+    backgroundColor: M3Colors.errorContainer,
+    borderColor: M3Colors.error,
+  },
+  fabExtendedText: {
+    color: M3Colors.onSurface,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  chipBase: {
+    height: 32,
+    borderRadius: M3Shapes.small,
+    backgroundColor: M3Colors.surfaceContainerLow,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    gap: 6,
+  },
+  chipText: {
+    color: M3Colors.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  chipSelected: {
+    backgroundColor: M3Colors.primaryContainer,
+    borderColor: M3Colors.primary,
+  },
+  chipSelectedText: {
+    color: M3Colors.onPrimaryContainer,
+    fontWeight: '700',
   },
 });
