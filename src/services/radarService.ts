@@ -1,4 +1,4 @@
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -307,21 +307,23 @@ export async function notifySentinelsOfRadarSession(params: {
       });
     }
 
-    // 2. Schedule system notification with sound & vibration
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Radar Sentinela: Pedido de Ligação',
-        body: `${params.senderName} está à sua espera na multidão. Toque aqui para abrir o radar diretamente.`,
-        data: {
-          type: 'radar_invite',
-          pin: params.pin,
-          senderName: params.senderName,
+    // 2. Schedule system notification with sound & vibration ONLY when app is minimized or screen locked
+    if (AppState.currentState !== 'active') {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Radar Sentinela: Pedido de Ligação',
+          body: `${params.senderName} está à sua espera na multidão. Toque aqui para abrir o radar diretamente.`,
+          data: {
+            type: 'radar_invite',
+            pin: params.pin,
+            senderName: params.senderName,
+          },
+          sound: 'default',
+          color: '#10B981',
         },
-        sound: 'default',
-        color: '#10B981',
-      },
-      trigger: null,
-    });
+        trigger: null,
+      });
+    }
 
     Haptics.notificationAsync(NotificationFeedbackType.Success);
 

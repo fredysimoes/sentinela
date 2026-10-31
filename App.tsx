@@ -18,7 +18,7 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import Haptics from './src/utils/haptics';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Incident, IncidentCategory, SOSAlert, EmergencyContact, UserLocation, SafePlace, HomeAddress, NotificationSettings } from './src/types';
+import { Incident, IncidentCategory, SOSAlert, EmergencyContact, UserLocation, SafePlace, HomeAddress, WorkAddress, NotificationSettings } from './src/types';
 import { CATEGORIES } from './src/constants/categories';
 import { getSafePlaces, SafePlaceWithDistance, loadLiveOsmPlacesForRegion } from './src/services/safePlacesService';
 import {
@@ -30,6 +30,10 @@ import {
   saveActiveSOSAlerts,
   loadHomeAddress,
   saveHomeAddress,
+  loadWorkAddress,
+  saveWorkAddress,
+  loadLastTransportMode,
+  saveLastTransportMode,
   loadNotificationSettings,
   saveNotificationSettings,
   DEFAULT_NOTIFICATION_SETTINGS,
@@ -40,6 +44,7 @@ import {
   requestNotificationPermissions,
   sendDangerProximityPushNotification,
   subscribeToInAppNotifications,
+  sendSystemNotification,
 } from './src/services/notifications';
 import {
   startBackgroundLocationTracking,
@@ -71,6 +76,8 @@ import { SafePlaceDetailSheet } from './src/components/SafePlaceDetailSheet';
 import { SelectedPlaceSheet, SelectedMapPoint } from './src/components/SelectedPlaceSheet';
 import { EmergencyContactsModal } from './src/components/EmergencyContactsModal';
 import { HomeModal } from './src/components/HomeModal';
+import { WorkModal } from './src/components/WorkModal';
+import { QuickTransportModeModal } from './src/components/QuickTransportModeModal';
 import { SettingsModal } from './src/components/SettingsModal';
 import { setTorch, setKeepScreenOn } from './src/services/torch';
 import { ProtestLightModal } from './src/components/ProtestLightModal';
@@ -224,6 +231,15 @@ export default function App() {
   const [selectedMapPoint, setSelectedMapPoint] = useState<SelectedMapPoint | null>(null);
   const [homeAddress, setHomeAddress] = useState<HomeAddress | null>(null);
   const [showHomeModal, setShowHomeModal] = useState(false);
+  const [workAddress, setWorkAddress] = useState<WorkAddress | null>(null);
+  const [showWorkModal, setShowWorkModal] = useState(false);
+  const [showQuickModeModal, setShowQuickModeModal] = useState(false);
+  const [quickModeDestination, setQuickModeDestination] = useState<{
+    title: string;
+    coord: RouteCoordinate;
+    address: string;
+  } | null>(null);
+  const [lastTransportMode, setLastTransportMode] = useState<TransportMode>('walking');
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
@@ -245,6 +261,8 @@ export default function App() {
   const [isAnimatingRouteDraw, setIsAnimatingRouteDraw] = useState(false);
   const [previewSafeRoute, setPreviewSafeRoute] = useState<PedestrianRoute | null>(null);
   const [previewDirectRoute, setPreviewDirectRoute] = useState<PedestrianRoute | undefined>(undefined);
+  const [previewAlternativeRoutes, setPreviewAlternativeRoutes] = useState<PedestrianRoute[] | undefined>(undefined);
+  const alertedTransferStopsRef = useRef<Set<string>>(new Set());
   const [previewOriginName, setPreviewOriginName] = useState('A minha localização');
   const [previewOriginCoord, setPreviewOriginCoord] = useState<RouteCoordinate | null>(null);
   const [previewDestName, setPreviewDestName] = useState('');
@@ -598,6 +616,11 @@ export default function App() {
     saveHomeAddress(home);
   };
 
+  const handleSaveWorkAddress = (work: WorkAddress | null) => {
+    setWorkAddress(work);
+    saveWorkAddress(work);
+  };
+
   const handlePressHome = () => {
     if (!homeAddress) {
       Haptics.selectionAsync();
@@ -606,10 +629,48 @@ export default function App() {
     }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    handleRequestNavigation('Casa', {
-      latitude: homeAddress.latitude,
-      longitude: homeAddress.longitude,
+    setQuickModeDestination({
+      title: 'Casa',
+      coord: {
+        latitude: homeAddress.latitude,
+        longitude: homeAddress.longitude,
+      },
+      address: homeAddress.address,
     });
+    setShowQuickModeModal(true);
+  };
+
+  const handlePressWork = () => {
+    if (!workAddress) {
+      Haptics.selectionAsync();
+      setShowWorkModal(true);
+      return;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setQuickModeDestination({
+      title: 'Trabalho',
+      coord: {
+        latitude: workAddress.latitude,
+        longitude: workAddress.longitude,
+      },
+      address: workAddress.address,
+    });
+    setShowQuickModeModal(true);
+  };
+
+  const handleConfirmQuickMode = async (chosenMode: TransportMode) => {
+    setShowQuickModeModal(false);
+    setLastTransportMode(chosenMode);
+    await saveLastTransportMode(chosenMode);
+
+    if (quickModeDestination) {
+      handleRequestNavigation(
+        quickModeDestination.title,
+        quickModeDestination.coord,
+        chosenMode
+      );
+    }
   };
 
   const handleSelectMapPoint = (point: SelectedMapPoint) => {
@@ -697,6 +758,7 @@ export default function App() {
     // 2. Render route on the map and let the progressive neon route animation play out in full view (2.4s)
     setPreviewSafeRoute(routes.safeRoute);
     setPreviewDirectRoute(routes.directRoute);
+    setPreviewAlternativeRoutes(routes.alternativeRoutes);
     setIsAnimatingRouteDraw(true);
 
     // 3. Only slide the RoutePreviewModal back up once the route drawing animation completes!
@@ -730,6 +792,7 @@ export default function App() {
     });
     setPreviewSafeRoute(routes.safeRoute);
     setPreviewDirectRoute(routes.directRoute);
+    setPreviewAlternativeRoutes(routes.alternativeRoutes);
   };
 
   const handleToggleAccessibilityRoute = async (enabled: boolean) => {
@@ -751,6 +814,7 @@ export default function App() {
       });
       setPreviewSafeRoute(routes.safeRoute);
       setPreviewDirectRoute(routes.directRoute);
+      setPreviewAlternativeRoutes(routes.alternativeRoutes);
     }
   };
 
@@ -787,6 +851,7 @@ export default function App() {
 
     // Suspend idle background proximity alerts to ensure only one navigation notification is shown
     await stopBackgroundLocationTracking();
+    alertedTransferStopsRef.current.clear();
 
     const newNavState: NavigationState = {
       isActive: true,
@@ -815,6 +880,7 @@ export default function App() {
 
   const handleStartSimulation = (chosenRoute: PedestrianRoute) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    alertedTransferStopsRef.current.clear();
     const origName = previewOriginName || 'A minha localização';
     const destName = previewDestName;
 
@@ -838,6 +904,14 @@ export default function App() {
       if (!prev) return null;
       const steps = prev.route.steps || [];
       const clampedIndex = Math.max(0, Math.min(steps.length - 1, nextIndex));
+      const targetStep = steps[clampedIndex];
+      if (targetStep?.isTransfer && clampedIndex !== prev.currentStepIndex) {
+        sendSystemNotification({
+          title: '🔄 Simulação: Ponto de Transbordo',
+          body: `${targetStep.transferInstruction || 'Troca de veículo necessária neste ponto'}`,
+          data: { type: 'transit_transfer' },
+        });
+      }
       return { ...prev, currentStepIndex: clampedIndex };
     });
   };
@@ -862,6 +936,14 @@ export default function App() {
         const nextIdx = prev.currentStepIndex + 1;
         if (nextIdx >= steps.length) {
           return { ...prev, isPlaying: false, currentStepIndex: steps.length - 1 };
+        }
+        const nextStep = steps[nextIdx];
+        if (nextStep?.isTransfer) {
+          sendSystemNotification({
+            title: '🔄 Simulação: Ponto de Transbordo',
+            body: `${nextStep.transferInstruction || 'Troca de veículo necessária neste ponto'}`,
+            data: { type: 'transit_transfer' },
+          });
         }
         return { ...prev, currentStepIndex: nextIdx };
       });
@@ -992,6 +1074,31 @@ export default function App() {
         timeRemainingMinutes: remainingMins,
       };
     });
+
+    // Notificação ao aproximar-se da paragem onde deve fazer o transbordo (<= 140m)
+    if (navState.mode === 'transit') {
+      const activeStep = steps[stepIndex];
+      if (activeStep?.isTransfer && (activeStep.toLocation || activeStep.location)) {
+        const targetStopCoord = activeStep.toLocation || activeStep.location!;
+        const stopId = `${activeStep.transferStopName || ''}_${targetStopCoord.latitude.toFixed(4)}_${targetStopCoord.longitude.toFixed(4)}`;
+        if (!alertedTransferStopsRef.current.has(stopId)) {
+          const distToStop = calculateDistanceMeters(
+            userLocation.latitude,
+            userLocation.longitude,
+            targetStopCoord.latitude,
+            targetStopCoord.longitude
+          );
+          if (distToStop <= 140) {
+            alertedTransferStopsRef.current.add(stopId);
+            sendSystemNotification({
+              title: '🔄 Transbordo Próximo!',
+              body: `Está a chegar a ${activeStep.transferStopName || 'paragem'}. Prepare-se para sair e apanhar ${activeStep.transferToLine || 'o próximo veículo'}.`,
+              data: { type: 'transit_transfer' },
+            });
+          }
+        }
+      }
+    }
 
     // Update persistent notification ONLY when app is minimized or screen locked
     if (AppState.currentState !== 'active') {
@@ -1209,6 +1316,12 @@ export default function App() {
 
       const savedHome = await loadHomeAddress();
       setHomeAddress(savedHome);
+
+      const savedWork = await loadWorkAddress();
+      setWorkAddress(savedWork);
+
+      const savedLastMode = await loadLastTransportMode();
+      setLastTransportMode(savedLastMode);
 
       const savedAccessibilityRoute = await loadAccessibilityRoutePreference();
       setAccessibilityRouteOnly(savedAccessibilityRoute);
@@ -1985,30 +2098,58 @@ export default function App() {
           {/* Top Compact Control Strip (Casa on Left with Filtros right underneath, and Active Hazard Pill if active) */}
           <View style={styles.topControlRow} pointerEvents="box-none">
             <View style={styles.topControlColumn} pointerEvents="box-none">
-              {/* Casa Quick Pill */}
-              <M3Pressable
-                scaleOnPress={0.94}
-                style={[
-                  styles.compactFilterPill,
-                  homeAddress && styles.filterChipHomeActive,
-                ]}
-                onPress={handlePressHome}
-                onLongPress={() => setShowHomeModal(true)}
-              >
-                <Ionicons
-                  name={homeAddress ? 'home' : 'home-outline'}
-                  size={14}
-                  color={homeAddress ? M3Colors.onPrimaryContainer : M3Colors.onSurfaceVariant}
-                />
-                <Text
+              {/* Row with Casa and Trabalho side-by-side */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }} pointerEvents="box-none">
+                {/* Casa Quick Pill */}
+                <M3Pressable
+                  scaleOnPress={0.94}
                   style={[
-                    styles.compactFilterPillText,
-                    homeAddress && styles.filterChipTextHomeActive,
+                    styles.compactFilterPill,
+                    homeAddress && styles.filterChipHomeActive,
                   ]}
+                  onPress={handlePressHome}
+                  onLongPress={() => setShowHomeModal(true)}
                 >
-                  {homeAddress ? 'Casa' : '+ Casa'}
-                </Text>
-              </M3Pressable>
+                  <Ionicons
+                    name={homeAddress ? 'home' : 'home-outline'}
+                    size={14}
+                    color={homeAddress ? M3Colors.onPrimaryContainer : M3Colors.onSurfaceVariant}
+                  />
+                  <Text
+                    style={[
+                      styles.compactFilterPillText,
+                      homeAddress && styles.filterChipTextHomeActive,
+                    ]}
+                  >
+                    {homeAddress ? 'Casa' : '+ Casa'}
+                  </Text>
+                </M3Pressable>
+
+                {/* Trabalho Quick Pill */}
+                <M3Pressable
+                  scaleOnPress={0.94}
+                  style={[
+                    styles.compactFilterPill,
+                    workAddress && styles.filterChipWorkActive,
+                  ]}
+                  onPress={handlePressWork}
+                  onLongPress={() => setShowWorkModal(true)}
+                >
+                  <Ionicons
+                    name={workAddress ? 'briefcase' : 'briefcase-outline'}
+                    size={14}
+                    color={workAddress ? '#F59E0B' : M3Colors.onSurfaceVariant}
+                  />
+                  <Text
+                    style={[
+                      styles.compactFilterPillText,
+                      workAddress && styles.filterChipTextWorkActive,
+                    ]}
+                  >
+                    {workAddress ? 'Trabalho' : '+ Trabalho'}
+                  </Text>
+                </M3Pressable>
+              </View>
 
               {/* Filtros Button (Colocado debaixo do botão Casa) */}
               <M3Pressable
@@ -2230,6 +2371,7 @@ export default function App() {
         originCoord={previewOriginCoord}
         safeRoute={previewSafeRoute}
         directRoute={previewDirectRoute}
+        alternativeRoutes={previewAlternativeRoutes}
         currentMode={transportMode}
         userLocation={userLocation}
         homeAddress={homeAddress ? { latitude: homeAddress.latitude, longitude: homeAddress.longitude, label: 'Casa' } : null}
@@ -2308,11 +2450,46 @@ export default function App() {
         userLocation={userLocation}
         onSaveHome={handleSaveHomeAddress}
         onNavigateHome={(home) => {
-          handleRequestNavigation('Casa', {
-            latitude: home.latitude,
-            longitude: home.longitude,
+          setQuickModeDestination({
+            title: 'Casa',
+            coord: {
+              latitude: home.latitude,
+              longitude: home.longitude,
+            },
+            address: home.address,
           });
+          setShowQuickModeModal(true);
         }}
+      />
+
+      {/* Work Safe Route Modal */}
+      <WorkModal
+        visible={showWorkModal}
+        onClose={() => setShowWorkModal(false)}
+        currentWork={workAddress}
+        userLocation={userLocation}
+        onSaveWork={handleSaveWorkAddress}
+        onNavigateWork={(work) => {
+          setQuickModeDestination({
+            title: 'Trabalho',
+            coord: {
+              latitude: work.latitude,
+              longitude: work.longitude,
+            },
+            address: work.address,
+          });
+          setShowQuickModeModal(true);
+        }}
+      />
+
+      {/* Quick Transport Mode Picker Modal (Casa & Trabalho) */}
+      <QuickTransportModeModal
+        visible={showQuickModeModal}
+        destinationTitle={quickModeDestination?.title || 'Destino'}
+        destinationAddress={quickModeDestination?.address || ''}
+        initialMode={lastTransportMode}
+        onClose={() => setShowQuickModeModal(false)}
+        onSelectAndStart={handleConfirmQuickMode}
       />
 
       {/* Proximity & Background Notification Settings Modal */}
@@ -2743,6 +2920,14 @@ const styles = StyleSheet.create({
   },
   filterChipTextHomeActive: {
     color: M3Colors.onPrimaryContainer,
+    fontWeight: '700',
+  },
+  filterChipWorkActive: {
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    borderColor: '#F59E0B',
+  },
+  filterChipTextWorkActive: {
+    color: '#F59E0B',
     fontWeight: '700',
   },
   tvdeActiveBanner: {

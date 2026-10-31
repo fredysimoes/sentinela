@@ -98,9 +98,14 @@ export const MetroStationDetailSheet: React.FC<MetroStationDetailSheetProps> = (
 
 const styles = StyleSheet.create({
   sheetContent: {
+    backgroundColor: '#0F172A',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 28,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   handleBar: {
     width: 36,

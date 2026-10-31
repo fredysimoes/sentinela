@@ -129,6 +129,16 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
           </TouchableOpacity>
         </View>
 
+        {/* Transfer Warning Banner in Simulation */}
+        {currentStep?.isTransfer && (
+          <View style={styles.simTransferBanner}>
+            <Ionicons name="swap-horizontal" size={15} color="#0F172A" />
+            <Text style={styles.simTransferBannerText} numberOfLines={1}>
+              {currentStep.transferInstruction || 'PONTO DE TRANSBORDO: Troca de veículo recomendada'}
+            </Text>
+          </View>
+        )}
+
         {/* Step Instruction Row */}
         <Animated.View
           style={[
@@ -368,6 +378,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom: 6,
+  },
+  simTransferBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    gap: 8,
+    marginHorizontal: 10,
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+  simTransferBannerText: {
+    color: '#0F172A',
+    fontSize: 11,
+    fontWeight: '800',
+    flex: 1,
+    letterSpacing: 0.3,
   },
   simBadge: {
     flexDirection: 'row',

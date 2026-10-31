@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Incident, EmergencyContact, SOSAlert, HomeAddress, NotificationSettings } from '../types';
-import { NavigationState } from '../types/navigation';
+import { Incident, EmergencyContact, SOSAlert, HomeAddress, WorkAddress, NotificationSettings } from '../types';
+import { NavigationState, TransportMode } from '../types/navigation';
 import { filterExpiredIncidents } from '../utils/geo';
 
 const STORAGE_KEYS = {
@@ -9,6 +9,8 @@ const STORAGE_KEYS = {
   SOS_ALERTS: '@sentinela_sos_alerts_v1',
   USER_SETTINGS: '@sentinela_user_settings_v1',
   HOME_ADDRESS: '@sentinela_home_address_v1',
+  WORK_ADDRESS: '@sentinela_work_address_v1',
+  LAST_TRANSPORT_MODE: '@sentinela_last_transport_mode_v1',
   NOTIFICATION_SETTINGS: '@sentinela_notification_settings_v1',
   ACTIVE_NAVIGATION: '@sentinela_active_navigation_v1',
   ACCESSIBILITY_ROUTE_PREFERENCE: '@sentinela_accessibility_route_v1',
@@ -136,6 +138,51 @@ export async function saveHomeAddress(home: HomeAddress | null): Promise<void> {
     }
   } catch (error) {
     console.error('Erro ao guardar morada de casa:', error);
+  }
+}
+
+export async function loadWorkAddress(): Promise<WorkAddress | null> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.WORK_ADDRESS);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+    return null;
+  } catch (error) {
+    console.error('Erro ao ler morada de trabalho:', error);
+    return null;
+  }
+}
+
+export async function saveWorkAddress(work: WorkAddress | null): Promise<void> {
+  try {
+    if (work) {
+      await AsyncStorage.setItem(STORAGE_KEYS.WORK_ADDRESS, JSON.stringify(work));
+    } else {
+      await AsyncStorage.removeItem(STORAGE_KEYS.WORK_ADDRESS);
+    }
+  } catch (error) {
+    console.error('Erro ao guardar morada de trabalho:', error);
+  }
+}
+
+export async function loadLastTransportMode(): Promise<TransportMode> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.LAST_TRANSPORT_MODE);
+    if (raw === 'walking' || raw === 'driving' || raw === 'transit') {
+      return raw;
+    }
+    return 'walking';
+  } catch (error) {
+    return 'walking';
+  }
+}
+
+export async function saveLastTransportMode(mode: TransportMode): Promise<void> {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.LAST_TRANSPORT_MODE, mode);
+  } catch (error) {
+    console.error('Erro ao guardar último modo de transporte:', error);
   }
 }
 

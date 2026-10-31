@@ -3,7 +3,7 @@ import { PedestrianRoute, RouteCoordinate, RouteStep, TransportMode } from '../t
 import { calculateDistanceMeters } from '../utils/geo';
 import { isAccessibilityCategory } from '../constants/categories';
 import { fetchPortoTransitRoute } from './stcpRealtimeService';
-import { fetchUnifiedTransitRoute } from './transitRoutingService';
+import { fetchUnifiedTransitRoute, fetchUnifiedTransitRoutes } from './transitRoutingService';
 
 export function formatDuration(minutes: number): string {
   if (minutes < 1) return '1 min';
@@ -661,6 +661,7 @@ export async function calculateSafeNavigationRoutes(params: {
 }): Promise<{
   safeRoute: PedestrianRoute;
   directRoute?: PedestrianRoute;
+  alternativeRoutes?: PedestrianRoute[];
 }> {
   const {
     origin,
@@ -674,15 +675,32 @@ export async function calculateSafeNavigationRoutes(params: {
   const effectiveAccessibilityAvoidance = mode !== 'driving' && Boolean(avoidAccessibilityBarriers);
 
   // 0. Modo de Transportes Públicos (Porto OTP / Google Routes / CP / Carris / Metro)
-  // Regra estrita: desvio seguro nos troços a pé até à paragem; troços de autocarro ignoram ocorrências
+  // Regra estrita: desvio seguro nos troços a pé até à paragem; troços de transporte ignoram ocorrências viárias
+  // Oferece múltiplas opções de trajeto (estilo Google Maps)
   if (mode === 'transit') {
-    const rawTransitRoute = await fetchUnifiedTransitRoute(origin, destination);
-    if (rawTransitRoute) {
-      return await applySafeWalkingDetourToTransitRoute(
-        rawTransitRoute,
+    const rawTransitRoutes = await fetchUnifiedTransitRoutes(origin, destination);
+    if (rawTransitRoutes && rawTransitRoutes.length > 0) {
+      const primaryResult = await applySafeWalkingDetourToTransitRoute(
+        rawTransitRoutes[0],
         incidents,
         effectiveAccessibilityAvoidance
       );
+
+      const altRoutes: PedestrianRoute[] = [];
+      for (let i = 1; i < rawTransitRoutes.length; i++) {
+        const altResult = await applySafeWalkingDetourToTransitRoute(
+          rawTransitRoutes[i],
+          incidents,
+          effectiveAccessibilityAvoidance
+        );
+        altRoutes.push(altResult.safeRoute);
+      }
+
+      return {
+        safeRoute: primaryResult.safeRoute,
+        directRoute: altRoutes[0] || primaryResult.directRoute,
+        alternativeRoutes: altRoutes,
+      };
     }
   }
 

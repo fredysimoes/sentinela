@@ -32,6 +32,7 @@ interface RoutePreviewModalProps {
   originCoord?: RouteCoordinate | null;
   safeRoute: PedestrianRoute | null;
   directRoute?: PedestrianRoute;
+  alternativeRoutes?: PedestrianRoute[];
   currentMode?: TransportMode;
   userLocation?: { latitude: number; longitude: number } | null;
   homeAddress?: { latitude: number; longitude: number; label?: string } | null;
@@ -52,6 +53,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
   originCoord,
   safeRoute,
   directRoute,
+  alternativeRoutes,
   currentMode = 'walking',
   userLocation,
   homeAddress,
@@ -130,8 +132,16 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
 
   if (!safeRoute) return null;
 
+  const allAvailableRoutes: PedestrianRoute[] = [
+    safeRoute,
+    ...(directRoute && directRoute.id !== safeRoute.id ? [directRoute] : []),
+    ...(alternativeRoutes || []).filter(
+      (r) => r.id !== safeRoute.id && (!directRoute || r.id !== directRoute.id)
+    ),
+  ];
+
   const selectedRoute =
-    directRoute && selectedRouteId === directRoute.id ? directRoute : safeRoute;
+    allAvailableRoutes.find((r) => r.id === selectedRouteId) || safeRoute;
 
   const handleSelectRoute = (route: PedestrianRoute) => {
     Haptics.selectionAsync();
@@ -962,6 +972,84 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   </TouchableOpacity>
                 )}
 
+                {/* ALTERNATIVE ROUTES (e.g. 2nd/3rd Transit Options) */}
+                {alternativeRoutes &&
+                  alternativeRoutes
+                    .filter((r) => r.id !== safeRoute.id && (!directRoute || r.id !== directRoute.id))
+                    .map((altRoute, altIdx) => {
+                      const isAltSelected = selectedRouteId === altRoute.id;
+                      return (
+                        <TouchableOpacity
+                          key={`alt-route-${altRoute.id || altIdx}`}
+                          style={[
+                            styles.routeCard,
+                            isAltSelected && styles.routeCardSelectedTransitAlt,
+                          ]}
+                          onPress={() => handleSelectRoute(altRoute)}
+                          activeOpacity={0.8}
+                        >
+                          <View style={styles.cardHeader}>
+                            <View style={[styles.safeBadge, styles.transitAltBadge]}>
+                              <Ionicons name="bus" size={14} color="#06B6D4" />
+                              <Text style={[styles.safeBadgeText, styles.transitAltBadgeText]}>
+                                {altRoute.transitLegsCount && altRoute.transitLegsCount <= 1
+                                  ? 'DIRETA · SEM TRANSBORDOS'
+                                  : `OPÇÃO ALTERNATIVA ${altIdx + 2}`}
+                              </Text>
+                            </View>
+
+                            {isAltSelected && (
+                              <Ionicons name="radio-button-on" size={20} color="#06B6D4" />
+                            )}
+                          </View>
+
+                          <View style={styles.metricsRow}>
+                            <Text style={[styles.timeText, { color: '#06B6D4' }]}>
+                              {altRoute.formattedDuration || `${altRoute.durationMinutes} min`}
+                            </Text>
+                            <Text style={styles.distText}>
+                              ({altRoute.formattedDistance || formatDistance(altRoute.distanceMeters)})
+                            </Text>
+                            {altRoute.estimatedArrival && (
+                              <View style={styles.arrivalBadge}>
+                                <Text style={styles.arrivalBadgeText}>
+                                  Chegada às {altRoute.estimatedArrival}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+
+                          {altRoute.transitLines && altRoute.transitLines.length > 0 && (
+                            <View style={styles.transitLinesPillsRow}>
+                              {altRoute.transitLines.map((tLine, idx) => (
+                                <React.Fragment key={`alt-transit-pill-${altIdx}-${idx}`}>
+                                  {idx > 0 && (
+                                    <Ionicons
+                                      name="arrow-forward"
+                                      size={12}
+                                      color="#64748B"
+                                      style={{ marginHorizontal: 2 }}
+                                    />
+                                  )}
+                                  <View style={styles.transitLinePill}>
+                                    <MaterialCommunityIcons
+                                      name="bus-side"
+                                      size={12}
+                                      color="#FFFFFF"
+                                      style={{ marginRight: 4 }}
+                                    />
+                                    <Text style={styles.transitLinePillText}>{tLine}</Text>
+                                  </View>
+                                </React.Fragment>
+                              ))}
+                            </View>
+                          )}
+
+                          <Text style={styles.summaryText}>{altRoute.summary}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+
                 {/* Collapsible Step-by-Step Route Details */}
                 {selectedRoute.steps && selectedRoute.steps.length > 0 && (
                   <View style={styles.stepsAccordionContainer}>
@@ -1057,6 +1145,16 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                                 ) : null}
 
                                 <Text style={styles.previewStepText}>{st.instruction}</Text>
+
+                                {/* Crachá de Transbordo de Veículo */}
+                                {st.isTransfer ? (
+                                  <View style={styles.transferBadgeStep}>
+                                    <Ionicons name="swap-horizontal" size={13} color="#F59E0B" />
+                                    <Text style={styles.transferBadgeStepText}>
+                                      {st.transferInstruction || (st.transferStopName ? `Transbordo em ${st.transferStopName}` : 'Transbordo de Veículo')}
+                                    </Text>
+                                  </View>
+                                ) : null}
 
                                 {/* Crachá de Tempo Real e Espera na Paragem */}
                                 {isTransitStep && tInfo && (tInfo.realtimeArrivalMinutes !== undefined || tInfo.waitingMinutes !== undefined) ? (
@@ -1840,6 +1938,35 @@ const styles = StyleSheet.create({
   },
   transitBadgeText: {
     color: '#38BDF8',
+  },
+  routeCardSelectedTransitAlt: {
+    borderColor: '#06B6D4',
+    backgroundColor: 'rgba(6, 182, 212, 0.08)',
+  },
+  transitAltBadge: {
+    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    borderColor: 'rgba(6, 182, 212, 0.3)',
+  },
+  transitAltBadgeText: {
+    color: '#06B6D4',
+  },
+  transferBadgeStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 5,
+    alignSelf: 'flex-start',
+  },
+  transferBadgeStepText: {
+    color: '#F59E0B',
+    fontSize: 11,
+    fontWeight: '700',
   },
   transitLinesPillsRow: {
     flexDirection: 'row',

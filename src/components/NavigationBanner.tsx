@@ -127,6 +127,16 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
         </Text>
       </View>
 
+      {/* Transfer Alert Banner if step involves vehicle/line exchange */}
+      {currentStep?.isTransfer && (
+        <View style={styles.transferAlertBanner}>
+          <Ionicons name="swap-horizontal" size={15} color="#0F172A" />
+          <Text style={styles.transferAlertBannerText} numberOfLines={1}>
+            {currentStep.transferInstruction || 'TRANSBORDO: Troca de veículo recomendada'}
+          </Text>
+        </View>
+      )}
+
       {/* Main instruction row with animated transition */}
       <Animated.View
         style={[
@@ -251,6 +261,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  transferAlertBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    gap: 8,
+  },
+  transferAlertBannerText: {
+    color: '#0F172A',
+    fontSize: 12,
+    fontWeight: '800',
+    flex: 1,
+    letterSpacing: 0.3,
   },
   mainRow: {
     flexDirection: 'row',

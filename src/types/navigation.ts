@@ -62,6 +62,10 @@ export interface RouteStep {
   toLocation?: RouteCoordinate;
   coordinates?: RouteCoordinate[];
   transitInfo?: TransitLegInfo;
+  isTransfer?: boolean;
+  transferInstruction?: string;
+  transferStopName?: string;
+  transferToLine?: string;
 }
 
 export interface PedestrianRoute {

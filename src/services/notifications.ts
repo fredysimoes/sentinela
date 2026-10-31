@@ -4,26 +4,15 @@ import Haptics, { NotificationFeedbackType } from '../utils/haptics';
 import { getManeuverArrow, formatArrivalTime, formatNavigationDistance } from '../utils/navigationHelper';
 
 // Configure how notifications appear when the app is in the foreground
+// Strictly suppress all native push banners/sounds when the user is actively using the app.
+// Alerts must be shown in-app via banners/UI, and system push only when minimized or locked.
 Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    // If app is currently open/foregrounded and this is a navigation notification, do NOT show it!
-    const isNavigation = notification.request.content.data?.type === 'navigation_active';
-    if (isNavigation) {
-      return {
-        shouldPlaySound: false,
-        shouldSetBadge: false,
-        shouldShowBanner: false,
-        shouldShowList: false,
-      };
-    }
-
-    return {
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    };
-  },
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: false,
+    shouldShowList: false,
+  }),
 });
 
 type NotificationListener = (notification: {
@@ -109,17 +98,19 @@ export async function sendSystemNotification(params: {
   }
 
   try {
-    // 1. Dispatch native OS system notification
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: params.title,
-        body: params.body,
-        data: params.data || {},
-        sound: 'default',
-        color: '#EF4444',
-      },
-      trigger: null, // Send immediately
-    });
+    // 1. Dispatch native OS system notification ONLY when app is minimized or screen locked
+    if (AppState.currentState !== 'active') {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: params.title,
+          body: params.body,
+          data: params.data || {},
+          sound: 'default',
+          color: '#EF4444',
+        },
+        trigger: null, // Send immediately
+      });
+    }
 
     // 2. Trigger hardware haptic feedback
     Haptics.notificationAsync(NotificationFeedbackType.Warning);

@@ -96,6 +96,8 @@ export interface HomeAddress {
   longitude: number;
 }
 
+export type WorkAddress = HomeAddress;
+
 export interface NotificationSettings {
   enabled: boolean;
   radiusMeters: number;
