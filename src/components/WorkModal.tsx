@@ -285,9 +285,9 @@ export const WorkModal: React.FC<WorkModalProps> = ({
               activeOpacity={0.85}
             >
               {isLocating ? (
-                <ActivityIndicator size="small" color="#0F172A" />
+                <ActivityIndicator size="small" color="#383139" />
               ) : (
-                <Ionicons name="locate" size={20} color="#0F172A" />
+                <Ionicons name="locate" size={20} color="#383139" />
               )}
               <View style={{ flex: 1 }}>
                 <Text style={styles.currentLocBtnTitle}>
@@ -307,16 +307,16 @@ export const WorkModal: React.FC<WorkModalProps> = ({
 
             {/* Option B: Search Input */}
             <View style={styles.searchBox}>
-              <Ionicons name="search" size={18} color="#F59E0B" />
+              <Ionicons name="search" size={18} color="#383139" />
               <TextInput
                 style={styles.input}
                 placeholder="Rua, avenida ou nome da empresa/local..."
-                placeholderTextColor="#64748B"
+                placeholderTextColor="#7D7582"
                 value={query}
                 onChangeText={setQuery}
                 autoCorrect={false}
               />
-              {isLoading && <ActivityIndicator size="small" color="#F59E0B" />}
+              {isLoading && <ActivityIndicator size="small" color="#383139" />}
             </View>
 
             {/* Suggestions List */}
@@ -333,7 +333,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({
                       onPress={() => handleSelectSuggestion(item)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="location-sharp" size={18} color="#F59E0B" />
+                      <Ionicons name="location-sharp" size={18} color="#383139" />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.suggestionTitle} numberOfLines={1}>
                           {item.title}
@@ -342,7 +342,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({
                           {item.subtitle}
                         </Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={16} color="#64748B" />
+                      <Ionicons name="chevron-forward" size={16} color="#7D7582" />
                     </TouchableOpacity>
                   )}
                 />

@@ -298,12 +298,12 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           activeOpacity={0.85}
         >
           {accessibleRouteOnly ? (
-            <MaterialCommunityIcons name="wheelchair" size={19} color="#383139" />
+            <MaterialCommunityIcons name="wheelchair" size={18} color="#383139" />
           ) : (
             <Ionicons name="walk" size={18} color="#383139" />
           )}
-          <Text style={styles.navBtnTextDark}>
-            {accessibleRouteOnly ? 'A Pé (Sem Barreiras)' : 'A Pé em Segurança'}
+          <Text style={styles.navBtnTextDark} numberOfLines={1}>
+            A Pé
           </Text>
         </TouchableOpacity>
 
@@ -314,7 +314,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           activeOpacity={0.85}
         >
           <Ionicons name="car-sport" size={17} color="#383139" />
-          <Text style={styles.navBtnTextDark}>De Carro</Text>
+          <Text style={styles.navBtnTextDark} numberOfLines={1}>De Carro</Text>
         </TouchableOpacity>
 
         {/* Navigate Transit (STCP / Metro do Porto) */}
@@ -331,7 +331,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           activeOpacity={0.85}
         >
           <MaterialCommunityIcons name="bus-side" size={17} color="#383139" />
-          <Text style={styles.navBtnTextDark}>Transportes</Text>
+          <Text style={styles.navBtnTextDark} numberOfLines={1}>Transportes</Text>
         </TouchableOpacity>
       </View>
 
@@ -574,9 +574,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 10,
     borderRadius: 999,
-    gap: 8,
+    gap: 5,
     height: 48,
+    overflow: 'hidden',
   },
   navBtnWhite: {
     backgroundColor: '#f6a3ca',

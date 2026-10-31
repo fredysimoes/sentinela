@@ -283,11 +283,11 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
       <View style={styles.header}>
         <View style={styles.modeIconCircle}>
           {isDriving ? (
-            <Ionicons name="car-sport" size={22} color="#38BDF8" />
+            <Ionicons name="car-sport" size={22} color="#383139" />
           ) : isTransit ? (
-            <MaterialCommunityIcons name="bus-side" size={22} color="#38BDF8" />
+            <MaterialCommunityIcons name="bus-side" size={22} color="#383139" />
           ) : (
-            <Ionicons name="walk" size={22} color="#38BDF8" />
+            <Ionicons name="walk" size={22} color="#383139" />
           )}
         </View>
 
@@ -315,12 +315,12 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
             <Ionicons
               name={isExpanded ? 'contract' : 'expand'}
               size={18}
-              color="#94A3B8"
+              color="#383139"
             />
           </M3Pressable>
 
           <M3Pressable onPress={onClose} style={styles.closeBtn}>
-            <Ionicons name="close" size={20} color="#94A3B8" />
+            <Ionicons name="close" size={20} color="#383139" />
           </M3Pressable>
         </View>
       </View>
@@ -342,7 +342,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
               <Ionicons
                 name="search"
                 size={16}
-                color={activeInput === 'origin' ? '#38BDF8' : '#64748B'}
+                color={activeInput === 'origin' ? '#383139' : '#7D7582'}
                 style={{ marginRight: 6 }}
               />
               <TextInput
@@ -362,7 +362,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   }
                 }}
                 placeholder="Pesquisar ponto de partida A..."
-                placeholderTextColor="#64748B"
+                placeholderTextColor="#7D7582"
                 returnKeyType="search"
                 selectTextOnFocus
                 autoCorrect={false}
@@ -377,7 +377,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close-circle" size={17} color="#94A3B8" />
+                  <Ionicons name="close-circle" size={17} color="#7D7582" />
                 </TouchableOpacity>
               )}
             </View>
@@ -397,7 +397,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
               <Ionicons
                 name="search"
                 size={16}
-                color={activeInput === 'destination' ? '#38BDF8' : '#64748B'}
+                color={activeInput === 'destination' ? '#383139' : '#7D7582'}
                 style={{ marginRight: 6 }}
               />
               <TextInput
@@ -417,7 +417,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   }
                 }}
                 placeholder="Pesquisar destino de chegada B..."
-                placeholderTextColor="#64748B"
+                placeholderTextColor="#7D7582"
                 returnKeyType="search"
                 selectTextOnFocus
                 autoCorrect={false}
@@ -432,7 +432,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close-circle" size={17} color="#94A3B8" />
+                  <Ionicons name="close-circle" size={17} color="#7D7582" />
                 </TouchableOpacity>
               )}
             </View>
@@ -457,7 +457,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                 ],
               }}
             >
-              <Ionicons name="swap-vertical" size={20} color="#38BDF8" />
+              <Ionicons name="swap-vertical" size={20} color="#383139" />
             </Animated.View>
           </M3Pressable>
         )}
@@ -471,12 +471,12 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
           activeOpacity={0.75}
         >
           <View style={styles.resetToMyLocationIcon}>
-            <Ionicons name="locate" size={14} color="#38BDF8" />
+            <Ionicons name="locate" size={14} color="#383139" />
           </View>
           <Text style={styles.resetToMyLocationText} numberOfLines={1}>
             Ponto A modificado. Toque para usar "A minha localização"
           </Text>
-          <Ionicons name="refresh" size={14} color="#38BDF8" />
+          <Ionicons name="refresh" size={14} color="#383139" />
         </TouchableOpacity>
       )}
 
@@ -490,7 +490,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   style={styles.presetPill}
                   onPress={() => handleResetToMyLocation(activeInput || 'origin')}
                 >
-                  <Ionicons name="locate" size={13} color="#38BDF8" />
+                  <Ionicons name="locate" size={13} color="#383139" />
                   <Text style={styles.presetPillText}>A Minha Localização</Text>
                 </M3Pressable>
               )}
@@ -505,7 +505,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     })
                   }
                 >
-                  <Ionicons name="home" size={13} color="#10B981" />
+                  <Ionicons name="home" size={13} color="#383139" />
                   <Text style={styles.presetPillText}>Casa</Text>
                 </M3Pressable>
               )}
@@ -531,7 +531,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
           {/* Loading Indicator */}
           {isSearching && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#38BDF8" />
+              <ActivityIndicator size="small" color="#383139" />
               <Text style={styles.loadingText}>A pesquisar em Portugal...</Text>
             </View>
           )}
@@ -553,8 +553,8 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     onPress={() => handleResetToMyLocation(activeInput || 'origin')}
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.quickOptionIcon, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
-                      <Ionicons name="locate" size={18} color="#38BDF8" />
+                    <View style={[styles.quickOptionIcon, { backgroundColor: '#c5e5fb' }]}>
+                      <Ionicons name="locate" size={18} color="#383139" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.quickOptionTitle}>Usar a Minha Localização Atual</Text>
@@ -562,7 +562,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                         GPS: {userLocation.latitude.toFixed(4)}, {userLocation.longitude.toFixed(4)}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={16} color="#64748B" />
+                    <Ionicons name="chevron-forward" size={16} color="#7D7582" />
                   </TouchableOpacity>
                 )}
 
@@ -577,14 +577,14 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     }
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.quickOptionIcon, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
-                      <Ionicons name="home" size={18} color="#10B981" />
+                    <View style={[styles.quickOptionIcon, { backgroundColor: '#c0efdc' }]}>
+                      <Ionicons name="home" size={18} color="#383139" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.quickOptionTitle}>Casa</Text>
                       <Text style={styles.quickOptionSubtitle}>{homeAddress.label || 'Morada guardada'}</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={16} color="#64748B" />
+                    <Ionicons name="chevron-forward" size={16} color="#7D7582" />
                   </TouchableOpacity>
                 )}
 
@@ -602,8 +602,8 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   }}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.quickOptionIcon, { backgroundColor: 'rgba(148, 163, 184, 0.15)' }]}>
-                    <Ionicons name="arrow-back" size={18} color="#94A3B8" />
+                  <View style={[styles.quickOptionIcon, { backgroundColor: '#ded0f9' }]}>
+                    <Ionicons name="arrow-back" size={18} color="#383139" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.quickOptionTitle}>Desistir da Pesquisa</Text>
@@ -643,19 +643,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                         : 'location-outline'
                     }
                     size={16}
-                    color={
-                      item.type === 'address'
-                        ? '#06B6D4'
-                        : item.type === 'street' || item.type === 'road'
-                        ? '#38BDF8'
-                        : item.type === 'pharmacy'
-                        ? '#10B981'
-                        : item.type === 'police'
-                        ? '#3B82F6'
-                        : item.type === 'school'
-                        ? '#8B5CF6'
-                        : '#F59E0B'
-                    }
+                    color="#383139"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -666,13 +654,13 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     {item.subtitle}
                   </Text>
                 </View>
-                <Ionicons name="arrow-forward" size={14} color="#64748B" />
+                <Ionicons name="arrow-forward" size={14} color="#7D7582" />
               </TouchableOpacity>
             ))}
 
             {suggestions.length === 0 && !isSearching && (activeQuery || '').trim().length >= 2 && (
               <View style={styles.emptyResultsBox}>
-                <Ionicons name="alert-circle-outline" size={22} color="#64748B" />
+                <Ionicons name="alert-circle-outline" size={22} color="#7D7582" />
                 <Text style={styles.emptyResultsText}>
                   Nenhum resultado encontrado para "{(activeQuery || '').trim()}".
                 </Text>
@@ -697,7 +685,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     <Ionicons
                       name="walk"
                       size={15}
-                      color={activeMode === 'walking' ? '#080A0C' : '#64748B'}
+                      color="#383139"
                     />
                     <Text
                       style={[
@@ -720,7 +708,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     <MaterialCommunityIcons
                       name="bus-side"
                       size={16}
-                      color={activeMode === 'transit' ? '#0284C7' : '#64748B'}
+                      color="#383139"
                     />
                     <Text
                       style={[
@@ -743,7 +731,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     <Ionicons
                       name="car-sport"
                       size={15}
-                      color={activeMode === 'driving' ? '#080A0C' : '#64748B'}
+                      color="#383139"
                     />
                     <Text
                       style={[
@@ -779,7 +767,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                     <MaterialCommunityIcons
                       name="wheelchair"
                       size={20}
-                      color={accessibleRouteOnly ? '#0284C7' : '#64748B'}
+                      color="#383139"
                     />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -800,7 +788,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                   <Ionicons
                     name={accessibleRouteOnly ? 'checkmark-circle' : 'ellipse-outline'}
                     size={22}
-                    color={accessibleRouteOnly ? '#0284C7' : '#94A3B8'}
+                    color="#383139"
                   />
                 </TouchableOpacity>
               )}
@@ -1176,7 +1164,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                                       <View style={styles.transitStopPointRow}>
                                         <View style={[styles.stopDot, { borderColor: '#10B981' }]} />
                                         <Text style={styles.transitStopPointText}>
-                                          Embarque: <Text style={{ color: '#F8FAFC' }}>{tInfo.departureStop}</Text>
+                                          Embarque: <Text style={{ color: '#383139', fontWeight: '700' }}>{tInfo.departureStop}</Text>
                                         </Text>
                                       </View>
                                     )}
@@ -1192,7 +1180,7 @@ export const RoutePreviewModal: React.FC<RoutePreviewModalProps> = ({
                                       <View style={styles.transitStopPointRow}>
                                         <View style={[styles.stopDot, { borderColor: '#EF4444' }]} />
                                         <Text style={styles.transitStopPointText}>
-                                          Desembarque: <Text style={{ color: '#F8FAFC' }}>{tInfo.arrivalStop}</Text>
+                                          Desembarque: <Text style={{ color: '#383139', fontWeight: '700' }}>{tInfo.arrivalStop}</Text>
                                         </Text>
                                       </View>
                                     )}
@@ -1301,29 +1289,59 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   expandBtn: {
-    padding: 6,
-    borderRadius: 12,
-    backgroundColor: 'rgba(148, 163, 184, 0.12)',
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   closeBtn: {
-    padding: 6,
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   modeIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: M3Shapes.medium,
-    backgroundColor: M3Colors.primaryContainer,
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#f6a3ca',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: M3Colors.onSurface,
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#383139',
   },
   headerSub: {
     fontSize: 12,
-    color: M3Colors.onSurfaceVariant,
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 2,
   },
 
@@ -1331,15 +1349,20 @@ const styles = StyleSheet.create({
   searchBarsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E222A',
+    backgroundColor: '#fffdf7',
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 8,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#2D323F',
-    padding: 10,
-    gap: 8,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    padding: 12,
+    gap: 10,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   searchBarsColumn: {
     flex: 1,
@@ -1354,22 +1377,28 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#13161C',
+    backgroundColor: '#ffffff',
     borderWidth: 1.5,
-    borderColor: '#2A303C',
-    borderRadius: 12,
-    paddingHorizontal: 10,
+    borderColor: '#ffffff',
+    borderRadius: 999,
+    paddingHorizontal: 14,
     height: 44,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   searchBarBoxFocused: {
-    backgroundColor: '#171B24',
-    borderColor: '#38BDF8',
+    backgroundColor: '#ffffff',
+    borderColor: '#f6a3ca',
+    borderWidth: 2,
   },
   searchBarInput: {
     flex: 1,
-    color: '#F8FAFC',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     paddingVertical: 0,
     height: '100%',
   },
@@ -1379,64 +1408,88 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pointAIconBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#10B981',
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    backgroundColor: '#c0efdc',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   pointBIconBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#EF4444',
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   pointLetterText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '900',
   },
   swapBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#262B36',
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#373E4F',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   // Shortcut bar to restore user location as Point A
   resetToMyLocationBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+    backgroundColor: '#c5e5fb',
     marginHorizontal: 16,
     marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.22)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   resetToMyLocationIcon: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   resetToMyLocationText: {
     flex: 1,
-    color: '#38BDF8',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 
   // Suggestions container (Dropdown shown when active)
@@ -1453,14 +1506,21 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   closeSuggestionsBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   closeSuggestionsBtnText: {
-    color: '#38BDF8',
-    fontWeight: '700',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 12,
   },
   emptyResultsBox: {
@@ -1470,24 +1530,30 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyResultsText: {
-    color: '#94A3B8',
+    color: '#48404b',
     fontSize: 13,
+    fontWeight: '600',
     textAlign: 'center',
   },
   quickOptionsCard: {
-    backgroundColor: '#1E222A',
-    borderRadius: 14,
-    padding: 12,
+    backgroundColor: '#fffdf7',
+    borderRadius: 24,
+    padding: 14,
     marginTop: 4,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#2D323F',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     gap: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   quickOptionsHeader: {
-    color: '#94A3B8',
+    color: '#7D7582',
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
@@ -1498,23 +1564,26 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#252A34',
+    borderBottomColor: 'rgba(56, 49, 57, 0.06)',
   },
   quickOptionIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   quickOptionTitle: {
-    color: '#F8FAFC',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   quickOptionSubtitle: {
-    color: '#94A3B8',
+    color: '#48404b',
     fontSize: 11,
+    fontWeight: '500',
     marginTop: 1,
   },
   quickPresetsRow: {
@@ -1525,17 +1594,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#242933',
+    backgroundColor: '#ded0f9',
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: M3Shapes.full,
-    borderWidth: 1,
-    borderColor: '#333A48',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   presetPillText: {
-    color: '#E2E8F0',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -1544,8 +1618,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   loadingText: {
-    color: '#94A3B8',
+    color: '#48404b',
     fontSize: 12,
+    fontWeight: '600',
   },
   suggestionsList: {
     maxHeight: 200,
@@ -1555,26 +1630,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#252A34',
+    paddingHorizontal: 12,
+    backgroundColor: '#fffdf7',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    marginBottom: 6,
     gap: 10,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   suggestionIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   suggestionTitle: {
-    color: '#F8FAFC',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   suggestionSubtitle: {
-    color: '#94A3B8',
+    color: '#48404b',
     fontSize: 11,
+    fontWeight: '500',
     marginTop: 1,
   },
 
@@ -1900,86 +1987,92 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepsAccordionTitle: {
-    color: '#F1F5F9',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     flex: 1,
   },
   stepsAccordionContent: {
     paddingHorizontal: 14,
     paddingBottom: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#2D323F',
+    borderTopWidth: 1.5,
+    borderTopColor: '#ffffff',
   },
   previewStepRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#262B36',
+    borderBottomColor: 'rgba(56, 49, 57, 0.08)',
     gap: 10,
   },
   previewStepBullet: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#282E3C',
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
   },
   previewStepBulletText: {
-    color: '#38BDF8',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   previewStepText: {
-    color: '#F8FAFC',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
     lineHeight: 18,
   },
   previewStepSubText: {
-    color: '#94A3B8',
+    color: '#48404b',
     fontSize: 11,
+    fontWeight: '500',
     marginTop: 2,
   },
   // Transit-specific preview styles
   transitBadge: {
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    backgroundColor: '#c5e5fb',
+    borderColor: '#ffffff',
+    borderWidth: 1,
   },
   transitBadgeText: {
-    color: '#38BDF8',
+    color: '#383139',
   },
   routeCardSelectedTransitAlt: {
-    borderColor: '#06B6D4',
-    backgroundColor: 'rgba(6, 182, 212, 0.08)',
+    borderColor: '#ffffff',
+    borderWidth: 2,
+    backgroundColor: '#c5e5fb',
   },
   transitAltBadge: {
-    backgroundColor: 'rgba(6, 182, 212, 0.15)',
-    borderColor: 'rgba(6, 182, 212, 0.3)',
+    backgroundColor: '#fffdf7',
+    borderColor: '#ffffff',
+    borderWidth: 1,
   },
   transitAltBadgeText: {
-    color: '#06B6D4',
+    color: '#383139',
   },
   transferBadgeStep: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    backgroundColor: '#f9e7a8',
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-    paddingHorizontal: 8,
+    borderColor: '#ffffff',
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 999,
     marginTop: 5,
     alignSelf: 'flex-start',
   },
   transferBadgeStepText: {
-    color: '#F59E0B',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   transitLinesPillsRow: {
     flexDirection: 'row',
@@ -1992,27 +2085,29 @@ const styles = StyleSheet.create({
   transitLinePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0284C7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    backgroundColor: '#c5e5fb',
+    borderWidth: 1,
+    borderColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   transitLinePillText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   previewStepRowTransit: {
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    backgroundColor: '#c5e5fb',
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     marginVertical: 4,
-    borderBottomWidth: 0,
-    borderLeftWidth: 3,
-    borderLeftColor: '#38BDF8',
+    borderBottomWidth: 1.5,
   },
   previewStepBulletTransit: {
-    backgroundColor: '#0284C7',
+    backgroundColor: '#ded0f9',
   },
   transitStepHeader: {
     flexDirection: 'row',
@@ -2021,20 +2116,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   transitStepLineBadge: {
-    backgroundColor: '#0284C7',
-    paddingHorizontal: 6,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1,
+    borderColor: '#ffffff',
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 999,
   },
   transitStepLineBadgeText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 10,
     fontWeight: '800',
   },
   transitStepOperatorText: {
-    color: '#94A3B8',
+    color: '#48404b',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   transitStopsDetailsBox: {
     marginTop: 6,
@@ -2052,11 +2149,12 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     borderWidth: 2,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#ffffff',
   },
   transitStopPointText: {
-    color: '#94A3B8',
+    color: '#48404b',
     fontSize: 11,
+    fontWeight: '500',
   },
   transitStopStopsCountRow: {
     flexDirection: 'row',
@@ -2066,12 +2164,12 @@ const styles = StyleSheet.create({
   stopVerticalLine: {
     width: 2,
     height: 14,
-    backgroundColor: '#334155',
+    backgroundColor: 'rgba(56, 49, 57, 0.25)',
     marginLeft: 3,
     marginRight: 11,
   },
   transitStopStopsCountText: {
-    color: '#64748B',
+    color: '#48404b',
     fontSize: 10,
     fontStyle: 'italic',
   },
@@ -2079,34 +2177,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    backgroundColor: '#fffdf7',
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.25)',
-    paddingHorizontal: 8,
+    borderColor: '#ffffff',
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 999,
     marginTop: 5,
     alignSelf: 'flex-start',
   },
   realtimeArrivalWaitText: {
-    color: '#38BDF8',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   microDelayBadge: {
-    paddingHorizontal: 5,
+    paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: 999,
     marginLeft: 2,
   },
   microDelayOk: {
-    backgroundColor: '#059669',
+    backgroundColor: '#c0efdc',
   },
   microDelayWarn: {
-    backgroundColor: '#D97706',
+    backgroundColor: '#f9e7a8',
   },
   microDelayText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 9.5,
     fontWeight: '800',
   },
@@ -2114,18 +2212,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    backgroundColor: '#c0efdc',
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    borderColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
     marginTop: 4,
     alignSelf: 'flex-start',
   },
   walkingDetourBadgeText: {
-    color: '#10B981',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

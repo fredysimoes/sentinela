@@ -577,7 +577,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <View
         style={[
           styles.container,
@@ -593,7 +593,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               onClose();
             }}
           >
-            <Ionicons name="close" size={24} color="#CBD5E1" />
+            <Ionicons name="close" size={22} color="#383139" />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
@@ -610,7 +610,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
         {/* Remote Strobe Alert Banner */}
         {strobeAlertMessage && (
           <View style={styles.strobeAlertBanner}>
-            <Ionicons name="flash" size={18} color="#000000" />
+            <Ionicons name="flash" size={18} color="#383139" />
             <Text style={styles.strobeAlertText}>{strobeAlertMessage}</Text>
           </View>
         )}
@@ -634,7 +634,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               <View style={[styles.introCard, isKeyboardVisible && styles.introCardCompact]}>
                 {!isKeyboardVisible && (
                   <View style={styles.introIconWrap}>
-                    <Ionicons name="scan" size={28} color="#10B981" />
+                    <Ionicons name="scan" size={28} color="#383139" />
                   </View>
                 )}
                 <Text style={[styles.introTitle, isKeyboardVisible && { fontSize: 16, marginBottom: 2 }]}>
@@ -650,8 +650,8 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               {/* Option B: Join Beacon via PIN - Posicionado com prioridade para nunca ser tapado pelo teclado */}
               <View style={[styles.joinCard, isKeyboardVisible && styles.joinCardRaised]}>
                 <View style={styles.joinHeader}>
-                  <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
-                    <Ionicons name="locate" size={22} color="#38BDF8" />
+                  <View style={[styles.actionIconWrap, { backgroundColor: '#c5e5fb' }]}>
+                    <Ionicons name="locate" size={22} color="#383139" />
                   </View>
                   <View style={styles.actionCardContent}>
                     <Text style={styles.actionCardTitle}>Seguir um Amigo</Text>
@@ -665,7 +665,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                   <TextInput
                     style={styles.pinInput}
                     placeholder="PIN (ex: 8492)"
-                    placeholderTextColor="#475569"
+                    placeholderTextColor="#7D7582"
                     keyboardType="number-pad"
                     maxLength={4}
                     value={pinInput}
@@ -685,7 +685,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                     disabled={pinInput.trim().length !== 4}
                   >
                     <Text style={styles.joinBtnText}>Ligar</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                    <Ionicons name="arrow-forward" size={16} color="#383139" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -696,8 +696,8 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                 scaleOnPress={0.97}
                 onPress={handleStartBeacon}
               >
-                <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
-                  <Ionicons name="radio" size={22} color="#10B981" />
+                <View style={[styles.actionIconWrap, { backgroundColor: '#c0efdc' }]}>
+                  <Ionicons name="radio" size={22} color="#383139" />
                 </View>
                 <View style={styles.actionCardContent}>
                   <Text style={styles.actionCardTitle}>Partilhar a Minha Posição</Text>
@@ -705,7 +705,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                     Gera um PIN e link de acesso direto via SMS, WhatsApp ou Sentinela
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#64748B" />
+                <Ionicons name="chevron-forward" size={20} color="#7D7582" />
               </M3Pressable>
             </ScrollView>
           </KeyboardAvoidingView>
@@ -723,7 +723,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                   style={[styles.sharePillBtn, styles.sharePillWhatsApp]}
                   onPress={() => handleOpenShareSplit('whatsapp')}
                 >
-                  <Ionicons name="logo-whatsapp" size={15} color="#FFFFFF" />
+                  <Ionicons name="logo-whatsapp" size={15} color="#383139" />
                   <Text style={styles.sharePillText}>WhatsApp</Text>
                 </TouchableOpacity>
 
@@ -731,7 +731,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                   style={[styles.sharePillBtn, styles.sharePillSMS]}
                   onPress={() => handleOpenShareSplit('sms')}
                 >
-                  <Ionicons name="chatbubble-ellipses" size={15} color="#FFFFFF" />
+                  <Ionicons name="chatbubble-ellipses" size={15} color="#383139" />
                   <Text style={styles.sharePillText}>SMS</Text>
                 </TouchableOpacity>
 
@@ -739,7 +739,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                   style={[styles.sharePillBtn, styles.sharePillSentinel]}
                   onPress={handleOpenSentinelNotifyModal}
                 >
-                  <Ionicons name="shield-checkmark" size={15} color="#FFFFFF" />
+                  <Ionicons name="shield-checkmark" size={15} color="#383139" />
                   <Text style={styles.sharePillText}>Sentinela</Text>
                 </TouchableOpacity>
 
@@ -747,7 +747,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                   style={[styles.sharePillBtn, styles.sharePillGeneral]}
                   onPress={handleSharePinGeneral}
                 >
-                  <Ionicons name="share-social-outline" size={15} color="#38BDF8" />
+                  <Ionicons name="share-social-outline" size={15} color="#383139" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -804,7 +804,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                 <View style={styles.targetLockContainer}>
                   <View style={styles.targetLockPulseOuter} />
                   <View style={styles.targetLockPulseInner} />
-                  <Ionicons name="checkmark-circle" size={32} color="#10B981" />
+                  <Ionicons name="checkmark-circle" size={32} color="#383139" />
                 </View>
               ) : targetPeer ? (
                 <View
@@ -828,7 +828,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                   styles.radarCenterDisplay,
                   {
                     transform: [{ scale: pulseAnim }],
-                    borderColor: proximity ? proximity.color : 'rgba(56, 189, 248, 0.4)',
+                    borderColor: '#ffffff',
                   },
                 ]}
               >
@@ -842,7 +842,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                     </Text>
                   </>
                 ) : (
-                  <Ionicons name="radio-outline" size={36} color="#64748B" />
+                  <Ionicons name="radio-outline" size={36} color="#383139" />
                 )}
               </Animated.View>
             </View>
@@ -850,7 +850,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
             {/* Direction & Proximity Feedback */}
             {targetPeer && proximity ? (
               <View style={styles.feedbackCard}>
-                <Text style={[styles.feedbackBadge, { color: proximity.color }]}>
+                <Text style={[styles.feedbackBadge, { color: '#383139' }]}>
                   {proximity.label.toUpperCase()}
                 </Text>
                 <Text style={styles.directionInstruction}>{directionText}</Text>
@@ -877,7 +877,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                 <Ionicons
                   name={isHeartbeatActive ? 'stop-circle' : 'flash'}
                   size={20}
-                  color={isHeartbeatActive ? '#FFFFFF' : '#000000'}
+                  color="#383139"
                 />
                 <Text
                   style={[
@@ -894,7 +894,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               {/* View on Map Option */}
               {targetPeer && onNavigateToFriend && (
                 <TouchableOpacity style={styles.viewOnMapBtn} onPress={handleOpenOnMap}>
-                  <Ionicons name="map-outline" size={17} color="#94A3B8" />
+                  <Ionicons name="map-outline" size={17} color="#383139" />
                   <Text style={styles.viewOnMapText}>Abrir no Mapa Sentinela</Text>
                 </TouchableOpacity>
               )}
@@ -931,39 +931,39 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               </View>
 
               <TouchableOpacity
-                style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(56, 189, 248, 0.12)', borderColor: 'rgba(56, 189, 248, 0.3)' }]}
+                style={[styles.sheetOptionBtn, { backgroundColor: '#c5e5fb', borderColor: '#ffffff' }]}
                 onPress={() => handleExecuteShare('code')}
               >
-                <Ionicons name="key-outline" size={20} color="#38BDF8" />
+                <Ionicons name="key-outline" size={20} color="#383139" />
                 <View style={styles.sheetOptionTextWrap}>
                   <Text style={styles.sheetOptionTitle}>1. Enviar Código PIN</Text>
                   <Text style={styles.sheetOptionDesc}>Informa o código PIN ({sessionHandle?.pin})</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+                <Ionicons name="chevron-forward" size={18} color="#383139" />
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)' }]}
+                style={[styles.sheetOptionBtn, { backgroundColor: '#c0efdc', borderColor: '#ffffff' }]}
                 onPress={() => handleExecuteShare('link')}
               >
-                <Ionicons name="link-outline" size={20} color="#10B981" />
+                <Ionicons name="link-outline" size={20} color="#383139" />
                 <View style={styles.sheetOptionTextWrap}>
                   <Text style={styles.sheetOptionTitle}>2. Enviar Link Direto</Text>
                   <Text style={styles.sheetOptionDesc}>Apenas o link limpo direto (toque único para abrir)</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+                <Ionicons name="chevron-forward" size={18} color="#383139" />
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.08)' }]}
+                style={[styles.sheetOptionBtn, { backgroundColor: '#ded0f9', borderColor: '#ffffff' }]}
                 onPress={() => handleExecuteShare('full')}
               >
-                <Ionicons name="document-text-outline" size={20} color="#94A3B8" />
+                <Ionicons name="document-text-outline" size={20} color="#383139" />
                 <View style={styles.sheetOptionTextWrap}>
                   <Text style={styles.sheetOptionTitle}>Enviar Mensagem Completa</Text>
                   <Text style={styles.sheetOptionDesc}>Texto informativo com instruções e código</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#64748B" />
+                <Ionicons name="chevron-forward" size={18} color="#383139" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -992,7 +992,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
               <View style={styles.sheetHeader}>
                 <View style={styles.sheetHeaderBar} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <Ionicons name="shield-checkmark" size={20} color="#10B981" />
+                  <Ionicons name="shield-checkmark" size={20} color="#383139" />
                   <Text style={styles.sheetTitle}>Notificar Sentinela</Text>
                 </View>
                 <Text style={styles.sheetSubtitle}>
@@ -1002,15 +1002,15 @@ export const RadarModal: React.FC<RadarModalProps> = ({
 
               {activeSentinels.length > 1 && (
                 <TouchableOpacity
-                  style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(16, 185, 129, 0.16)', borderColor: 'rgba(16, 185, 129, 0.4)', marginBottom: 12 }]}
+                  style={[styles.sheetOptionBtn, { backgroundColor: '#c0efdc', borderColor: '#ffffff', marginBottom: 12 }]}
                   onPress={() => handleSendNotificationToSentinel(undefined)}
                 >
-                  <Ionicons name="notifications" size={20} color="#10B981" />
+                  <Ionicons name="notifications" size={20} color="#383139" />
                   <View style={styles.sheetOptionTextWrap}>
-                    <Text style={[styles.sheetOptionTitle, { color: '#10B981' }]}>Notificar Todos os Sentinelas</Text>
+                    <Text style={styles.sheetOptionTitle}>Notificar Todos os Sentinelas</Text>
                     <Text style={styles.sheetOptionDesc}>Dispara alerta para todos os contactos do seu círculo</Text>
                   </View>
-                  <Ionicons name="arrow-forward" size={18} color="#10B981" />
+                  <Ionicons name="arrow-forward" size={18} color="#383139" />
                 </TouchableOpacity>
               )}
 
@@ -1018,7 +1018,7 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                 {activeSentinels.map((sentinel) => (
                   <TouchableOpacity
                     key={`sentinel-${sentinel.id}`}
-                    style={[styles.sheetOptionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.08)' }]}
+                    style={[styles.sheetOptionBtn, { backgroundColor: '#ffffff', borderColor: '#ffffff' }]}
                     onPress={() => handleSendNotificationToSentinel(sentinel)}
                   >
                     <View style={styles.sentinelAvatarWrap}>
@@ -1052,13 +1052,13 @@ export const RadarModal: React.FC<RadarModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0C',
+    backgroundColor: '#f1f2fa',
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 54 : 32,
     paddingBottom: Platform.OS === 'ios' ? 34 : 20,
   },
   containerFlashWhite: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#f9e7a8',
   },
   header: {
     flexDirection: 'row',
@@ -1067,12 +1067,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   closeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerCenter: {
     alignItems: 'center',
@@ -1080,44 +1087,58 @@ const styles = StyleSheet.create({
   radarLiveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
+    backgroundColor: '#c0efdc',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
     marginBottom: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
   radarLiveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#10B981',
+    backgroundColor: '#383139',
     marginRight: 6,
   },
   radarLiveText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#10B981',
-    letterSpacing: 1.2,
+    color: '#383139',
+    letterSpacing: 1.1,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#383139',
   },
   strobeAlertBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#f9e7a8',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 999,
     marginBottom: 16,
     gap: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   strobeAlertText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     flex: 1,
   },
   startSection: {
@@ -1129,13 +1150,18 @@ const styles = StyleSheet.create({
     paddingBottom: 36,
   },
   introCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderRadius: 20,
+    backgroundColor: '#fffdf7',
+    borderRadius: 32,
     padding: 22,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    marginBottom: 18,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   introCardCompact: {
     padding: 12,
@@ -1144,39 +1170,54 @@ const styles = StyleSheet.create({
   introIconWrap: {
     width: 64,
     height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderRadius: 999,
+    backgroundColor: '#c0efdc',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   introTitle: {
     fontSize: 19,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#383139',
     marginBottom: 8,
     textAlign: 'center',
   },
   introDesc: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: '#48404b',
+    fontWeight: '500',
     textAlign: 'center',
     lineHeight: 19,
   },
   actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.06)',
-    borderRadius: 18,
+    backgroundColor: '#fffdf7',
+    borderRadius: 28,
     padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     marginBottom: 16,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   actionIconWrap: {
     width: 46,
     height: 46,
-    borderRadius: 14,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -1186,24 +1227,30 @@ const styles = StyleSheet.create({
   },
   actionCardTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#383139',
     marginBottom: 2,
   },
   actionCardSubtitle: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#48404b',
+    fontWeight: '500',
   },
   joinCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderRadius: 18,
+    backgroundColor: '#fffdf7',
+    borderRadius: 28,
     padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   joinCardRaised: {
-    borderColor: 'rgba(56, 189, 248, 0.45)',
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    borderColor: '#f6a3ca',
+    backgroundColor: '#ffffff',
   },
   joinHeader: {
     flexDirection: 'row',
@@ -1217,31 +1264,43 @@ const styles = StyleSheet.create({
   pinInput: {
     flex: 1,
     height: 48,
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    color: '#FFFFFF',
+    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    color: '#383139',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     textAlign: 'center',
     letterSpacing: 3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   joinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#334155',
+    backgroundColor: '#ded0f9',
     paddingHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 6,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   joinBtnActive: {
-    backgroundColor: '#38BDF8',
+    backgroundColor: '#f6a3ca',
   },
   joinBtnText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#383139',
   },
   activeRadarSection: {
     flex: 1,
@@ -1250,12 +1309,19 @@ const styles = StyleSheet.create({
   pinDisplayCard: {
     flexDirection: 'column',
     width: '100%',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    backgroundColor: '#fffdf7',
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     marginBottom: 10,
     gap: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   pinPill: {
     flexDirection: 'row',
@@ -1264,14 +1330,14 @@ const styles = StyleSheet.create({
   },
   pinPillLabel: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#64748B',
+    fontWeight: '800',
+    color: '#7D7582',
     letterSpacing: 0.8,
   },
   pinPillCode: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
-    color: '#38BDF8',
+    color: '#383139',
     letterSpacing: 2,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
@@ -1279,8 +1345,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    borderTopWidth: 1.5,
+    borderTopColor: '#ffffff',
     paddingTop: 8,
   },
   sharePillBtn: {
@@ -1288,59 +1354,73 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sharePillWhatsApp: {
-    backgroundColor: '#25D366',
+    backgroundColor: '#c0efdc',
     flex: 1,
     justifyContent: 'center',
   },
   sharePillSMS: {
-    backgroundColor: '#0284C7',
+    backgroundColor: '#c5e5fb',
     flex: 1,
     justifyContent: 'center',
   },
   sharePillSentinel: {
-    backgroundColor: '#0F766E',
+    backgroundColor: '#ded0f9',
     flex: 1,
     justifyContent: 'center',
   },
   sharePillGeneral: {
-    backgroundColor: 'rgba(56, 189, 248, 0.14)',
-    paddingHorizontal: 10,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
     justifyContent: 'center',
   },
   sharePillText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#383139',
   },
   peerStatusPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 10,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#f9e7a8',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     marginBottom: 12,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   peerStatusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   peerStatusDotOnline: {
     backgroundColor: '#10B981',
   },
   peerStatusDotSearching: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#383139',
   },
   peerStatusText: {
     fontSize: 12,
-    color: '#CBD5E1',
-    fontWeight: '600',
+    color: '#383139',
+    fontWeight: '700',
   },
   radarContainer: {
     width: RADAR_SIZE,
@@ -1355,40 +1435,49 @@ const styles = StyleSheet.create({
     width: RADAR_SIZE,
     height: RADAR_SIZE,
     borderRadius: RADAR_SIZE / 2,
-    borderColor: '#10B981',
-    borderWidth: 2,
+    borderColor: '#f6a3ca',
+    borderWidth: 2.5,
   },
   sonarRing: {
     position: 'absolute',
     borderRadius: 9999,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    backgroundColor: 'rgba(255, 253, 247, 0.35)',
   },
   sonarRingOuter: {
     width: RADAR_SIZE,
     height: RADAR_SIZE,
+    backgroundColor: '#fffdf7',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sonarRingMid: {
     width: RADAR_SIZE * 0.68,
     height: RADAR_SIZE * 0.68,
-    borderColor: 'rgba(56, 189, 248, 0.16)',
+    borderColor: '#ffffff',
+    backgroundColor: '#ded0f9',
   },
   sonarRingInner: {
     width: RADAR_SIZE * 0.38,
     height: RADAR_SIZE * 0.38,
-    borderColor: 'rgba(16, 185, 129, 0.22)',
+    borderColor: '#ffffff',
+    backgroundColor: '#c0efdc',
   },
   crosshairVertical: {
     position: 'absolute',
-    width: 1,
+    width: 1.5,
     height: RADAR_SIZE,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(56, 49, 57, 0.1)',
   },
   crosshairHorizontal: {
     position: 'absolute',
-    height: 1,
+    height: 1.5,
     width: RADAR_SIZE,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(56, 49, 57, 0.1)',
   },
   targetLockContainer: {
     position: 'absolute',
@@ -1403,7 +1492,7 @@ const styles = StyleSheet.create({
     height: RADAR_SIZE * 0.55,
     borderRadius: 999,
     borderWidth: 2,
-    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderColor: '#383139',
     borderStyle: 'dashed',
   },
   targetLockPulseInner: {
@@ -1411,8 +1500,8 @@ const styles = StyleSheet.create({
     width: RADAR_SIZE * 0.46,
     height: RADAR_SIZE * 0.46,
     borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   arrowTrack: {
     position: 'absolute',
@@ -1434,38 +1523,39 @@ const styles = StyleSheet.create({
     borderBottomWidth: 18,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: '#10B981',
+    borderBottomColor: '#383139',
   },
   arrowShaft: {
     width: 4,
     height: 18,
-    backgroundColor: '#10B981',
+    backgroundColor: '#383139',
     borderRadius: 2,
   },
   radarCenterDisplay: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#0F172A',
-    borderWidth: 2,
+    width: 104,
+    height: 104,
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 2.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
     shadowRadius: 10,
-    elevation: 8,
+    elevation: 5,
   },
   distanceNumber: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: '#383139',
     lineHeight: 30,
   },
   distanceUnit: {
     fontSize: 8.5,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: '#48404b',
     letterSpacing: 0.8,
     marginTop: 2,
     textAlign: 'center',
@@ -1473,13 +1563,18 @@ const styles = StyleSheet.create({
   feedbackCard: {
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    paddingVertical: 12,
+    borderRadius: 24,
+    backgroundColor: '#fffdf7',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     width: '100%',
     marginBottom: 12,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   feedbackBadge: {
     fontSize: 11,
@@ -1487,16 +1582,18 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 4,
     textAlign: 'center',
+    color: '#383139',
   },
   directionInstruction: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#F8FAFC',
+    fontWeight: '800',
+    color: '#383139',
     textAlign: 'center',
   },
   searchingNotice: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: '#48404b',
+    fontWeight: '600',
     textAlign: 'center',
   },
   footerActions: {
@@ -1508,72 +1605,100 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
-    borderRadius: 14,
+    height: 52,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 8,
   },
   heartbeatBtn: {
-    backgroundColor: '#F59E0B',
-    shadowColor: '#F59E0B',
+    backgroundColor: '#f9e7a8',
+    shadowColor: '#383139',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
-    elevation: 4,
+    elevation: 3,
   },
   heartbeatBtnActive: {
-    backgroundColor: '#DC2626',
+    backgroundColor: '#f6a3ca',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
-    shadowColor: '#DC2626',
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
+    shadowOpacity: 0.14,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 4,
   },
   heartbeatBtnText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#000000',
+    color: '#383139',
   },
   heartbeatBtnTextActive: {
-    color: '#FFFFFF',
+    color: '#383139',
   },
   viewOnMapBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 6,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   viewOnMapText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#94A3B8',
+    fontWeight: '800',
+    color: '#383139',
   },
   leaveSessionBtn: {
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 10,
-    marginTop: 4,
+    paddingHorizontal: 20,
+    marginTop: 6,
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
   leaveSessionText: {
     fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600',
+    color: '#383139',
+    fontWeight: '800',
   },
   sheetOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    backgroundColor: 'rgba(56, 49, 57, 0.45)',
     justifyContent: 'flex-end',
   },
   sheetContent: {
-    backgroundColor: '#0F172A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 36 : 24,
-    borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
   },
   sheetHeader: {
     alignItems: 'center',
@@ -1582,20 +1707,21 @@ const styles = StyleSheet.create({
   sheetHeaderBar: {
     width: 36,
     height: 4,
-    borderRadius: 2,
-    backgroundColor: '#475569',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     marginBottom: 12,
   },
   sheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#383139',
     marginBottom: 4,
     textAlign: 'center',
   },
   sheetSubtitle: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: '#48404b',
+    fontWeight: '500',
     textAlign: 'center',
     lineHeight: 18,
     paddingHorizontal: 10,
@@ -1604,62 +1730,76 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     marginBottom: 10,
     gap: 12,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sheetOptionTextWrap: {
     flex: 1,
   },
   sheetOptionTitle: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#383139',
     marginBottom: 2,
   },
   sheetOptionDesc: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#48404b',
+    fontWeight: '500',
   },
   sheetCancelBtn: {
     alignItems: 'center',
     paddingVertical: 14,
     marginTop: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sheetCancelText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#94A3B8',
+    fontWeight: '800',
+    color: '#383139',
   },
   sentinelAvatarWrap: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: '#1E293B',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#334155',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   sentinelAvatarLetter: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#10B981',
+    color: '#383139',
   },
   notifyBadge: {
-    backgroundColor: 'rgba(16, 185, 129, 0.16)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    backgroundColor: '#c0efdc',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   notifyBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#10B981',
+    fontWeight: '800',
+    color: '#383139',
   },
 });

@@ -288,9 +288,9 @@ export const HomeModal: React.FC<HomeModalProps> = ({
                 activeOpacity={0.85}
               >
                 {isLocating ? (
-                  <ActivityIndicator size="small" color="#0F172A" />
+                  <ActivityIndicator size="small" color="#383139" />
                 ) : (
-                  <Ionicons name="locate" size={20} color="#0F172A" />
+                  <Ionicons name="locate" size={20} color="#383139" />
                 )}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.currentLocBtnTitle}>
@@ -310,16 +310,16 @@ export const HomeModal: React.FC<HomeModalProps> = ({
 
               {/* Option B: Search Input */}
               <View style={styles.searchBox}>
-                <Ionicons name="search" size={18} color="#38BDF8" />
+                <Ionicons name="search" size={18} color="#383139" />
                 <TextInput
                   style={styles.input}
                   placeholder="Rua, avenida ou local de casa..."
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor="#7D7582"
                   value={query}
                   onChangeText={setQuery}
                   autoCorrect={false}
                 />
-                {isLoading && <ActivityIndicator size="small" color="#38BDF8" />}
+                {isLoading && <ActivityIndicator size="small" color="#383139" />}
               </View>
 
               {/* Suggestions List */}
@@ -336,7 +336,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({
                         onPress={() => handleSelectSuggestion(item)}
                         activeOpacity={0.7}
                       >
-                        <Ionicons name="location-sharp" size={18} color="#38BDF8" />
+                        <Ionicons name="location-sharp" size={18} color="#383139" />
                         <View style={{ flex: 1 }}>
                           <Text style={styles.suggestionTitle} numberOfLines={1}>
                             {item.title}
@@ -345,7 +345,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({
                             {item.subtitle}
                           </Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={16} color="#64748B" />
+                        <Ionicons name="chevron-forward" size={16} color="#7D7582" />
                       </TouchableOpacity>
                     )}
                   />
