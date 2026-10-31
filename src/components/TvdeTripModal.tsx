@@ -206,7 +206,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.headerIconCircle}>
-            <Ionicons name="car-sport-outline" size={20} color="#10B981" />
+            <Ionicons name="car-sport-outline" size={20} color="#383139" />
           </View>
           <View>
             <Text style={styles.headerTitle}>Acompanhamento TVDE</Text>
@@ -216,7 +216,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
           </View>
         </View>
         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-          <Ionicons name="close" size={22} color="#94A3B8" />
+          <Ionicons name="close" size={20} color="#383139" />
         </TouchableOpacity>
       </View>
 
@@ -228,7 +228,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
         {/* Source banner when auto-populated from Share Sheet or Notification */}
         {sourceBadge === 'share_sheet' && (
           <View style={styles.autoCapturedBanner}>
-            <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+            <Ionicons name="checkmark-circle" size={18} color="#383139" />
             <Text style={styles.autoCapturedText}>
               Dados captados através da Folha de Partilha do Android ({platform}). Verifique e confirme o início da proteção.
             </Text>
@@ -237,7 +237,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
 
         {sourceBadge === 'notification' && (
           <View style={styles.autoCapturedBanner}>
-            <Ionicons name="notifications" size={18} color="#38BDF8" />
+            <Ionicons name="notifications" size={18} color="#383139" />
             <Text style={styles.autoCapturedText}>
               Viagem detetada automaticamente por notificação da {platform}.
             </Text>
@@ -267,7 +267,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
           <TextInput
             style={[styles.input, { flex: 1 }]}
             placeholder="Ex: https://trip.uber.com/... ou texto da viagem"
-            placeholderTextColor="#64748B"
+            placeholderTextColor="#7D7582"
             value={rawInputText}
             onChangeText={setRawInputText}
             autoCapitalize="none"
@@ -279,10 +279,10 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
             activeOpacity={0.8}
           >
             {isExtracting ? (
-              <ActivityIndicator size="small" color="#0F172A" />
+              <ActivityIndicator size="small" color="#383139" />
             ) : (
               <>
-                <Ionicons name="sparkles" size={15} color="#0F172A" />
+                <Ionicons name="sparkles" size={15} color="#383139" />
                 <Text style={styles.extractBtnText}>Extrair</Text>
               </>
             )}
@@ -323,7 +323,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
           <TextInput
             style={styles.plateInput}
             placeholder="00-AA-00"
-            placeholderTextColor="#64748B"
+            placeholderTextColor="#7D7582"
             value={licensePlate}
             onChangeText={(txt) => setLicensePlate(txt.toUpperCase())}
             autoCapitalize="characters"
@@ -336,7 +336,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
         <TextInput
           style={styles.input}
           placeholder="Ex: Peugeot 208 (Cinzento)"
-          placeholderTextColor="#64748B"
+          placeholderTextColor="#7D7582"
           value={vehicleModel}
           onChangeText={setVehicleModel}
           maxLength={60}
@@ -347,7 +347,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
         <TextInput
           style={styles.input}
           placeholder="Ex: António Silva"
-          placeholderTextColor="#64748B"
+          placeholderTextColor="#7D7582"
           value={driverName}
           onChangeText={setDriverName}
           maxLength={50}
@@ -370,7 +370,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
         <TextInput
           style={styles.input}
           placeholder="Ex: Rua Garrett, Lisboa"
-          placeholderTextColor="#64748B"
+          placeholderTextColor="#7D7582"
           value={destination}
           onChangeText={setDestination}
           maxLength={100}
@@ -383,7 +383,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
             onPress={() => handleShareWithContact('whatsapp')}
             activeOpacity={0.8}
           >
-            <Ionicons name="logo-whatsapp" size={17} color="#FFFFFF" />
+            <Ionicons name="logo-whatsapp" size={17} color="#25D366" />
             <Text style={styles.shareBtnText}>Enviar por WhatsApp</Text>
           </TouchableOpacity>
 
@@ -392,7 +392,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
             onPress={() => handleShareWithContact('sms')}
             activeOpacity={0.8}
           >
-            <Ionicons name="chatbubble-ellipses-outline" size={17} color="#FFFFFF" />
+            <Ionicons name="chatbubble-ellipses-outline" size={17} color="#383139" />
             <Text style={styles.shareBtnText}>Enviar por SMS</Text>
           </TouchableOpacity>
         </View>
@@ -403,7 +403,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
           onPress={handleActivateProtection}
           activeOpacity={0.85}
         >
-          <MaterialCommunityIcons name="shield-car" size={22} color="#0F172A" />
+          <MaterialCommunityIcons name="shield-car" size={22} color="#383139" />
           <Text style={styles.activateBtnText}>
             {activeTrip ? 'Atualizar Dados da Viagem Protegida' : 'Ativar Proteção de Viagem TVDE'}
           </Text>
@@ -421,7 +421,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
               }}
               activeOpacity={0.85}
             >
-              <Ionicons name="warning" size={18} color="#FFFFFF" />
+              <Ionicons name="warning" size={18} color="#383139" />
               <Text style={styles.sosTripBtnText}>
                 Disparar SOS com Matrícula e Dados da Viatura
               </Text>
@@ -436,7 +436,7 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
               }}
               activeOpacity={0.8}
             >
-              <Ionicons name="checkmark-done-circle" size={18} color="#10B981" />
+              <Ionicons name="checkmark-done-circle" size={18} color="#383139" />
               <Text style={styles.endTripBtnText}>Cheguei em Segurança (Terminar Viagem)</Text>
             </TouchableOpacity>
           </View>
@@ -448,19 +448,19 @@ export const TvdeTripModal: React.FC<TvdeTripModalProps> = ({
 
 const styles = StyleSheet.create({
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
     maxHeight: '92%',
     paddingBottom: Platform.OS === 'ios' ? 92 : 90,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
   },
   header: {
@@ -470,9 +470,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 14,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
-    backgroundColor: '#f5f4ee',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#f1f2fa',
+    backgroundColor: '#fffdf7',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -483,68 +483,83 @@ const styles = StyleSheet.create({
   headerIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    backgroundColor: '#c0efdc',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
     textTransform: 'uppercase',
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#000000',
+    color: '#7D7582',
     fontWeight: '600',
     marginTop: 2,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   scrollContent: {
     padding: 20,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   autoCapturedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#ffff00',
-    borderWidth: 3,
-    borderColor: '#000000',
-    borderRadius: 0,
-    padding: 12,
+    backgroundColor: '#f9e7a8',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 24,
+    padding: 14,
     marginBottom: 14,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   autoCapturedText: {
     flex: 1,
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 17,
   },
   integrationBox: {
     backgroundColor: '#ffffff',
-    borderRadius: 0,
-    padding: 14,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 28,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     marginBottom: 14,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 3,
   },
   integrationRow: {
@@ -555,25 +570,25 @@ const styles = StyleSheet.create({
   integrationRowDivider: {
     marginTop: 12,
     paddingTop: 12,
-    borderTopWidth: 2,
-    borderTopColor: '#000000',
+    borderTopWidth: 1,
+    borderTopColor: '#f1f2fa',
   },
   integrationStatusDotActive: {
     width: 10,
     height: 10,
-    borderRadius: 0,
-    backgroundColor: '#ff0000',
+    borderRadius: 999,
+    backgroundColor: '#c0efdc',
     marginTop: 5,
   },
   integrationTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
     marginBottom: 3,
   },
   integrationDesc: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 11,
     fontWeight: '500',
     lineHeight: 16,
@@ -583,16 +598,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 6,
-    backgroundColor: '#ffff00',
-    borderWidth: 2,
-    borderColor: '#000000',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 0,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
     marginTop: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   enableListenerBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -600,7 +620,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: 6,
@@ -612,7 +632,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   useHomeLink: {
-    color: '#ff0000',
+    color: '#f6a3ca',
     fontSize: 11,
     fontWeight: '900',
     marginTop: 10,
@@ -628,15 +648,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ffff00',
-    borderWidth: 2,
-    borderColor: '#000000',
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    borderRadius: 0,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   extractBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -649,66 +674,76 @@ const styles = StyleSheet.create({
   platformChip: {
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: 0,
+    borderRadius: 999,
     backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    elevation: 2,
   },
   platformChipActive: {
-    backgroundColor: '#ffff00',
-    borderColor: '#000000',
+    backgroundColor: '#ded0f9',
+    borderColor: '#ffffff',
   },
   platformChipText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '800',
     textTransform: 'uppercase',
   },
   platformChipTextActive: {
-    color: '#000000',
+    color: '#383139',
     fontWeight: '900',
   },
   plateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     overflow: 'hidden',
     height: 48,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   plateBlueStrip: {
     width: 34,
     height: '100%',
-    backgroundColor: '#0000ff',
-    borderRightWidth: 2,
-    borderRightColor: '#000000',
+    backgroundColor: '#003399',
+    borderRightWidth: 1.5,
+    borderRightColor: '#ffffff',
     justifyContent: 'flex-end',
     alignItems: 'center',
     paddingBottom: 6,
   },
   plateCountryText: {
-    color: '#FFFFFF',
+    color: '#ffffff',
     fontSize: 12,
     fontWeight: '900',
   },
   plateInput: {
     flex: 1,
     paddingHorizontal: 14,
-    color: '#000000',
+    color: '#383139',
     fontSize: 19,
     fontWeight: '900',
     letterSpacing: 2,
   },
   input: {
-    backgroundColor: '#ffffff',
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    borderRadius: 0,
+    backgroundColor: '#f1f2fa',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -723,11 +758,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#ffff00',
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    paddingVertical: 11,
-    borderRadius: 0,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingVertical: 12,
+    borderRadius: 999,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   smsShareBtn: {
     flex: 1,
@@ -736,13 +776,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: '#ffffff',
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    paddingVertical: 11,
-    borderRadius: 0,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingVertical: 12,
+    borderRadius: 999,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   shareBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -752,20 +797,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
     paddingVertical: 15,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     marginTop: 14,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   activateBtnText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 15,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -780,14 +825,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
     paddingVertical: 13,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
+    elevation: 2,
   },
   sosTripBtnText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -797,14 +847,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ffff00',
-    borderWidth: 3,
-    borderColor: '#000000',
-    paddingVertical: 12,
-    borderRadius: 0,
+    backgroundColor: '#c0efdc',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingVertical: 13,
+    borderRadius: 999,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
+    elevation: 2,
   },
   endTripBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',

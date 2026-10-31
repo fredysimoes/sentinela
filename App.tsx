@@ -2682,7 +2682,7 @@ export default function App() {
                     <Ionicons
                       name={isMapActive ? 'home' : 'home-outline'}
                       size={18}
-                      color="#000000"
+                      color="#383139"
                     />
                   </View>
                   <Text
@@ -2722,7 +2722,7 @@ export default function App() {
                   <Ionicons
                     name={showReportModal ? 'warning' : 'warning-outline'}
                     size={18}
-                    color="#000000"
+                    color="#383139"
                   />
                   {activeStalkingSession && <View style={styles.dockLiveBadgeDotRed} />}
                 </View>
@@ -2761,7 +2761,7 @@ export default function App() {
                   <Ionicons
                     name={showTvdeModal ? 'car-sport' : 'car-sport-outline'}
                     size={18}
-                    color="#000000"
+                    color="#383139"
                   />
                   {activeTvdeTrip && <View style={styles.dockLiveBadgeDotNeon} />}
                 </View>
@@ -2769,7 +2769,7 @@ export default function App() {
               <Text
                 style={[
                   styles.dockPillItemText,
-                  !showTvdeModal && activeTvdeTrip && { color: '#0000ff', fontWeight: '900' },
+                  !showTvdeModal && activeTvdeTrip && { color: '#383139', fontWeight: '700' },
                   showTvdeModal && styles.dockPillItemTextSelected,
                 ]}
               >
@@ -2805,7 +2805,7 @@ export default function App() {
                   <Ionicons
                     name={showSentinelsModal ? 'shield-checkmark' : 'shield-checkmark-outline'}
                     size={18}
-                    color="#000000"
+                    color="#383139"
                   />
                   {mySentinels.length > 0 && (
                     <View style={styles.dockCountBadge}>
@@ -2824,7 +2824,7 @@ export default function App() {
               </Text>
             </M3Pressable>
 
-            {/* 5. SOS (Google M3 High-Emphasis Action Button) */}
+            {/* 5. SOS (Claymorphism Pink Cushion Pill) */}
             <M3Pressable
               scaleOnPress={0.91}
               style={styles.dockSosPill}
@@ -2833,7 +2833,7 @@ export default function App() {
                 setShowSOSModal(true);
               }}
             >
-              <Ionicons name="megaphone" size={16} color="#FFFFFF" />
+              <Ionicons name="megaphone" size={16} color="#383139" />
               <Text style={styles.dockSosPillText}>SOS</Text>
             </M3Pressable>
           </View>
@@ -2846,7 +2846,7 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#f1f2fa',
   },
   topFloatingOverlay: {
     position: 'absolute',
@@ -2868,95 +2868,91 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   compactFilterPill: {
-    height: 36,
+    height: 38,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
-    borderWidth: 3,
-    borderColor: '#000000',
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     ...M3Elevation.level2,
   },
   compactFilterPillText: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    color: '#383139',
+    fontWeight: '700',
   },
   filtersFab: {
-    height: 36,
+    height: 38,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
-    borderWidth: 3,
-    borderColor: '#000000',
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: '#ded0f9', // Lavender decision cushion
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     ...M3Elevation.level2,
   },
   filtersFabActive: {
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
-    borderWidth: 3.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#f6a3ca', // Pink lead cushion
   },
   filtersFabText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   filtersBadge: {
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
     minWidth: 18,
     height: 18,
-    borderRadius: 0,
-    borderWidth: 1.5,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 3,
   },
   filtersBadgeText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   activeHazardFilterPill: {
     height: 36,
-    paddingHorizontal: 10,
-    borderRadius: 0,
-    borderWidth: 2.5,
-    borderColor: '#000000',
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
     gap: 5,
+    ...M3Elevation.level1,
   },
   activeHazardFilterPillText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     maxWidth: 130,
-    textTransform: 'uppercase',
   },
   filterChipHomeActive: {
-    backgroundColor: '#ffffff',
-    borderColor: '#000000',
-    borderWidth: 3,
+    backgroundColor: '#f6a3ca',
+    borderColor: '#ffffff',
   },
   filterChipTextHomeActive: {
-    color: '#000000',
-    fontWeight: '800',
+    color: '#383139',
+    fontWeight: '700',
   },
   filterChipWorkActive: {
-    backgroundColor: '#ffff00',
-    borderColor: '#000000',
-    borderWidth: 3,
+    backgroundColor: '#f9e7a8',
+    borderColor: '#ffffff',
   },
   filterChipTextWorkActive: {
-    color: '#000000',
-    fontWeight: '800',
+    color: '#383139',
+    fontWeight: '700',
   },
   tvdeActiveBanner: {
     flexDirection: 'row',
@@ -2964,21 +2960,21 @@ const styles = StyleSheet.create({
     gap: 10,
     marginHorizontal: 14,
     marginTop: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 0,
-    backgroundColor: '#f5f4ee',
-    borderWidth: 3,
-    borderColor: '#000000',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 32,
+    backgroundColor: '#fffdf7',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     ...M3Elevation.level3,
   },
   tvdeBannerIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 0,
-    backgroundColor: '#0000ff',
-    borderWidth: 2,
-    borderColor: '#000000',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#c5e5fb',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2988,74 +2984,74 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tvdeBannerTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   tvdeMiniPlate: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 0,
-    borderWidth: 1.5,
-    borderColor: '#000000',
+    backgroundColor: '#ded0f9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#ffffff',
   },
   tvdeMiniPlateText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.8,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   tvdeBannerSub: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 11,
     marginTop: 2,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   filterChipActivePolice: {
-    backgroundColor: '#ffffff',
-    borderColor: '#000000',
+    backgroundColor: '#c5e5fb',
+    borderColor: '#ffffff',
   },
   filterChipActivePharmacy: {
-    backgroundColor: '#ffff00',
-    borderColor: '#000000',
+    backgroundColor: '#c0efdc',
+    borderColor: '#ffffff',
   },
   filterChipActiveHospital: {
-    backgroundColor: '#0000ff',
-    borderColor: '#000000',
+    backgroundColor: '#ded0f9',
+    borderColor: '#ffffff',
   },
   filterChipActiveSchool: {
-    backgroundColor: '#ffff00',
-    borderColor: '#000000',
+    backgroundColor: '#f9e7a8',
+    borderColor: '#ffffff',
   },
   filterChipActiveHeritage: {
-    backgroundColor: '#e8e8e8',
-    borderColor: '#000000',
+    backgroundColor: '#f9e7a8',
+    borderColor: '#ffffff',
   },
   filterChipActiveWheelmap: {
-    backgroundColor: '#0000ff',
-    borderColor: '#000000',
+    backgroundColor: '#c0efdc',
+    borderColor: '#ffffff',
   },
   filterChipActive: {
-    backgroundColor: '#ffff00',
-    borderColor: '#000000',
+    backgroundColor: '#ded0f9',
+    borderColor: '#ffffff',
   },
   filterChipText: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '700',
+    color: '#383139',
+    fontWeight: '600',
   },
   filterChipTextActive: {
-    color: '#000000',
-    fontWeight: '800',
+    color: '#383139',
+    fontWeight: '700',
   },
   filterChipTextActiveWhite: {
-    color: '#ffffff',
-    fontWeight: '800',
+    color: '#383139',
+    fontWeight: '700',
   },
   filterChipTextActiveDark: {
-    color: '#000000',
-    fontWeight: '800',
+    color: '#383139',
+    fontWeight: '700',
   },
   mapContainer: {
     flex: 1,
@@ -3063,8 +3059,8 @@ const styles = StyleSheet.create({
   bottomDockContainer: {
     position: 'absolute',
     bottom: Platform.OS === 'android' ? 14 : 14,
-    left: 10,
-    right: 10,
+    left: 12,
+    right: 12,
     alignItems: 'center',
     zIndex: 10000,
     elevation: 28,
@@ -3074,50 +3070,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    height: 74,
-    backgroundColor: '#f5f4ee',
-    borderRadius: 0,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderWidth: 4,
-    borderColor: '#000000',
-    ...M3Elevation.level4,
+    height: 72,
+    backgroundColor: '#fffdf7',
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    elevation: 8,
   },
   dockPillItem: {
     flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 64,
-    borderRadius: 0,
+    height: 60,
+    borderRadius: 999,
     gap: 2,
   },
   dockActiveIndicator: {
-    width: 54,
-    height: 32,
-    borderRadius: 0,
+    width: 50,
+    height: 30,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
   },
   dockActiveIndicatorSelected: {
-    backgroundColor: '#ffff00',
-    borderRadius: 0,
-    borderWidth: 2.5,
-    borderColor: '#000000',
+    backgroundColor: '#ded0f9', // Soft lavender active cushion
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     ...M3Elevation.level1,
   },
   dockPillItemText: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '600',
     textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   dockPillItemTextSelected: {
-    color: '#000000',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '700',
   },
   dockIconWrap: {
     position: 'relative',
@@ -3131,10 +3130,10 @@ const styles = StyleSheet.create({
     right: -4,
     width: 8,
     height: 8,
-    borderRadius: 0,
-    backgroundColor: '#ff0000',
-    borderWidth: 1.5,
-    borderColor: '#000000',
+    borderRadius: 4,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 1,
+    borderColor: '#ffffff',
   },
   dockLiveBadgeDotNeon: {
     position: 'absolute',
@@ -3142,47 +3141,47 @@ const styles = StyleSheet.create({
     right: -4,
     width: 8,
     height: 8,
-    borderRadius: 0,
-    backgroundColor: '#0000ff',
-    borderWidth: 1.5,
-    borderColor: '#000000',
+    borderRadius: 4,
+    backgroundColor: '#c5e5fb',
+    borderWidth: 1,
+    borderColor: '#ffffff',
   },
   dockCountBadge: {
     position: 'absolute',
     top: -5,
     right: -8,
-    backgroundColor: '#0000ff',
-    borderRadius: 0,
-    minWidth: 15,
-    height: 15,
+    backgroundColor: '#f6a3ca',
+    borderRadius: 999,
+    minWidth: 16,
+    height: 16,
     paddingHorizontal: 3,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: '#ffffff',
   },
   dockCountBadgeText: {
-    color: '#ffffff',
-    fontSize: 8.5,
-    fontWeight: '900',
+    color: '#383139',
+    fontSize: 9,
+    fontWeight: '700',
   },
   dockSosPill: {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff0000',
-    paddingHorizontal: 12,
-    height: 54,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#f6a3ca', // Pink lead cushion
+    paddingHorizontal: 14,
+    height: 52,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     ...M3Elevation.level2,
     gap: 2,
   },
   dockSosPillText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
 });

@@ -32,7 +32,7 @@ export const ProtestHUD: React.FC<ProtestHUDProps> = ({
       {/* Top Banner Tag */}
       <View style={styles.topTagRow}>
         <View style={styles.protestBadge}>
-          <Ionicons name="flag" size={14} color="#EF4444" />
+          <Ionicons name="flag" size={14} color="#383139" />
           <Text style={styles.protestBadgeText}>MODO PROTESTO ATIVO</Text>
         </View>
 
@@ -44,7 +44,7 @@ export const ProtestHUD: React.FC<ProtestHUDProps> = ({
           }}
           activeOpacity={0.75}
         >
-          <Ionicons name="exit-outline" size={14} color="#EF4444" />
+          <Ionicons name="exit-outline" size={14} color="#383139" />
           <Text style={styles.exitBtnText}>Sair</Text>
         </TouchableOpacity>
       </View>
@@ -64,7 +64,7 @@ export const ProtestHUD: React.FC<ProtestHUDProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <Ionicons name="flashlight" size={16} color="#0F172A" />
+          <Ionicons name="flashlight" size={16} color="#383139" />
           <Text style={styles.torchChipText}>Lanterna</Text>
         </TouchableOpacity>
 
@@ -77,7 +77,7 @@ export const ProtestHUD: React.FC<ProtestHUDProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <Ionicons name="flash" size={16} color="#0F172A" />
+          <Ionicons name="flash" size={16} color="#383139" />
           <Text style={styles.strobeChipText}>Strobe Piscar</Text>
         </TouchableOpacity>
 
@@ -90,7 +90,7 @@ export const ProtestHUD: React.FC<ProtestHUDProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <Ionicons name="shield" size={16} color="#FFFFFF" />
+          <Ionicons name="shield" size={16} color="#383139" />
           <Text style={styles.policeChipText}>Sinalizar Polícia</Text>
         </TouchableOpacity>
 
@@ -103,7 +103,7 @@ export const ProtestHUD: React.FC<ProtestHUDProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <Ionicons name="book" size={16} color="#FFFFFF" />
+          <Ionicons name="book" size={16} color="#383139" />
           <Text style={styles.rightsChipText}>Direitos Legais</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -113,18 +113,18 @@ export const ProtestHUD: React.FC<ProtestHUDProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f5f4ee',
-    borderRadius: 0,
-    borderWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     marginHorizontal: 14,
     marginTop: 6,
-    padding: 10,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 6,
+    padding: 12,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
   },
   topTagRow: {
     flexDirection: 'row',
@@ -137,15 +137,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ff0000',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    backgroundColor: '#f9e7a8',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   protestBadgeText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -156,14 +156,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     backgroundColor: '#ffffff',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   exitBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -179,43 +184,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 0,
-    borderWidth: 2.5,
-    borderColor: '#000000',
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    elevation: 2,
   },
   torchChip: {
     backgroundColor: '#ffffff',
   },
   torchChipText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   strobeChip: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#f9e7a8',
   },
   strobeChipText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   policeChip: {
-    backgroundColor: '#0000ff',
+    backgroundColor: '#c5e5fb',
   },
   policeChipText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   rightsChip: {
-    backgroundColor: '#e8e8e8',
+    backgroundColor: '#ded0f9',
   },
   rightsChipText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',

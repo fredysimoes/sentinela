@@ -420,10 +420,10 @@ export const SOSModal: React.FC<SOSModalProps> = ({
             <View style={styles.dispatchedBox}>
               <View style={styles.alertHeader}>
                 <View style={styles.sirenIcon}>
-                  <Ionicons name="megaphone" size={32} color="#FFFFFF" />
+                  <Ionicons name="megaphone" size={28} color="#383139" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.dispatchedTitle}>SOS TRANSMITIDO!</Text>
+                  <Text style={styles.dispatchedTitle}>SOS Transmitido</Text>
                   <Text style={styles.dispatchedSubtitle}>
                     Notificação enviada a quem tem o Sentinela na sua área
                   </Text>
@@ -431,7 +431,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
               </View>
 
               <View style={styles.coordCard}>
-                <Ionicons name="pin" size={16} color="#EF4444" />
+                <Ionicons name="pin" size={16} color="#f6a3ca" />
                 <Text style={styles.coordText}>
                   Localização: {createdAlert?.latitude.toFixed(4)}, {createdAlert?.longitude.toFixed(4)}
                 </Text>
@@ -445,7 +445,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
                   onPress={handleCall112}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="call" size={22} color="#FFFFFF" />
+                  <Ionicons name="call" size={22} color="#383139" />
                   <View>
                     <Text style={styles.actionBtnTitle}>Ligar 112</Text>
                     <Text style={styles.actionBtnSub}>Emergência Nacional</Text>
@@ -458,7 +458,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
                   onPress={() => handleSendWhatsAppToPhone()}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="logo-whatsapp" size={22} color="#FFFFFF" />
+                  <Ionicons name="logo-whatsapp" size={22} color="#383139" />
                   <View>
                     <Text style={styles.actionBtnTitle}>Enviar WhatsApp</Text>
                     <Text style={styles.actionBtnSub}>
@@ -475,7 +475,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
                   onPress={() => handleSendSMSToPhone()}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="chatbubble-ellipses" size={22} color="#FFFFFF" />
+                  <Ionicons name="chatbubble-ellipses" size={22} color="#383139" />
                   <View>
                     <Text style={styles.actionBtnTitle}>Enviar por SMS</Text>
                     <Text style={styles.actionBtnSub}>
@@ -493,20 +493,20 @@ export const SOSModal: React.FC<SOSModalProps> = ({
                 onPress={handleOpenImSafe}
                 activeOpacity={0.8}
               >
-                <Ionicons name="shield-checkmark" size={18} color="#10B981" />
+                <Ionicons name="shield-checkmark" size={18} color="#383139" />
                 <Text style={styles.imSafeDispatchedBtnText}>Enviar "Estou Bem" aos Contactos</Text>
               </TouchableOpacity>
 
               {/* Personal Emergency Contacts Section */}
               <View style={styles.contactsSection}>
                 <View style={styles.contactsSectionHeader}>
-                  <Text style={styles.contactsSectionTitle}>CONTACTOS DE EMERGÊNCIA</Text>
+                  <Text style={styles.contactsSectionTitle}>Contactos de Emergência</Text>
                   <TouchableOpacity
                     onPress={handleImportDeviceContact}
                     style={styles.addContactSmallBtn}
                     activeOpacity={0.8}
                   >
-                    <Ionicons name="person-add" size={13} color="#38BDF8" />
+                    <Ionicons name="person-add" size={13} color="#383139" />
                     <Text style={styles.addContactSmallText}>+ Importar Contacto</Text>
                   </TouchableOpacity>
                 </View>
@@ -590,7 +590,7 @@ export const SOSModal: React.FC<SOSModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: 'rgba(56, 49, 57, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -598,12 +598,16 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#f5f4ee',
-    borderRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderRadius: 38,
     padding: 24,
-    borderWidth: 4,
-    borderColor: '#000000',
-    ...M3Elevation.level4,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
   },
   countdownBox: {
     alignItems: 'center',
@@ -611,75 +615,80 @@ const styles = StyleSheet.create({
   iconPulseCircle: {
     width: 80,
     height: 80,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   countdownTitle: {
     fontSize: 22,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     textAlign: 'center',
-    textTransform: 'uppercase',
   },
   countdownNotice: {
     fontSize: 13,
-    color: '#000000',
+    color: '#48404b',
     textAlign: 'center',
     marginTop: 6,
     marginBottom: 18,
     lineHeight: 18,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   timerCircle: {
     width: 86,
     height: 86,
-    borderRadius: 43,
-    borderWidth: 4,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
+    backgroundColor: '#f9e7a8',
     marginBottom: 20,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   timerNumber: {
     fontSize: 38,
-    fontWeight: '900',
-    color: '#ff0000',
+    fontWeight: '800',
+    color: '#383139',
   },
   cancelBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     width: '100%',
     paddingVertical: 14,
-    borderRadius: 0,
+    borderRadius: 999,
     gap: 8,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cancelBtnText: {
-    color: '#000000',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 14,
-    textTransform: 'uppercase',
   },
   immediateBtn: {
     marginTop: 10,
     paddingVertical: 8,
   },
   immediateBtnText: {
-    color: '#ff0000',
+    color: '#48404b',
     fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   dispatchedBox: {
     width: '100%',
@@ -693,39 +702,43 @@ const styles = StyleSheet.create({
   sirenIcon: {
     width: 50,
     height: 50,
-    borderRadius: 0,
-    backgroundColor: '#ff0000',
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   dispatchedTitle: {
     fontSize: 20,
-    fontWeight: '900',
-    color: '#ff0000',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#383139',
+    letterSpacing: 0.2,
   },
   dispatchedSubtitle: {
     fontSize: 12,
-    color: '#000000',
+    color: '#48404b',
     marginTop: 2,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   coordCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fffdf7',
     padding: 12,
-    borderRadius: 0,
+    borderRadius: 20,
     gap: 8,
     marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
   coordText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -738,57 +751,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 13,
     paddingHorizontal: 16,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 14,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   call112Btn: {
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
   },
   whatsappBtn: {
-    backgroundColor: '#0000ff',
+    backgroundColor: '#c0efdc',
   },
   smsBtn: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#ded0f9',
   },
   actionBtnTitle: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 15,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   actionBtnSub: {
-    color: '#FFFFFF',
+    color: '#48404b',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   safeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffff00',
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#c0efdc',
+    borderWidth: 2,
+    borderColor: '#ffffff',
     paddingVertical: 13,
-    borderRadius: 0,
+    borderRadius: 999,
     gap: 8,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   safeBtnText: {
-    color: '#000000',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 14,
-    textTransform: 'uppercase',
   },
   contactsSection: {
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    padding: 14,
+    backgroundColor: '#fffdf7',
+    borderRadius: 28,
+    padding: 16,
     marginBottom: 16,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   contactsSectionHeader: {
     flexDirection: 'row',
@@ -798,9 +822,9 @@ const styles = StyleSheet.create({
   },
   contactsSectionTitle: {
     fontSize: 11,
-    fontWeight: '900',
-    color: '#000000',
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    color: '#383139',
+    letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
   addContactSmallBtn: {
@@ -809,16 +833,15 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
   },
   addContactSmallText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   contactSOSCard: {
     flexDirection: 'row',

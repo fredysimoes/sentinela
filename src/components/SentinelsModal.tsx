@@ -132,7 +132,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.iconCircle}>
-            <Ionicons name="shield-checkmark-outline" size={22} color="#38BDF8" />
+            <Ionicons name="shield-checkmark-outline" size={22} color="#383139" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>Os Meus Sentinelas</Text>
@@ -141,7 +141,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
             </Text>
           </View>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Ionicons name="close" size={20} color="#94A3B8" />
+            <Ionicons name="close" size={20} color="#383139" />
           </TouchableOpacity>
         </View>
 
@@ -153,7 +153,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
             <Text style={styles.myCodeSub}>Partilhe com amigos ou familiares para o adicionarem</Text>
           </View>
           <M3Pressable style={styles.shareCodeBtn} onPress={handleCopyCode}>
-            <Ionicons name="share-social" size={16} color="#0F172A" style={{ marginRight: 6 }} />
+            <Ionicons name="share-social" size={16} color="#383139" style={{ marginRight: 6 }} />
             <Text style={styles.shareCodeBtnText}>Partilhar</Text>
           </M3Pressable>
         </View>
@@ -168,12 +168,12 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
             }}
             activeOpacity={0.8}
           >
-            <Ionicons name="person-circle-outline" size={24} color="#38BDF8" style={{ marginRight: 10 }} />
+            <Ionicons name="person-circle-outline" size={24} color="#383139" style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.guestBannerTitle}>Inicie sessão para sincronizar na nuvem</Text>
               <Text style={styles.guestBannerSub}>Ligue uma conta Google para guardar os seus Sentinelas</Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="#38BDF8" />
+            <Ionicons name="chevron-forward" size={16} color="#383139" />
           </TouchableOpacity>
         )}
 
@@ -184,7 +184,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
             <TextInput
               style={styles.addInput}
               placeholder="Código (ex: ST-8291) ou email..."
-              placeholderTextColor="#64748B"
+              placeholderTextColor="#7D7582"
               value={inputCode}
               onChangeText={setInputCode}
               autoCapitalize="characters"
@@ -196,10 +196,10 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
               disabled={isAdding}
             >
               {isAdding ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color="#383139" />
               ) : (
                 <>
-                  <Ionicons name="person-add" size={15} color="#FFFFFF" style={{ marginRight: 4 }} />
+                  <Ionicons name="person-add" size={15} color="#383139" style={{ marginRight: 4 }} />
                   <Text style={styles.addBtnText}>Adicionar</Text>
                 </>
               )}
@@ -238,10 +238,10 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
         {activeTab === 'my_sentinels' && (
           <View style={styles.listSection}>
             {isLoading ? (
-              <ActivityIndicator size="small" color="#38BDF8" style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="small" color="#f6a3ca" style={{ marginVertical: 20 }} />
             ) : sentinels.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Ionicons name="shield-outline" size={32} color="#64748B" />
+                <Ionicons name="shield-outline" size={32} color="#7D7582" />
                 <Text style={styles.emptyTitle}>Ainda não tem Sentinelas</Text>
                 <Text style={styles.emptySub}>
                   Adicione o código de um amigo ou familiar acima para que possam acompanhar os seus alertas em tempo real.
@@ -269,7 +269,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
                       }}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="scan" size={14} color="#10B981" />
+                      <Ionicons name="scan" size={14} color="#383139" />
                       <Text style={styles.findFriendBtnText}>Radar</Text>
                     </TouchableOpacity>
                   )}
@@ -287,7 +287,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
                       }}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="radio" size={14} color="#10B981" />
+                      <Ionicons name="radio" size={14} color="#383139" />
                       <Text style={styles.findFriendBtnText}>Estou Aqui</Text>
                     </TouchableOpacity>
                   )}
@@ -296,7 +296,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
                     onPress={() => handleRemove(sentinel)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Ionicons name="trash-outline" size={17} color="#94A3B8" />
+                    <Ionicons name="trash-outline" size={17} color="#f6a3ca" />
                   </TouchableOpacity>
                 </View>
               ))
@@ -309,7 +309,7 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
           <View style={styles.listSection}>
             {protectedUsers.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Ionicons name="heart-outline" size={32} color="#64748B" />
+                <Ionicons name="heart-outline" size={32} color="#7D7582" />
                 <Text style={styles.emptyTitle}>Ainda não protege ninguém</Text>
                 <Text style={styles.emptySub}>
                   Partilhe o seu Código de Sentinela com quem precisa de proteção para ser avisado se estiverem a ser seguidos.
@@ -318,8 +318,8 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
             ) : (
               protectedUsers.map((person) => (
                 <View key={person.id} style={styles.sentinelCard}>
-                  <View style={[styles.sentinelAvatarWrap, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
-                    <Text style={[styles.sentinelAvatarText, { color: '#10B981' }]}>
+                  <View style={[styles.sentinelAvatarWrap, { backgroundColor: '#c0efdc' }]}>
+                    <Text style={[styles.sentinelAvatarText, { color: '#383139' }]}>
                       {person.name.charAt(0).toUpperCase()}
                     </Text>
                   </View>
@@ -327,8 +327,8 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
                     <Text style={styles.sentinelName}>{person.name}</Text>
                     <Text style={styles.sentinelCodeText}>Protegido(a) por si</Text>
                   </View>
-                  <View style={[styles.activeBadge, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
-                    <Ionicons name="shield-checkmark" size={13} color="#10B981" style={{ marginRight: 4 }} />
+                  <View style={styles.activeBadge}>
+                    <Ionicons name="shield-checkmark" size={13} color="#383139" style={{ marginRight: 4 }} />
                     <Text style={styles.activeBadgeText}>Sentinela Ativo</Text>
                   </View>
                 </View>
@@ -343,111 +343,129 @@ export const SentinelsModal: React.FC<SentinelsModalProps> = ({
 
 const styles = StyleSheet.create({
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
     maxHeight: '85%',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 96,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
     gap: 12,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#f1f2fa',
     paddingBottom: 12,
   },
   iconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   title: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 18,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   subtitle: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 11,
     fontWeight: '600',
     marginTop: 2,
     lineHeight: 15,
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   myCodeCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    borderRadius: 0,
-    padding: 14,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 28,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     marginBottom: 14,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 3,
   },
   myCodeLabel: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   myCodeValue: {
-    color: '#ff0000',
+    color: '#383139',
     fontSize: 22,
     fontWeight: '900',
     letterSpacing: 1.5,
     marginVertical: 2,
   },
   myCodeSub: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 11,
     fontWeight: '600',
   },
   shareCodeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
-    borderWidth: 2,
-    borderColor: '#000000',
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 0,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 4,
+    elevation: 2,
   },
   shareCodeBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -455,39 +473,44 @@ const styles = StyleSheet.create({
   guestBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
-    borderRadius: 0,
-    padding: 12,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#f9e7a8',
+    borderRadius: 24,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     marginBottom: 14,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   guestBannerTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   guestBannerSub: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 11,
     fontWeight: '600',
   },
   addCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 0,
-    padding: 12,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 28,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     marginBottom: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 3,
   },
   sectionHeader: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -500,12 +523,12 @@ const styles = StyleSheet.create({
   },
   addInput: {
     flex: 1,
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#000000',
-    borderRadius: 0,
-    paddingHorizontal: 12,
-    color: '#000000',
+    backgroundColor: '#f1f2fa',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    color: '#383139',
     fontSize: 13,
     fontWeight: '700',
     height: 44,
@@ -514,47 +537,57 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff0000',
-    borderWidth: 2,
-    borderColor: '#000000',
-    paddingHorizontal: 14,
-    borderRadius: 0,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 16,
+    borderRadius: 999,
     height: 44,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 4,
+    elevation: 2,
   },
   addBtnText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#e8e8e8',
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    padding: 3,
+    backgroundColor: '#f1f2fa',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    padding: 4,
     marginBottom: 12,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 9,
     alignItems: 'center',
-    borderRadius: 0,
+    borderRadius: 999,
   },
   tabBtnActive: {
-    backgroundColor: '#ffff00',
-    borderWidth: 2,
-    borderColor: '#000000',
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tabText: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   tabTextActive: {
-    color: '#000000',
+    color: '#383139',
     fontWeight: '900',
   },
   listSection: {
@@ -564,40 +597,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    borderRadius: 0,
-    padding: 12,
-    borderWidth: 2.5,
-    borderColor: '#000000',
+    borderRadius: 24,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 10,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
   sentinelAvatarWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
-    borderWidth: 2,
-    borderColor: '#000000',
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   sentinelAvatarText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '900',
   },
   sentinelName: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   sentinelCodeText: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 11,
     fontWeight: '600',
     marginTop: 1,
@@ -605,15 +638,15 @@ const styles = StyleSheet.create({
   activeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
+    backgroundColor: '#c0efdc',
     borderWidth: 1.5,
-    borderColor: '#000000',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 0,
+    borderColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
   activeBadgeText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -622,15 +655,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ff0000',
-    borderWidth: 2,
-    borderColor: '#000000',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 0,
+    backgroundColor: '#c5e5fb',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   findFriendBtnText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -642,20 +680,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
-    borderRadius: 0,
+    borderRadius: 28,
     padding: 24,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
   emptyTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   emptySub: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 12,
     fontWeight: '500',
     textAlign: 'center',

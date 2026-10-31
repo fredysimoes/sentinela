@@ -116,7 +116,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       <View style={styles.header}>
             <View style={styles.headerTitleWrap}>
               <View style={styles.headerIconBadge}>
-                <Ionicons name="chatbubbles" size={20} color={M3Colors.primary} />
+                <Ionicons name="chatbubbles" size={20} color="#383139" />
               </View>
               <View>
                 <Text style={styles.headerTitle}>Feedback & Suporte</Text>
@@ -126,7 +126,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               </View>
             </View>
             <TouchableOpacity onPress={handleClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Ionicons name="close" size={22} color={M3Colors.onSurfaceVariant} />
+              <Ionicons name="close" size={20} color="#383139" />
             </TouchableOpacity>
           </View>
 
@@ -145,8 +145,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     style={[
                       styles.chip,
                       isSelected && {
-                        backgroundColor: `${cat.color}22`,
-                        borderColor: cat.color,
+                        backgroundColor: '#ded0f9',
+                        borderColor: '#ffffff',
                       },
                     ]}
                     onPress={() => {
@@ -158,12 +158,12 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     <Ionicons
                       name={cat.icon}
                       size={16}
-                      color={isSelected ? cat.color : M3Colors.onSurfaceVariant}
+                      color={isSelected ? '#383139' : '#7D7582'}
                     />
                     <Text
                       style={[
                         styles.chipText,
-                        isSelected && { color: '#FFFFFF', fontWeight: '700' },
+                        isSelected && { color: '#383139', fontWeight: '900' },
                       ]}
                     >
                       {cat.label}
@@ -184,7 +184,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   ? 'Ex: Erro ao carregar mapa / App bloqueia'
                   : 'Ex: Sugestão para rotas noturnas'
               }
-              placeholderTextColor="#64748B"
+              placeholderTextColor="#7D7582"
               value={title}
               onChangeText={setTitle}
               maxLength={80}
@@ -195,7 +195,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Descreva detalhadamente o que observou, onde ocorreu e passos para reproduzir se aplicável..."
-              placeholderTextColor="#64748B"
+              placeholderTextColor="#7D7582"
               value={description}
               onChangeText={setDescription}
               multiline
@@ -208,7 +208,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             <TextInput
               style={styles.input}
               placeholder="Email ou telefone caso deseje receber resposta"
-              placeholderTextColor="#64748B"
+              placeholderTextColor="#7D7582"
               value={contactInfo}
               onChangeText={setContactInfo}
               keyboardType="email-address"
@@ -230,12 +230,12 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   value={includeLocation && !!userLocation}
                   onValueChange={setIncludeLocation}
                   disabled={!userLocation}
-                  trackColor={{ false: '#334155', true: M3Colors.primaryContainer }}
-                  thumbColor={includeLocation && userLocation ? M3Colors.primary : '#94A3B8'}
+                  trackColor={{ false: '#e2dbe6', true: '#c0efdc' }}
+                  thumbColor={includeLocation && userLocation ? '#ffffff' : '#b0a7b3'}
                 />
               </View>
 
-              <View style={[styles.toggleRow, { borderTopWidth: 1, borderTopColor: '#282A2F', marginTop: 10, paddingTop: 10 }]}>
+              <View style={[styles.toggleRow, { borderTopWidth: 1, borderTopColor: '#f1f2fa', marginTop: 10, paddingTop: 10 }]}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.toggleTitle}>Incluir dados do dispositivo</Text>
                   <Text style={styles.toggleSubtitle}>
@@ -245,8 +245,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 <Switch
                   value={includeDevice}
                   onValueChange={setIncludeDevice}
-                  trackColor={{ false: '#334155', true: M3Colors.primaryContainer }}
-                  thumbColor={includeDevice ? M3Colors.primary : '#94A3B8'}
+                  trackColor={{ false: '#e2dbe6', true: '#c0efdc' }}
+                  thumbColor={includeDevice ? '#ffffff' : '#b0a7b3'}
                 />
               </View>
             </View>
@@ -269,10 +269,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#062E6F" />
+                  <ActivityIndicator size="small" color="#383139" />
                 ) : (
                   <>
-                    <Ionicons name="paper-plane" size={18} color="#062E6F" />
+                    <Ionicons name="paper-plane" size={18} color="#383139" />
                     <Text style={styles.submitBtnText}>Enviar Feedback</Text>
                   </>
                 )}
@@ -286,23 +286,23 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(56, 49, 57, 0.45)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
     maxHeight: '90%',
     paddingBottom: Platform.OS === 'ios' ? 34 : 20,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
   },
   header: {
@@ -312,9 +312,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 14,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
-    backgroundColor: '#f5f4ee',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#f1f2fa',
+    backgroundColor: '#fffdf7',
   },
   headerTitleWrap: {
     flexDirection: 'row',
@@ -324,45 +324,55 @@ const styles = StyleSheet.create({
   headerIconBadge: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
     textTransform: 'uppercase',
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#000000',
+    color: '#7D7582',
     fontWeight: '600',
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 24,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   sectionLabel: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: 8,
@@ -377,44 +387,50 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
     backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    elevation: 2,
   },
   chipText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#000000',
+    color: '#383139',
     textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    color: '#000000',
+    backgroundColor: '#f1f2fa',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    color: '#383139',
     fontSize: 14,
     fontWeight: '700',
   },
   textArea: {
+    borderRadius: 24,
     minHeight: 90,
   },
   togglesCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    padding: 14,
+    borderRadius: 28,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    padding: 16,
     marginTop: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 3,
   },
   toggleRow: {
@@ -425,12 +441,12 @@ const styles = StyleSheet.create({
   toggleTitle: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
     textTransform: 'uppercase',
   },
   toggleSubtitle: {
     fontSize: 11,
-    color: '#000000',
+    color: '#7D7582',
     fontWeight: '600',
     marginTop: 2,
   },
@@ -443,14 +459,19 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#e8e8e8',
+    paddingHorizontal: 20,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cancelBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -459,23 +480,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
     paddingVertical: 12,
     paddingHorizontal: 22,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
   },
   submitBtnDisabled: {
     opacity: 0.5,
   },
   submitBtnText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '900',
     textTransform: 'uppercase',

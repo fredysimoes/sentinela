@@ -284,7 +284,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           <Ionicons
             name={accessibleRouteOnly ? 'checkmark-circle' : 'ellipse-outline'}
             size={22}
-            color="#06140E"
+            color="#383139"
           />
         </TouchableOpacity>
       )}
@@ -298,9 +298,9 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           activeOpacity={0.85}
         >
           {accessibleRouteOnly ? (
-            <MaterialCommunityIcons name="wheelchair" size={19} color="#080A0C" />
+            <MaterialCommunityIcons name="wheelchair" size={19} color="#383139" />
           ) : (
-            <Ionicons name="walk" size={18} color="#10B981" />
+            <Ionicons name="walk" size={18} color="#383139" />
           )}
           <Text style={styles.navBtnTextDark}>
             {accessibleRouteOnly ? 'A Pé (Sem Barreiras)' : 'A Pé em Segurança'}
@@ -313,7 +313,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           onPress={handleStartDriveRoute}
           activeOpacity={0.85}
         >
-          <Ionicons name="car-sport" size={17} color="#F59E0B" />
+          <Ionicons name="car-sport" size={17} color="#383139" />
           <Text style={styles.navBtnTextDark}>De Carro</Text>
         </TouchableOpacity>
 
@@ -330,7 +330,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           }}
           activeOpacity={0.85}
         >
-          <MaterialCommunityIcons name="bus-side" size={17} color="#0284C7" />
+          <MaterialCommunityIcons name="bus-side" size={17} color="#383139" />
           <Text style={styles.navBtnTextDark}>Transportes</Text>
         </TouchableOpacity>
       </View>
@@ -346,7 +346,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
             }}
             activeOpacity={0.8}
           >
-            <Ionicons name="play-circle-outline" size={16} color="#10B981" />
+            <Ionicons name="play-circle-outline" size={16} color="#383139" />
             <Text style={styles.secondaryBtnTextDark}>
               Partir Daqui (A)
             </Text>
@@ -358,7 +358,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           onPress={handleReportHere}
           activeOpacity={0.8}
         >
-          <Ionicons name="alert-circle-outline" size={16} color="#F59E0B" />
+          <Ionicons name="alert-circle-outline" size={16} color="#383139" />
           <Text style={styles.secondaryBtnTextDark}>Sinalizar Perigo</Text>
         </TouchableOpacity>
 
@@ -367,7 +367,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           onPress={handleOpenGoogleMaps}
           activeOpacity={0.8}
         >
-          <Ionicons name="map-outline" size={16} color="#475569" />
+          <Ionicons name="map-outline" size={16} color="#383139" />
           <Text style={styles.secondaryBtnTextDark}>Google Maps</Text>
         </TouchableOpacity>
       </View>
@@ -381,24 +381,28 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
     borderLeftWidth: 0,
     borderRightWidth: 0,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'android' ? 92 : 90,
-    ...M3Elevation.level4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
     zIndex: 8000,
   },
   handle: {
-    width: 48,
+    width: 36,
     height: 4,
-    backgroundColor: '#000000',
-    borderRadius: 0,
+    backgroundColor: '#ded0f9',
+    borderRadius: 999,
     alignSelf: 'center',
     marginBottom: 10,
   },
@@ -414,17 +418,16 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   poiBadgeText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   closeBtn: {
     padding: 6,
@@ -434,15 +437,15 @@ const styles = StyleSheet.create({
   },
   placeTitle: {
     fontSize: 19,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     lineHeight: 24,
   },
   placeSubtitle: {
     fontSize: 13,
-    color: '#000000',
+    color: '#48404b',
     marginTop: 3,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   wheelmapInlineBadgeWrap: {
     flexDirection: 'row',
@@ -452,12 +455,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
   },
   wheelmapInlineText: {
     fontSize: 11,
@@ -471,25 +474,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
   },
   officialAddressText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#000000',
+    color: '#383139',
   },
   officialAddressSource: {
     fontSize: 9,
-    fontWeight: '800',
-    color: '#000000',
+    fontWeight: '700',
+    color: '#48404b',
     paddingLeft: 4,
     borderLeftWidth: 1,
-    borderLeftColor: '#000000',
+    borderLeftColor: 'rgba(56, 49, 57, 0.2)',
   },
   estimatesRow: {
     flexDirection: 'row',
@@ -500,55 +503,63 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 10,
+    backgroundColor: '#fffdf7',
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
   estimatePillAccessible: {
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
+    borderColor: '#ffffff',
+    backgroundColor: '#c5e5fb',
   },
   estimateValue: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#000000',
+    color: '#383139',
   },
   accessToggleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0000ff',
-    borderWidth: 3,
-    borderColor: '#000000',
-    borderRadius: 0,
+    backgroundColor: '#c5e5fb',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    borderRadius: 24,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 12,
     gap: 12,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   accessIconWrap: {
     width: 38,
     height: 38,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   accessTitle: {
     fontSize: 14,
-    fontWeight: '900',
-    color: '#ffffff',
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#383139',
   },
   accessSub: {
     fontSize: 11,
-    color: '#ffffff',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     lineHeight: 14,
     marginTop: 1,
   },
@@ -562,22 +573,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 13,
-    borderRadius: 0,
+    paddingVertical: 12,
+    borderRadius: 999,
     gap: 8,
     height: 48,
   },
   navBtnWhite: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 3,
-    borderColor: '#000000',
-    ...M3Elevation.level2,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   navBtnTextDark: {
-    color: '#000000',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 13,
-    textTransform: 'uppercase',
   },
   secondaryRow: {
     flexDirection: 'row',
@@ -592,16 +606,19 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 0,
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    ...M3Elevation.level1,
+    backgroundColor: '#ded0f9',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   secondaryBtnTextDark: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
 });

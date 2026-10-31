@@ -47,8 +47,8 @@ export const MetroStationDetailSheet: React.FC<MetroStationDetailSheetProps> = (
 
           <View style={styles.headerInfo}>
             <View style={styles.badgeRow}>
-              <View style={[styles.stationBadge, { borderColor: primaryColor }]}>
-                <Text style={[styles.stationBadgeText, { color: primaryColor }]}>
+              <View style={styles.stationBadge}>
+                <Text style={styles.stationBadgeText}>
                   {station.isUnderground ? 'ESTAÇÃO SUBTERRÂNEA' : 'METRO DO PORTO'}
                 </Text>
               </View>
@@ -71,7 +71,7 @@ export const MetroStationDetailSheet: React.FC<MetroStationDetailSheetProps> = (
           <Text style={styles.sectionTitle}>LINHAS QUE SERVEM ESTA ESTAÇÃO</Text>
           <View style={styles.linesChipsWrap}>
             {station.lines.map((line) => {
-              const color = METRO_LINE_COLORS[line] || '#0284C7';
+              const color = METRO_LINE_COLORS[line] || '#ded0f9';
               return (
                 <View key={`line-chip-${line}`} style={[styles.lineBadge, { backgroundColor: color }]}>
                   <Text style={styles.lineBadgeText}>Linha {line}</Text>
@@ -86,7 +86,7 @@ export const MetroStationDetailSheet: React.FC<MetroStationDetailSheetProps> = (
           <M3Button
             title="Navegar até à Estação"
             variant="filled"
-            icon={<Ionicons name="navigate" size={18} color="#06140E" />}
+            icon={<Ionicons name="navigate" size={18} color="#383139" />}
             style={styles.navigateBtn}
             onPress={() => onNavigateToStation(station)}
           />
@@ -98,27 +98,27 @@ export const MetroStationDetailSheet: React.FC<MetroStationDetailSheetProps> = (
 
 const styles = StyleSheet.create({
   sheetContent: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 28,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
   },
   handleBar: {
-    width: 48,
+    width: 36,
     height: 4,
-    backgroundColor: '#000000',
-    borderRadius: 0,
+    backgroundColor: '#ded0f9',
+    borderRadius: 999,
     alignSelf: 'center',
     marginBottom: 16,
   },
@@ -129,12 +129,18 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 52,
     height: 52,
-    borderRadius: 0,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#ded0f9',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerInfo: {
     flex: 1,
@@ -145,49 +151,48 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   stationBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#ded0f9',
     marginRight: 8,
   },
   stationBadgeText: {
     fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    color: '#000000',
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    color: '#383139',
   },
   distanceText: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '700',
+    color: '#48404b',
+    fontWeight: '600',
   },
   stationName: {
     fontSize: 19,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     letterSpacing: -0.3,
-    textTransform: 'uppercase',
   },
   stationSub: {
     fontSize: 13,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 2,
   },
   linesSection: {
     marginTop: 18,
     paddingTop: 14,
-    borderTopWidth: 3,
-    borderTopColor: '#000000',
+    borderTopWidth: 1.5,
+    borderTopColor: '#ffffff',
   },
   sectionTitle: {
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    color: '#000000',
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    color: '#383139',
     marginBottom: 10,
     textTransform: 'uppercase',
   },
@@ -197,36 +202,40 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   lineBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
   },
   lineBadgeText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '800',
     color: '#FFFFFF',
-    textTransform: 'uppercase',
   },
   navigateBtn: {
     marginTop: 20,
-    backgroundColor: '#ff0000',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    backgroundColor: '#f6a3ca',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   navigateBtnText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '800',
     textTransform: 'uppercase',
   },
 });

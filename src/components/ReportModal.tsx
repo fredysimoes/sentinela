@@ -254,11 +254,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               style={styles.backBtn}
               activeOpacity={0.7}
             >
-              <Ionicons name="chevron-back" size={18} color="#06B6D4" />
+              <Ionicons name="chevron-back" size={18} color="#383139" />
               <Text style={styles.backBtnText}>Geral</Text>
             </TouchableOpacity>
             <View style={[styles.headerIconBadge, styles.accessibilityHeaderBadge]}>
-              <MaterialCommunityIcons name="wheelchair" size={20} color="#06B6D4" />
+              <MaterialCommunityIcons name="wheelchair" size={20} color="#383139" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>Acessibilidade</Text>
@@ -270,7 +270,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         ) : (
           <View style={styles.headerLeftRow}>
             <View style={styles.headerIconBadge}>
-              <Ionicons name="warning-outline" size={20} color="#FBBF24" />
+              <Ionicons name="warning-outline" size={20} color="#383139" />
             </View>
             <View>
               <Text style={styles.headerTitle}>Sinalizar no Mapa</Text>
@@ -281,7 +281,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </View>
         )}
         <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-          <Ionicons name="close" size={22} color="#94A3B8" />
+          <Ionicons name="close" size={20} color="#383139" />
         </TouchableOpacity>
       </View>
 
@@ -298,13 +298,13 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             activeOpacity={0.8}
           >
             <View style={styles.stalkingIconCircle}>
-              <Ionicons name="eye" size={22} color="#FFFFFF" />
+              <Ionicons name="eye" size={22} color="#383139" />
             </View>
             <View style={{ flex: 1 }}>
               <View style={styles.stalkingTitleRow}>
                 <Text style={styles.stalkingTitle}>Estou a ser seguido(a)</Text>
                 <View style={styles.privateBadge}>
-                  <Ionicons name="lock-closed" size={10} color="#FFFFFF" style={{ marginRight: 3 }} />
+                  <Ionicons name="lock-closed" size={10} color="#383139" style={{ marginRight: 3 }} />
                   <Text style={styles.privateBadgeText}>Privado</Text>
                 </View>
               </View>
@@ -312,7 +312,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 Ativar gravação discreta e rastro ao vivo apenas para os seus Sentinelas.
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+            <Ionicons name="chevron-forward" size={20} color="#383139" />
           </TouchableOpacity>
         )}
 
@@ -328,7 +328,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             activeOpacity={0.85}
           >
             <View style={styles.accessIconCircle}>
-              <MaterialCommunityIcons name="wheelchair" size={24} color="#06140E" />
+              <MaterialCommunityIcons name="wheelchair" size={24} color="#383139" />
             </View>
             <View style={{ flex: 1 }}>
               <View style={styles.accessTitleRow}>
@@ -338,16 +338,16 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 Degraus sem rampa, elevadores avariados, passeio cortado e calçada perigosa.
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#06140E" />
+            <Ionicons name="chevron-forward" size={20} color="#383139" />
           </TouchableOpacity>
         )}
 
         {/* Accessibility Notice Banner (When inside Accessibility Submenu) */}
         {isAccessibility && (
           <View style={styles.accessNoticeBanner}>
-            <MaterialCommunityIcons name="shield-check" size={22} color="#06B6D4" style={{ marginTop: 1 }} />
+            <MaterialCommunityIcons name="shield-check" size={22} color="#383139" style={{ marginTop: 1 }} />
             <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={styles.accessNoticeTitle}>REGISTO PERMANENTE DE ACESSIBILIDADE</Text>
+              <Text style={styles.accessNoticeTitle}>Registo Permanente de Acessibilidade</Text>
               <Text style={styles.accessNoticeText}>
                 Estes alertas não expiram ao fim de 12h. Ficam disponíveis no mapa para proteger pessoas de cadeira de rodas, idosos e carrinhos de bebé até serem resolvidos.
               </Text>
@@ -372,13 +372,13 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             activeOpacity={0.8}
           >
             <View style={styles.infiltratorIconCircle}>
-              <Ionicons name="eye-off" size={22} color="#FFFFFF" />
+              <Ionicons name="eye-off" size={22} color="#383139" />
             </View>
             <View style={{ flex: 1 }}>
               <View style={styles.infiltratorTitleRow}>
                 <Text style={styles.infiltratorTitle}>Possíveis Infiltrados</Text>
                 <View style={styles.infiltratorBadge}>
-                  <Ionicons name="shield-checkmark" size={10} color="#EF4444" style={{ marginRight: 3 }} />
+                  <Ionicons name="shield-checkmark" size={10} color="#383139" style={{ marginRight: 3 }} />
                   <Text style={styles.infiltratorBadgeText}>Modo Protesto</Text>
                 </View>
               </View>
@@ -386,7 +386,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 Sinalizar provocadores na manifestação. Usar com cautela: o marcador só aparece no mapa após 2 ou 3 sinalizações trianguladas num raio de 300m.
               </Text>
               <View style={styles.infiltratorMetaRow}>
-                <Ionicons name="people" size={12} color="#FCA5A5" />
+                <Ionicons name="people" size={12} color="#383139" />
                 <Text style={styles.infiltratorMetaText}>
                   {nearbyInfiltratorSignals >= 2
                     ? `Visível e triangulado no mapa (${nearbyInfiltratorSignals} sinalizações)`
@@ -397,7 +397,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             <Ionicons
               name={selectedCategory === 'protest_infiltrator' ? 'checkmark-circle' : 'chevron-forward'}
               size={20}
-              color={selectedCategory === 'protest_infiltrator' ? '#FFFFFF' : '#EF4444'}
+              color="#383139"
             />
           </TouchableOpacity>
         )}
@@ -405,10 +405,10 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         {/* Category selection Grid */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionLabel}>
-            {isAccessibility ? 'SELECIONE A BARREIRA ENCONTRADA' : 'TIPO DE OCORRÊNCIA'}
+            {isAccessibility ? 'Selecione a Barreira' : 'Tipo de Ocorrência'}
           </Text>
           <View style={styles.quickActionHintBadge}>
-            <MaterialCommunityIcons name="gesture-double-tap" size={14} color="#059669" />
+            <MaterialCommunityIcons name="gesture-double-tap" size={14} color="#383139" />
             <Text style={styles.quickActionHintText}>2 toques sinalização rápida</Text>
           </View>
         </View>
@@ -425,27 +425,24 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 style={[
                   styles.categoryCard,
                   isFullWidthLast && styles.categoryCardFullRow,
-                  isSelected && [
-                    styles.categoryCardSelected,
-                    { borderColor: cat.color, shadowColor: cat.color },
-                  ],
+                  isSelected && styles.categoryCardSelected,
                 ]}
                 onPress={() => handleCategoryPress(catKey)}
                 activeOpacity={0.78}
               >
                 {isSelected && (
-                  <View style={[styles.catSelectedCheckBadge, { backgroundColor: cat.color }]}>
-                    <Ionicons name="checkmark" size={11} color="#FFFFFF" />
+                  <View style={styles.catSelectedCheckBadge}>
+                    <Ionicons name="checkmark" size={11} color="#383139" />
                   </View>
                 )}
 
-                {/* Modern Teardrop Squircle Badge */}
+                {/* Claymorphism Squircle Badge */}
                 <View
                   style={[
                     styles.catIconSquircle,
                     isSelected
-                      ? { backgroundColor: cat.color, borderColor: cat.color }
-                      : { backgroundColor: '#0E1217', borderColor: cat.color },
+                      ? { backgroundColor: '#f6a3ca' }
+                      : { backgroundColor: '#fffdf7' },
                   ]}
                 >
                   {renderModernCategoryIcon(catKey, isSelected)}
@@ -567,14 +564,18 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
 const styles = StyleSheet.create({
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
     maxHeight: '92%',
     paddingBottom: Platform.OS === 'ios' ? 92 : 90,
-    borderTopWidth: 4,
-    borderTopColor: '#000000',
-    ...M3Elevation.level4,
+    borderTopWidth: 2,
+    borderTopColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
   },
   header: {
     flexDirection: 'row',
@@ -583,9 +584,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 14,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
-    backgroundColor: '#f5f4ee',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
+    backgroundColor: '#fffdf7',
   },
   headerLeftRow: {
     flexDirection: 'row',
@@ -596,56 +597,65 @@ const styles = StyleSheet.create({
   headerIconBadge: {
     width: 40,
     height: 40,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   accessibilityHeaderBadge: {
-    backgroundColor: '#0000ff',
-    borderColor: '#000000',
+    backgroundColor: '#c5e5fb',
+    borderColor: '#ffffff',
   },
   backBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 8,
+    backgroundColor: '#fffdf7',
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     marginRight: 2,
     gap: 2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   backBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#000000',
-    textTransform: 'uppercase',
+    color: '#383139',
   },
   headerTitle: {
     fontSize: 19,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     letterSpacing: -0.3,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#000000',
+    color: '#48404b',
     marginTop: 2,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#000000',
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   scrollContent: {
     padding: 20,
@@ -653,22 +663,26 @@ const styles = StyleSheet.create({
   stalkingAlertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ff0000',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    padding: 14,
+    backgroundColor: '#f6a3ca',
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    padding: 16,
     marginBottom: 12,
     gap: 12,
-    ...M3Elevation.level3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   stalkingIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -679,52 +693,54 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   stalkingTitle: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 16,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   privateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000000',
-    paddingHorizontal: 7,
-    paddingVertical: 2.5,
-    borderRadius: 0,
+    backgroundColor: '#fffdf7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
   },
   privateBadgeText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 10,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   stalkingSub: {
-    color: '#FFFFFF',
+    color: '#48404b',
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   accessibilityEntryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0000ff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    padding: 14,
+    backgroundColor: '#c5e5fb',
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    padding: 16,
     marginBottom: 14,
     gap: 12,
-    ...M3Elevation.level3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   accessIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -735,40 +751,43 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   accessTitle: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 16,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   accessSub: {
-    color: '#FFFFFF',
+    color: '#48404b',
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   accessNoticeBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#ffffff',
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    borderRadius: 0,
-    padding: 12,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 20,
+    padding: 14,
     marginBottom: 14,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   accessNoticeTitle: {
     fontSize: 11,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     marginBottom: 3,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   accessNoticeText: {
     fontSize: 12,
-    color: '#000000',
+    color: '#48404b',
     lineHeight: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   expirationNoticeRow: {
     flexDirection: 'row',
@@ -779,34 +798,38 @@ const styles = StyleSheet.create({
   },
   expirationNoticeText: {
     fontSize: 11,
-    color: '#000000',
+    color: '#48404b',
     flex: 1,
     lineHeight: 15,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   infiltratorAlertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderWidth: 3,
-    borderColor: '#000000',
-    borderRadius: 0,
-    padding: 14,
+    backgroundColor: '#fffdf7',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    borderRadius: 32,
+    padding: 16,
     marginBottom: 16,
     gap: 12,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   infiltratorAlertCardActive: {
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
+    borderColor: '#ffffff',
+    backgroundColor: '#f9e7a8',
   },
   infiltratorIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    backgroundColor: '#ff0000',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -817,31 +840,30 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   infiltratorTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 15,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   infiltratorBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
-    borderWidth: 1.5,
-    borderColor: '#000000',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 0,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1,
+    borderColor: '#ffffff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
   },
   infiltratorBadgeText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   infiltratorSub: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 11,
     lineHeight: 15,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   infiltratorMetaRow: {
     flexDirection: 'row',
@@ -850,88 +872,91 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   infiltratorMetaText: {
-    color: '#ff0000',
+    color: '#48404b',
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   cautionBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#ffff00',
-    borderLeftWidth: 4,
-    borderLeftColor: '#000000',
-    borderWidth: 2,
-    borderColor: '#000000',
-    borderRadius: 0,
-    padding: 12,
+    backgroundColor: '#f9e7a8',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 20,
+    padding: 14,
     marginTop: 12,
   },
   cautionBannerTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    letterSpacing: 0.3,
     marginBottom: 2,
-    textTransform: 'uppercase',
   },
   cautionBannerText: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 11,
     lineHeight: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
-    marginTop: 10,
+    marginBottom: 10,
+    marginTop: 12,
   },
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#000000',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#383139',
+    letterSpacing: 0.3,
   },
   quickActionHintBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ffff00',
+    backgroundColor: '#fffdf7',
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    ...M3Elevation.level1,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   quickActionHintText: {
     fontSize: 10.5,
-    fontWeight: '900',
-    color: '#000000',
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#383139',
   },
   categoriesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 9,
+    rowGap: 10,
   },
   categoryCard: {
     position: 'relative',
     width: '31.5%',
     aspectRatio: 1.04,
-    backgroundColor: '#ffffff',
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    borderRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    borderRadius: 24,
     paddingVertical: 10,
     paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    ...M3Elevation.level1,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   categoryCardFullRow: {
     width: '100%',
@@ -944,42 +969,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   categoryCardSelected: {
-    backgroundColor: '#ffff00',
-    borderWidth: 3.5,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    backgroundColor: '#ded0f9',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   catSelectedCheckBadge: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    width: 17,
-    height: 17,
-    borderRadius: 8.5,
+    top: 6,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+    borderColor: '#ffffff',
+    backgroundColor: '#f6a3ca',
   },
   catIconSquircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 999,
     borderWidth: 1.5,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   catLabel: {
     fontSize: 11,
-    color: '#080A0C',
-    fontWeight: '800',
+    color: '#383139',
+    fontWeight: '700',
     textAlign: 'center',
     lineHeight: 13.5,
-    letterSpacing: -0.1,
   },
   metaNotice: {
     backgroundColor: M3Colors.surfaceContainerLow,

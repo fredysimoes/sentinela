@@ -192,7 +192,7 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
           onPress={() => onNavigate(incident)}
           activeOpacity={0.85}
         >
-          <Ionicons name="navigate" size={18} color="#080A0C" />
+          <Ionicons name="navigate" size={18} color="#383139" />
           <Text style={styles.navigateBtnText}>Navegar com Rota Segura (A Pé)</Text>
         </TouchableOpacity>
       )}
@@ -203,7 +203,7 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
         onPress={handleOpenMaps}
         activeOpacity={0.85}
       >
-        <Ionicons name="map-outline" size={18} color="#080A0C" />
+        <Ionicons name="map-outline" size={18} color="#383139" />
         <Text style={styles.mapsBtnText}>Ver no Google Maps</Text>
       </TouchableOpacity>
 
@@ -213,7 +213,7 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
         onPress={handleDelete}
         activeOpacity={0.8}
       >
-        <Ionicons name="trash-outline" size={16} color="#EF4444" />
+        <Ionicons name="trash-outline" size={16} color="#7D7582" />
         <Text style={styles.deleteBtnText}>Remover Ocorrência do Mapa</Text>
       </TouchableOpacity>
     </Animated.View>
@@ -226,22 +226,26 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'android' ? 92 : 90,
-    borderTopWidth: 4,
-    borderTopColor: '#000000',
-    ...M3Elevation.level4,
+    borderTopWidth: 2,
+    borderTopColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
     zIndex: 8000,
   },
   handle: {
-    width: 48,
+    width: 36,
     height: 4,
-    borderRadius: 0,
-    backgroundColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     alignSelf: 'center',
     marginBottom: 12,
   },
@@ -254,9 +258,9 @@ const styles = StyleSheet.create({
   titleIconSquircle: {
     width: 40,
     height: 40,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -265,9 +269,9 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#000000',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#383139',
     letterSpacing: -0.3,
   },
   dateMetaContainer: {
@@ -276,11 +280,11 @@ const styles = StyleSheet.create({
   },
   dateMetaHighlight: {
     fontSize: 12,
-    color: '#000000',
+    color: '#48404b',
     fontWeight: '600',
   },
   dateMetaValue: {
-    color: '#000000',
+    color: '#383139',
     fontWeight: '800',
   },
   metaRow: {
@@ -296,30 +300,34 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
   },
   description: {
     fontSize: 14,
-    color: '#000000',
+    color: '#48404b',
     lineHeight: 20,
     marginBottom: 16,
     fontWeight: '500',
   },
   votingContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    padding: 12,
+    backgroundColor: '#fffdf7',
+    borderRadius: 24,
+    padding: 14,
     marginBottom: 16,
-    borderWidth: 3,
-    borderColor: '#000000',
-    ...M3Elevation.level2,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   votingTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#000000',
-    letterSpacing: 0.6,
+    color: '#383139',
+    letterSpacing: 0.3,
     marginBottom: 10,
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -333,74 +341,82 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 42,
-    borderRadius: 0,
+    height: 44,
+    borderRadius: 999,
     gap: 6,
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    ...M3Elevation.level1,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   confirmBtn: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#c0efdc',
   },
   confirmBtnText: {
-    color: '#000000',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 12,
-    textTransform: 'uppercase',
   },
   dismissBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fffdf7',
   },
   dismissBtnText: {
-    color: '#ff0000',
-    fontWeight: '900',
+    color: '#48404b',
+    fontWeight: '800',
     fontSize: 12,
-    textTransform: 'uppercase',
   },
   votingHint: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 11,
     marginTop: 8,
     textAlign: 'center',
-    fontWeight: '600',
+    fontWeight: '500',
   },
   mapsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    height: 48,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#ded0f9',
+    height: 50,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 8,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   navigateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff0000',
-    height: 48,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#f6a3ca',
+    height: 50,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 8,
     marginBottom: 10,
-    ...M3Elevation.level3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   navigateBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 15,
-    textTransform: 'uppercase',
   },
   mapsBtnText: {
-    color: '#000000',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 14,
-    textTransform: 'uppercase',
   },
   deleteBtn: {
     flexDirection: 'row',
@@ -411,7 +427,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   deleteBtnText: {
-    color: M3Colors.error,
+    color: '#7D7582',
     fontWeight: '600',
     fontSize: 13,
   },

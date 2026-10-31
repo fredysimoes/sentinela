@@ -109,7 +109,7 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
           <Ionicons
             name={isSafe ? 'shield-checkmark' : 'warning'}
             size={14}
-            color="#FFFFFF"
+            color="#383139"
           />
         )}
         <Text style={styles.statusTagText}>
@@ -130,7 +130,7 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
       {/* Transfer Alert Banner if step involves vehicle/line exchange */}
       {currentStep?.isTransfer && (
         <View style={styles.transferAlertBanner}>
-          <Ionicons name="swap-horizontal" size={15} color="#0F172A" />
+          <Ionicons name="swap-horizontal" size={15} color="#383139" />
           <Text style={styles.transferAlertBannerText} numberOfLines={1}>
             {currentStep.transferInstruction || 'TRANSBORDO: Troca de veículo recomendada'}
           </Text>
@@ -171,13 +171,13 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
             <MaterialCommunityIcons
               name={getTransitIcon(tInfo?.vehicleType) as any}
               size={24}
-              color={tInfo?.textColor || '#FFFFFF'}
+              color="#383139"
             />
           ) : (
             <Ionicons
               name={getManeuverIcon(currentStep?.maneuverModifier, currentStep?.maneuverType) as any}
               size={24}
-              color="#FFFFFF"
+              color="#383139"
             />
           )}
         </View>
@@ -195,7 +195,7 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
         </View>
 
         <TouchableOpacity onPress={onExit} style={styles.exitBtn} activeOpacity={0.8}>
-          <Ionicons name="close" size={20} color="#FFFFFF" />
+          <Ionicons name="close" size={20} color="#383139" />
         </TouchableOpacity>
       </Animated.View>
 
@@ -205,7 +205,7 @@ export const NavigationBanner: React.FC<NavigationBannerProps> = ({
           <Ionicons
             name={navState.mode === 'driving' ? 'car-sport' : navState.mode === 'transit' ? 'bus' : 'walk'}
             size={15}
-            color="#38BDF8"
+            color="#383139"
           />
           <Text style={styles.etaTime}>
             {navState.route.formattedDuration || `${navState.timeRemainingMinutes} min`}
@@ -232,11 +232,15 @@ const styles = StyleSheet.create({
     top: 50,
     left: 14,
     right: 14,
-    backgroundColor: '#f5f4ee',
-    borderRadius: 0,
-    borderWidth: 4,
-    borderColor: '#000000',
-    ...M3Elevation.level4,
+    backgroundColor: '#fffdf7',
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
     zIndex: 999,
     overflow: 'hidden',
   },
@@ -244,105 +248,108 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
   },
   statusSafe: {
-    backgroundColor: '#0000ff',
+    backgroundColor: '#c0efdc',
   },
   statusTransit: {
-    backgroundColor: '#0000ff',
+    backgroundColor: '#ded0f9',
   },
   statusWarning: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#f9e7a8',
   },
   statusTagText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   transferAlertBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    backgroundColor: '#f9e7a8',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     gap: 8,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
   },
   transferAlertBannerText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '800',
     flex: 1,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    letterSpacing: 0.2,
   },
   mainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    padding: 16,
     gap: 12,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   turnIconWrap: {
     width: 46,
     height: 46,
-    borderRadius: 0,
-    borderWidth: 2.5,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   turnIconSafe: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#c0efdc',
   },
   turnIconWarn: {
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f9e7a8',
   },
   turnIconTransit: {
-    backgroundColor: '#0000ff',
+    backgroundColor: '#ded0f9',
   },
   instructionWrap: {
     flex: 1,
   },
   nextDistText: {
     fontSize: 12,
-    color: '#ff0000',
-    fontWeight: '900',
+    color: '#48404b',
+    fontWeight: '700',
     textTransform: 'uppercase',
   },
   instructionText: {
     fontSize: 15,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     marginTop: 2,
     lineHeight: 20,
   },
   exitBtn: {
     width: 36,
     height: 36,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   etaBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#ffffff',
-    borderTopWidth: 2.5,
-    borderTopColor: '#000000',
+    paddingVertical: 12,
+    backgroundColor: '#fffdf7',
+    borderTopWidth: 1.5,
+    borderTopColor: '#ffffff',
   },
   etaItem: {
     flexDirection: 'row',
@@ -351,22 +358,22 @@ const styles = StyleSheet.create({
   },
   etaTime: {
     fontSize: 14,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
   },
   etaDist: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '700',
+    color: '#48404b',
+    fontWeight: '600',
   },
   etaArrival: {
     fontSize: 11,
-    color: '#000000',
-    fontWeight: '900',
+    color: '#48404b',
+    fontWeight: '700',
   },
   destText: {
     fontSize: 12,
-    color: '#000000',
+    color: '#383139',
     fontWeight: '700',
     maxWidth: '55%',
   },

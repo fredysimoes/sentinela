@@ -194,7 +194,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({
             <View style={styles.content}>
               <View style={styles.homeCard}>
                 <View style={styles.homePinCircle}>
-                  <Ionicons name="home" size={28} color="#0F172A" />
+                  <Ionicons name="home" size={24} color="#383139" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.homeCardTitle}>{currentHome.title}</Text>
@@ -207,20 +207,20 @@ export const HomeModal: React.FC<HomeModalProps> = ({
               {distanceToHome !== null && (
                 <View style={styles.estimatesRow}>
                   <View style={styles.estimatePill}>
-                    <Ionicons name="navigate-outline" size={15} color="#38BDF8" />
+                    <Ionicons name="navigate-outline" size={15} color="#383139" />
                     <Text style={styles.estimateValue}>{formatDistance(distanceToHome)} de si</Text>
                   </View>
 
                   {walkMins !== null && (
                     <View style={styles.estimatePill}>
-                      <Ionicons name="walk" size={15} color="#10B981" />
+                      <Ionicons name="walk" size={15} color="#383139" />
                       <Text style={styles.estimateValue}>~{formatDuration(walkMins)} a pé</Text>
                     </View>
                   )}
 
                   {driveMins !== null && (
                     <View style={styles.estimatePill}>
-                      <Ionicons name="car-sport" size={15} color="#F59E0B" />
+                      <Ionicons name="car-sport" size={15} color="#383139" />
                       <Text style={styles.estimateValue}>~{formatDuration(driveMins)} de carro</Text>
                     </View>
                   )}
@@ -234,7 +234,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({
                   onPress={handleNavigate}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="navigate" size={20} color="#0F172A" />
+                  <Ionicons name="navigate" size={18} color="#383139" />
                   <Text style={styles.navigateHomeBtnText}>Ir Para Casa em Segurança</Text>
                 </TouchableOpacity>
               )}
@@ -246,7 +246,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({
                   onPress={() => setIsEditing(true)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="create-outline" size={16} color="#38BDF8" />
+                  <Ionicons name="create-outline" size={16} color="#383139" />
                   <Text style={styles.secondaryActionText}>Alterar Morada</Text>
                 </TouchableOpacity>
 
@@ -255,8 +255,8 @@ export const HomeModal: React.FC<HomeModalProps> = ({
                   onPress={handleRemoveHome}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                  <Text style={[styles.secondaryActionText, { color: '#EF4444' }]}>
+                  <Ionicons name="trash-outline" size={16} color="#383139" />
+                  <Text style={styles.secondaryActionText}>
                     Remover Casa
                   </Text>
                 </TouchableOpacity>
@@ -264,7 +264,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({
 
               {/* Privacy Guarantee Banner */}
               <View style={styles.privacyCard}>
-                <Ionicons name="shield-checkmark" size={16} color="#10B981" />
+                <Ionicons name="shield-checkmark" size={16} color="#383139" />
                 <Text style={styles.privacyCardText}>
                   Privacidade 100% Local: Esta morada é armazenada exclusivamente na memória encriptada do seu telemóvel e nunca é enviada para a nuvem nem para terceiros.
                 </Text>
@@ -275,7 +275,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({
             <View style={styles.content}>
               {/* Privacy Notice Banner */}
               <View style={[styles.privacyCard, { marginBottom: 14 }]}>
-                <Ionicons name="lock-closed" size={16} color="#38BDF8" />
+                <Ionicons name="lock-closed" size={16} color="#383139" />
                 <Text style={styles.privacyCardText}>
                   Privacidade Garantida: A sua morada fica gravada apenas no telemóvel para cálculo de rotas seguras e nunca sai do seu dispositivo.
                 </Text>
@@ -369,24 +369,24 @@ export const HomeModal: React.FC<HomeModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(56, 49, 57, 0.45)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
     paddingBottom: Platform.OS === 'android' ? 92 : 90,
     maxHeight: '88%',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
   },
   header: {
     flexDirection: 'row',
@@ -394,9 +394,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
-    backgroundColor: '#f5f4ee',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
+    backgroundColor: '#fffdf7',
   },
   headerTitleWrap: {
     flexDirection: 'row',
@@ -406,31 +406,44 @@ const styles = StyleSheet.create({
   homeIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#f9e7a8',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: 19,
-    fontWeight: '900',
-    color: '#000000',
-    textTransform: 'uppercase',
-    letterSpacing: -0.5,
+    fontWeight: '800',
+    color: '#383139',
+    letterSpacing: -0.3,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 2,
   },
   closeBtn: {
-    padding: 6,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   content: {
     padding: 20,
@@ -438,39 +451,38 @@ const styles = StyleSheet.create({
   homeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fffdf7',
     padding: 16,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     gap: 14,
     marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   homePinCircle: {
     width: 46,
     height: 46,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ff0000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#f6a3ca',
     justifyContent: 'center',
     alignItems: 'center',
   },
   homeCardTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 16,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   homeCardAddress: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
     marginTop: 4,
     lineHeight: 16,
   },
@@ -484,15 +496,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 10,
+    backgroundColor: '#fffdf7',
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
   estimateValue: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -500,74 +517,77 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
     paddingVertical: 14,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 8,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
     marginBottom: 12,
   },
   navigateHomeBtnText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 15,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: '800',
   },
   cardActionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 6,
+    gap: 10,
   },
   secondaryActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#ded0f9',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   secondaryActionText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   currentLocBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
+    backgroundColor: '#c0efdc',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     gap: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
     marginBottom: 16,
   },
   currentLocBtnTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   currentLocBtnSub: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '500',
     marginTop: 2,
   },
   dividerRow: {
@@ -578,91 +598,111 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-    height: 2,
-    backgroundColor: '#000000',
+    height: 1.5,
+    backgroundColor: 'rgba(56, 49, 57, 0.1)',
   },
   dividerText: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     paddingHorizontal: 16,
     height: 50,
     gap: 8,
     marginBottom: 10,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   input: {
     flex: 1,
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   suggestionsListContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     overflow: 'hidden',
     marginBottom: 10,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(56, 49, 57, 0.06)',
     gap: 10,
   },
   suggestionTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   suggestionSubtitle: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 12,
     fontWeight: '500',
     marginTop: 1,
   },
   cancelEditBtn: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     marginTop: 6,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#e8e8e8',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   cancelEditText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   privacyCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e8e8e8',
-    borderWidth: 2,
-    borderColor: '#000000',
-    borderRadius: 0,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     gap: 10,
     marginTop: 14,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   privacyCardText: {
     flex: 1,
-    color: '#000000',
+    color: '#48404b',
     fontSize: 11,
     lineHeight: 15,
     fontWeight: '600',

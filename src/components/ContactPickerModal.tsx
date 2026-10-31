@@ -74,11 +74,11 @@ export const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
 
           {/* Search Box */}
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#64748B" style={{ marginRight: 8 }} />
+            <Ionicons name="search" size={18} color="#7D7582" style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               placeholder="Pesquisar por nome ou número..."
-              placeholderTextColor="#64748B"
+              placeholderTextColor="#7D7582"
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCorrect={false}
@@ -86,7 +86,7 @@ export const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={18} color="#64748B" />
+                <Ionicons name="close-circle" size={18} color="#7D7582" />
               </TouchableOpacity>
             )}
           </View>
@@ -94,7 +94,7 @@ export const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
           {/* Contact List */}
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#38BDF8" />
+              <ActivityIndicator size="large" color="#f6a3ca" />
               <Text style={styles.loadingText}>A aceder aos contactos do dispositivo...</Text>
             </View>
           ) : (
@@ -108,7 +108,7 @@ export const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
               maxToRenderPerBatch={20}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
-                  <Ionicons name="person-outline" size={40} color="#475569" />
+                  <Ionicons name="person-outline" size={40} color="#7D7582" />
                   <Text style={styles.emptyText}>
                     {searchQuery.trim()
                       ? 'Nenhum contacto encontrado para a pesquisa.'
@@ -132,11 +132,11 @@ export const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
                         {item.name}
                       </Text>
                       <View style={styles.phoneRow}>
-                        <Ionicons name="call-outline" size={12} color="#38BDF8" />
+                        <Ionicons name="call-outline" size={12} color="#7D7582" />
                         <Text style={styles.contactPhone}>{item.phone}</Text>
                       </View>
                     </View>
-                    <Ionicons name="add" size={20} color="#38BDF8" />
+                    <Ionicons name="add" size={20} color="#383139" />
                   </TouchableOpacity>
                 );
               }}
@@ -151,24 +151,24 @@ export const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(56, 49, 57, 0.45)',
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
     height: '86%',
     maxHeight: '90%',
     paddingTop: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
   },
   header: {
@@ -177,28 +177,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingBottom: 14,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
-    backgroundColor: '#f5f4ee',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#f1f2fa',
+    backgroundColor: '#fffdf7',
   },
   title: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
     textTransform: 'uppercase',
   },
   subtitle: {
     fontSize: 12,
-    color: '#000000',
+    color: '#7D7582',
     fontWeight: '600',
     marginTop: 2,
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   searchBox: {
     flexDirection: 'row',
@@ -206,15 +214,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginHorizontal: 16,
     marginVertical: 12,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '700',
     padding: 0,
@@ -227,7 +240,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 13,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -241,30 +254,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff',
     paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 0,
+    paddingHorizontal: 14,
+    borderRadius: 24,
     marginBottom: 8,
-    borderWidth: 2.5,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
   avatarCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   avatarInitial: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 15,
     fontWeight: '900',
   },
@@ -272,7 +285,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contactName: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -284,7 +297,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   contactPhone: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -295,7 +308,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   emptyText: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',

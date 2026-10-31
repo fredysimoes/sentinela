@@ -106,8 +106,8 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
         {/* Header Tag & Controls */}
         <View style={styles.topBannerHeader}>
           <View style={styles.simBadge}>
-            <Ionicons name="game-controller" size={13} color="#38BDF8" />
-            <Text style={styles.simBadgeText}>MODO SIMULAÇÃO</Text>
+            <Ionicons name="game-controller" size={13} color="#383139" />
+            <Text style={styles.simBadgeText}>Modo Simulação</Text>
           </View>
 
           <View style={styles.stepCounterBadge}>
@@ -124,7 +124,7 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
             style={styles.exitBtn}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="close" size={18} color="#94A3B8" />
+            <Ionicons name="close" size={16} color="#383139" />
             <Text style={styles.exitBtnText}>Sair</Text>
           </TouchableOpacity>
         </View>
@@ -132,7 +132,7 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
         {/* Transfer Warning Banner in Simulation */}
         {currentStep?.isTransfer && (
           <View style={styles.simTransferBanner}>
-            <Ionicons name="swap-horizontal" size={15} color="#0F172A" />
+            <Ionicons name="swap-horizontal" size={15} color="#383139" />
             <Text style={styles.simTransferBannerText} numberOfLines={1}>
               {currentStep.transferInstruction || 'PONTO DE TRANSBORDO: Troca de veículo recomendada'}
             </Text>
@@ -160,7 +160,7 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
             <Ionicons
               name={getManeuverIcon(currentStep?.maneuverModifier, currentStep?.maneuverType) as any}
               size={22}
-              color="#38BDF8"
+              color="#383139"
             />
           </View>
 
@@ -179,8 +179,8 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
         {/* Origin to Destination Breadcrumb */}
         <View style={styles.endpointRow}>
           <Text style={styles.endpointText} numberOfLines={1}>
-            <Text style={{ color: '#38BDF8' }}>A: {originName}</Text> ➔{' '}
-            <Text style={{ color: '#10B981' }}>B: {destinationName}</Text>
+            <Text style={{ color: '#383139' }}>De: {originName}</Text> ➔{' '}
+            <Text style={{ color: '#383139' }}>Para: {destinationName}</Text>
           </Text>
         </View>
       </Animated.View>
@@ -206,8 +206,8 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
         >
           <Ionicons
             name="chevron-back"
-            size={22}
-            color={isFirstStep ? '#475569' : '#F1F5F9'}
+            size={20}
+            color={isFirstStep ? '#7D7582' : '#383139'}
           />
           <Text style={[styles.controlBtnText, isFirstStep && styles.controlBtnTextDisabled]}>
             Anterior
@@ -225,8 +225,8 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
         >
           <Ionicons
             name={isPlaying ? 'pause' : 'play'}
-            size={20}
-            color="#FFFFFF"
+            size={18}
+            color="#383139"
           />
           <Text style={styles.playBtnText}>
             {isPlaying ? 'Pausa' : 'Auto'}
@@ -252,15 +252,15 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
           <Text
             style={[
               styles.controlBtnText,
-              isLastStep && { color: '#10B981', fontWeight: '700' },
+              isLastStep && { color: '#383139', fontWeight: '700' },
             ]}
           >
             {isLastStep ? 'Concluir' : 'Próximo'}
           </Text>
           <Ionicons
             name={isLastStep ? 'checkmark' : 'chevron-forward'}
-            size={20}
-            color={isLastStep ? '#10B981' : '#F1F5F9'}
+            size={18}
+            color="#383139"
           />
         </TouchableOpacity>
 
@@ -273,7 +273,7 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
           }}
           activeOpacity={0.7}
         >
-          <Ionicons name="list" size={18} color="#94A3B8" />
+          <Ionicons name="list" size={18} color="#383139" />
         </TouchableOpacity>
       </Animated.View>
 
@@ -297,7 +297,7 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
                 onPress={() => setShowStepList(false)}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={20} color="#94A3B8" />
+                <Ionicons name="close" size={20} color="#383139" />
               </TouchableOpacity>
             </View>
 
@@ -335,7 +335,7 @@ export const SimulationController: React.FC<SimulationControllerProps> = ({
                     </View>
 
                     {isCurrent && (
-                      <Ionicons name="radio-button-on" size={18} color="#38BDF8" />
+                      <Ionicons name="radio-button-on" size={18} color="#383139" />
                     )}
                   </TouchableOpacity>
                 );
@@ -354,82 +354,84 @@ const styles = StyleSheet.create({
     top: 52,
     left: 14,
     right: 14,
-    backgroundColor: '#f5f4ee',
-    borderRadius: 0,
-    borderWidth: 4,
-    borderColor: '#000000',
-    ...M3Elevation.level4,
+    backgroundColor: '#fffdf7',
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
     zIndex: 1000,
     overflow: 'hidden',
   },
   progressBarTrack: {
     height: 4,
-    backgroundColor: '#e8e8e8',
+    backgroundColor: '#ded0f9',
     width: '100%',
   },
   progressBarFill: {
     height: 4,
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
   },
   topBannerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 6,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
   },
   simTransferBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
+    backgroundColor: '#f9e7a8',
     paddingHorizontal: 14,
-    paddingVertical: 5,
+    paddingVertical: 8,
     gap: 8,
-    marginHorizontal: 10,
-    borderRadius: 0,
+    marginHorizontal: 12,
+    marginTop: 8,
+    borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#000000',
-    marginBottom: 6,
+    borderColor: '#ffffff',
+    marginBottom: 4,
   },
   simTransferBannerText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '800',
     flex: 1,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    letterSpacing: 0.2,
   },
   simBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 0,
+    backgroundColor: '#ded0f9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
     gap: 5,
   },
   simBadgeText: {
-    color: '#000000',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    color: '#383139',
+    fontSize: 11,
+    fontWeight: '800',
   },
   stepCounterBadge: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 0,
+    backgroundColor: '#c5e5fb',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
   },
   stepCounterText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -437,34 +439,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   exitBtnText: {
-    color: '#ff0000',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   instructionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     gap: 12,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   maneuverIconBox: {
     width: 42,
     height: 42,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -472,27 +478,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepDistanceText: {
-    color: '#ff0000',
+    color: '#48404b',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '800',
     marginBottom: 2,
     textTransform: 'uppercase',
   },
   stepInstructionText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '800',
     lineHeight: 18,
   },
   endpointRow: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderTopWidth: 2,
-    borderTopColor: '#000000',
+    backgroundColor: '#fffdf7',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: 1.5,
+    borderTopColor: '#ffffff',
   },
   endpointText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -506,13 +512,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f5f4ee',
-    borderRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderWidth: 4,
-    borderColor: '#000000',
-    ...M3Elevation.level4,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
     zIndex: 1000,
     gap: 8,
   },
@@ -521,75 +531,92 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
     gap: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   controlBtnDisabled: {
     opacity: 0.35,
   },
   controlBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '800',
-    textTransform: 'uppercase',
   },
   controlBtnTextDisabled: {
-    color: '#000000',
+    color: '#7D7582',
   },
   playBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
     paddingVertical: 10,
     paddingHorizontal: 18,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 6,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   playBtnActive: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#f9e7a8',
   },
   playBtnText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   finishBtn: {
-    backgroundColor: '#ffff00',
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#c0efdc',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   listToggleBtn: {
     padding: 8,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   // Modal Step List Sheet
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'rgba(56, 49, 57, 0.45)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
     paddingTop: 16,
     paddingBottom: 32,
     maxHeight: '75%',
-    borderTopWidth: 4,
-    borderTopColor: '#000000',
+    borderTopWidth: 2,
+    borderTopColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -597,23 +624,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2D323F',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
   },
   modalTitle: {
     fontSize: 17,
-    fontWeight: '700',
-    color: '#F8FAFC',
+    fontWeight: '800',
+    color: '#383139',
   },
   modalSubtitle: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#48404b',
     marginTop: 2,
   },
   modalCloseBtn: {
     padding: 6,
-    borderRadius: 12,
-    backgroundColor: '#282E3C',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   stepListScroll: {
     paddingHorizontal: 16,
@@ -623,50 +652,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    marginBottom: 6,
-    backgroundColor: '#171A21',
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginBottom: 8,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 12,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
   stepItemRowActive: {
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.4)',
+    backgroundColor: '#ded0f9',
+    borderColor: '#ffffff',
   },
   stepNumCircle: {
     width: 28,
     height: 28,
-    borderRadius: 14,
-    backgroundColor: '#282E3C',
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
+    borderWidth: 1,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   stepNumCircleActive: {
-    backgroundColor: '#0284C7',
+    backgroundColor: '#f6a3ca',
   },
   stepNumText: {
-    color: '#94A3B8',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   stepNumTextActive: {
-    color: '#FFFFFF',
+    color: '#383139',
   },
   stepItemInfo: {
     flex: 1,
   },
   stepItemInstruction: {
-    color: '#F1F5F9',
+    color: '#383139',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     lineHeight: 18,
   },
   stepItemInstructionActive: {
-    color: '#38BDF8',
+    color: '#383139',
   },
   stepItemDistance: {
-    color: '#64748B',
+    color: '#48404b',
     fontSize: 11,
     marginTop: 2,
   },

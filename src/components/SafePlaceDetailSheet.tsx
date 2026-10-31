@@ -405,7 +405,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           onPress={() => onNavigate(place)}
           activeOpacity={0.85}
         >
-          <Ionicons name="navigate" size={18} color="#06140E" />
+          <Ionicons name="navigate" size={18} color="#383139" />
           <Text style={styles.navigateBtnText}>Navegar com Rota Segura</Text>
         </TouchableOpacity>
       )}
@@ -418,7 +418,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
             onPress={handleCall}
             activeOpacity={0.8}
           >
-            <Ionicons name="call" size={18} color="#FFFFFF" />
+            <Ionicons name="call" size={18} color="#383139" />
             <Text style={styles.callBtnText}>Ligar ({place.phone})</Text>
           </TouchableOpacity>
         )}
@@ -428,7 +428,7 @@ export const SafePlaceDetailSheet: React.FC<SafePlaceDetailSheetProps> = ({
           onPress={handleOpenMaps}
           activeOpacity={0.8}
         >
-          <Ionicons name="map" size={18} color="#FFFFFF" />
+          <Ionicons name="map" size={18} color="#383139" />
           <Text style={styles.mapsBtnText}>Abrir no Mapa</Text>
         </TouchableOpacity>
       </View>
@@ -442,28 +442,28 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'android' ? 92 : 90,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
     zIndex: 8000,
   },
   handle: {
-    width: 48,
+    width: 36,
     height: 4,
-    borderRadius: 0,
-    backgroundColor: '#000000',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     alignSelf: 'center',
     marginBottom: 12,
   },
@@ -479,27 +479,35 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   typeBadgeText: {
     fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#383139',
   },
   closeBtn: {
-    padding: 6,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   name: {
     fontSize: 19,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     marginBottom: 6,
-    textTransform: 'uppercase',
   },
   locationRow: {
     flexDirection: 'row',
@@ -509,8 +517,8 @@ const styles = StyleSheet.create({
   },
   addressText: {
     fontSize: 13,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     flexShrink: 1,
   },
   distanceRow: {
@@ -664,24 +672,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff0000',
+    backgroundColor: '#f6a3ca',
     paddingVertical: 14,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 8,
     marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   navigateBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 14,
-    textTransform: 'uppercase',
   },
   actionBtn: {
     flex: 1,
@@ -689,27 +696,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 0,
-    borderWidth: 2.5,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   callBtn: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#c0efdc',
   },
   callBtnText: {
-    color: '#000000',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 13,
-    textTransform: 'uppercase',
   },
   mapsBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#ded0f9',
   },
   mapsBtnText: {
-    color: '#000000',
-    fontWeight: '900',
+    color: '#383139',
+    fontWeight: '800',
     fontSize: 13,
-    textTransform: 'uppercase',
   },
 });

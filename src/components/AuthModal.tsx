@@ -103,7 +103,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.brandIconWrap}>
-              <Ionicons name="shield-checkmark" size={24} color="#38BDF8" />
+              <Ionicons name="shield-checkmark" size={24} color="#383139" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.title}>
@@ -114,7 +114,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color="#94A3B8" />
+              <Ionicons name="close" size={20} color="#383139" />
             </TouchableOpacity>
           </View>
 
@@ -125,7 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
             disabled={isGoogleLoading || isLoading}
           >
             {isGoogleLoading ? (
-              <ActivityIndicator size="small" color="#0F172A" />
+              <ActivityIndicator size="small" color="#383139" />
             ) : (
               <>
                 <Ionicons name="logo-google" size={18} color="#EA4335" style={{ marginRight: 10 }} />
@@ -144,7 +144,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
           {/* Error Message banner */}
           {errorMessage ? (
             <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={16} color="#EF4444" style={{ marginRight: 6 }} />
+              <Ionicons name="alert-circle" size={16} color="#383139" style={{ marginRight: 6 }} />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           ) : null}
@@ -154,11 +154,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>O SEU NOME</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="person-outline" size={18} color="#64748B" style={styles.inputIcon} />
+                <Ionicons name="person-outline" size={18} color="#7D7582" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Ex: Maria Santos"
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor="#7D7582"
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -171,11 +171,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>EMAIL</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="mail-outline" size={18} color="#64748B" style={styles.inputIcon} />
+              <Ionicons name="mail-outline" size={18} color="#7D7582" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="nome@email.com"
-                placeholderTextColor="#64748B"
+                placeholderTextColor="#7D7582"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -189,11 +189,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>PALAVRA-PASSE</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="lock-closed-outline" size={18} color="#64748B" style={styles.inputIcon} />
+              <Ionicons name="lock-closed-outline" size={18} color="#7D7582" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Mínimo 6 caracteres"
-                placeholderTextColor="#64748B"
+                placeholderTextColor="#7D7582"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -208,7 +208,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
             disabled={isLoading || isGoogleLoading}
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color="#383139" />
             ) : (
               <Text style={styles.submitBtnText}>
                 {mode === 'login' ? 'Entrar no Sentinela' : 'Criar a Minha Conta'}
@@ -227,9 +227,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
           >
             <Text style={styles.toggleModeText}>
               {mode === 'login' ? (
-                <>Não tem conta? <Text style={{ color: '#38BDF8', fontWeight: '700' }}>Registar-se</Text></>
+                <>Não tem conta? <Text style={{ color: '#f6a3ca', fontWeight: '800' }}>Registar-se</Text></>
               ) : (
-                <>Já tem conta? <Text style={{ color: '#38BDF8', fontWeight: '700' }}>Iniciar Sessão</Text></>
+                <>Já tem conta? <Text style={{ color: '#f6a3ca', fontWeight: '800' }}>Iniciar Sessão</Text></>
               )}
             </Text>
           </TouchableOpacity>
@@ -249,81 +249,95 @@ export const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, onSucces
 
 const styles = StyleSheet.create({
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
     maxHeight: '85%',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 28,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
     gap: 12,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#f1f2fa',
     paddingBottom: 12,
   },
   brandIconWrap: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   title: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 18,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   subtitle: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
   },
   closeBtn: {
-    padding: 6,
-    borderWidth: 2,
-    borderColor: '#000000',
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     paddingVertical: 14,
     marginBottom: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   googleBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 15,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -336,36 +350,36 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-    height: 2,
-    backgroundColor: '#000000',
+    height: 1.5,
+    backgroundColor: '#f1f2fa',
   },
   dividerText: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     textTransform: 'uppercase',
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ff0000',
-    borderWidth: 2,
-    borderColor: '#000000',
-    borderRadius: 0,
-    padding: 10,
+    backgroundColor: '#f9e7a8',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 24,
+    padding: 12,
     marginBottom: 14,
   },
   errorText: {
     flex: 1,
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   inputGroup: {
     marginBottom: 14,
   },
   inputLabel: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -375,11 +389,11 @@ const styles = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    borderRadius: 0,
-    paddingHorizontal: 12,
+    backgroundColor: '#f1f2fa',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 999,
+    paddingHorizontal: 16,
     height: 48,
   },
   inputIcon: {
@@ -387,28 +401,28 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '700',
   },
   submitBtn: {
-    backgroundColor: '#ff0000',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#f6a3ca',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
     marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   submitBtnText: {
-    color: '#FFFFFF',
+    color: '#383139',
     fontSize: 15,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -419,7 +433,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   toggleModeText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -427,16 +441,16 @@ const styles = StyleSheet.create({
   safetyCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#e8e8e8',
-    borderWidth: 2,
-    borderColor: '#000000',
-    borderRadius: 0,
-    padding: 12,
+    backgroundColor: '#f1f2fa',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 24,
+    padding: 14,
     marginTop: 12,
   },
   safetyCardText: {
     flex: 1,
-    color: '#000000',
+    color: '#48404b',
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '600',

@@ -116,7 +116,7 @@ export const StalkingActiveModal: React.FC<StalkingActiveModalProps> = ({
 
       {/* Sentinels Notice */}
       <View style={styles.infoRow}>
-        <Ionicons name="shield-checkmark" size={16} color="#38BDF8" style={{ marginRight: 6 }} />
+        <Ionicons name="shield-checkmark" size={16} color="#383139" style={{ marginRight: 6 }} />
         <Text style={styles.infoText}>
           {sentinelsCount > 0
             ? `${sentinelsCount} Sentinela(s) notificado(s) e a acompanhar o seu rastro ao vivo.`
@@ -135,13 +135,13 @@ export const StalkingActiveModal: React.FC<StalkingActiveModalProps> = ({
           }}
           activeOpacity={0.7}
         >
-          <Ionicons name="eye-off" size={16} color="#94A3B8" style={{ marginRight: 6 }} />
+          <Ionicons name="eye-off" size={16} color="#383139" style={{ marginRight: 6 }} />
           <Text style={styles.stealthBtnText}>Camuflar Ecrã</Text>
         </TouchableOpacity>
 
         {/* I am Safe Button */}
         <M3Pressable style={styles.safeBtn} onPress={handleConfirmStop}>
-          <Ionicons name="checkmark-done" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+          <Ionicons name="checkmark-done" size={18} color="#383139" style={{ marginRight: 6 }} />
           <Text style={styles.safeBtnText}>Estou em Segurança</Text>
         </M3Pressable>
       </View>
@@ -155,40 +155,40 @@ const styles = StyleSheet.create({
     top: 50,
     left: 16,
     right: 16,
-    backgroundColor: '#f5f4ee',
-    borderRadius: 0,
-    borderWidth: 4,
-    borderColor: '#ff0000',
-    padding: 14,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    padding: 16,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
     elevation: 8,
     zIndex: 9999,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   pulseLiveDot: {
     width: 10,
     height: 10,
-    borderRadius: 0,
-    backgroundColor: '#ff0000',
+    borderRadius: 999,
+    backgroundColor: '#f6a3ca',
     marginRight: 8,
   },
   liveAlertTitle: {
     flex: 1,
-    color: '#ff0000',
+    color: '#f6a3ca',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   timerText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 16,
     fontWeight: '900',
     fontVariant: ['tabular-nums'],
@@ -197,16 +197,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    marginBottom: 12,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   infoText: {
     flex: 1,
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '700',
     lineHeight: 15,
@@ -220,14 +225,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
-    borderWidth: 2.5,
-    borderColor: '#000000',
-    borderRadius: 0,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   stealthBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 12,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -237,18 +247,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffff00',
-    borderWidth: 3,
-    borderColor: '#000000',
-    borderRadius: 0,
-    paddingVertical: 10,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    backgroundColor: '#c0efdc',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    borderRadius: 999,
+    paddingVertical: 11,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
+    elevation: 2,
   },
   safeBtnText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -269,7 +280,7 @@ const styles = StyleSheet.create({
   stealthAvatar: {
     width: 90,
     height: 90,
-    borderRadius: 45,
+    borderRadius: 999,
     backgroundColor: '#334155',
     alignItems: 'center',
     justifyContent: 'center',
@@ -300,7 +311,7 @@ const styles = StyleSheet.create({
   stealthEndCallBtn: {
     width: 68,
     height: 68,
-    borderRadius: 34,
+    borderRadius: 999,
     backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',

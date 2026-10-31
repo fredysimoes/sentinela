@@ -56,7 +56,7 @@ export const ArrivalDestinationModal: React.FC<ArrivalDestinationModalProps> = (
           {/* Header Icon with Neon Glow */}
           <View style={styles.iconCircleOuter}>
             <View style={styles.iconCircleInner}>
-              <Ionicons name="checkmark-sharp" size={32} color="#10B981" />
+              <Ionicons name="checkmark-sharp" size={32} color="#383139" />
             </View>
           </View>
 
@@ -68,7 +68,7 @@ export const ArrivalDestinationModal: React.FC<ArrivalDestinationModalProps> = (
 
           {/* Safety Status Pill */}
           <View style={styles.safetyPill}>
-            <MaterialCommunityIcons name="shield-check" size={16} color="#34D399" />
+            <MaterialCommunityIcons name="shield-check" size={16} color="#383139" />
             <Text style={styles.safetyPillText}>
               {data.hazardsAvoidedCount && data.hazardsAvoidedCount > 0
                 ? `${data.hazardsAvoidedCount} zona(s) de perigo contornada(s)`
@@ -81,11 +81,11 @@ export const ArrivalDestinationModal: React.FC<ArrivalDestinationModalProps> = (
             <View style={styles.metricItem}>
               <View style={styles.metricIconWrap}>
                 {isDriving ? (
-                  <Ionicons name="car-sport" size={16} color="#38BDF8" />
+                  <Ionicons name="car-sport" size={16} color="#383139" />
                 ) : isTransit ? (
-                  <MaterialCommunityIcons name="bus" size={16} color="#38BDF8" />
+                  <MaterialCommunityIcons name="bus" size={16} color="#383139" />
                 ) : (
-                  <Ionicons name="walk" size={16} color="#38BDF8" />
+                  <Ionicons name="walk" size={16} color="#383139" />
                 )}
               </View>
               <Text style={styles.metricLabel}>Modo</Text>
@@ -98,7 +98,7 @@ export const ArrivalDestinationModal: React.FC<ArrivalDestinationModalProps> = (
 
             <View style={styles.metricItem}>
               <View style={styles.metricIconWrap}>
-                <Ionicons name="time-outline" size={16} color="#38BDF8" />
+                <Ionicons name="time-outline" size={16} color="#383139" />
               </View>
               <Text style={styles.metricLabel}>Duração</Text>
               <Text style={styles.metricValue}>
@@ -110,7 +110,7 @@ export const ArrivalDestinationModal: React.FC<ArrivalDestinationModalProps> = (
 
             <View style={styles.metricItem}>
               <View style={styles.metricIconWrap}>
-                <Ionicons name="navigate-outline" size={16} color="#38BDF8" />
+                <Ionicons name="navigate-outline" size={16} color="#383139" />
               </View>
               <Text style={styles.metricLabel}>Distância</Text>
               <Text style={styles.metricValue}>
@@ -122,7 +122,7 @@ export const ArrivalDestinationModal: React.FC<ArrivalDestinationModalProps> = (
           {/* Primary Action Button */}
           <M3Pressable style={styles.finishButton} onPress={handleFinish}>
             <Text style={styles.finishButtonText}>Concluir Navegação</Text>
-            <Ionicons name="arrow-forward" size={18} color="#06140E" />
+            <Ionicons name="arrow-forward" size={18} color="#383139" />
           </M3Pressable>
         </View>
       </View>
@@ -133,7 +133,7 @@ export const ArrivalDestinationModal: React.FC<ArrivalDestinationModalProps> = (
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(56, 49, 57, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -141,48 +141,53 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: '#f5f4ee',
-    borderRadius: 0,
-    borderWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderRadius: 36,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 5, height: 5 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
     elevation: 8,
   },
   iconCircleOuter: {
     width: 76,
     height: 76,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    backgroundColor: '#c0efdc',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 3,
   },
   iconCircleInner: {
     width: 56,
     height: 56,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    backgroundColor: '#c0efdc',
     alignItems: 'center',
     justifyContent: 'center',
   },
   arrivalTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
     letterSpacing: -0.5,
     textTransform: 'uppercase',
     marginBottom: 6,
   },
   destinationName: {
     fontSize: 15,
-    color: '#000000',
+    color: '#7D7582',
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 16,
@@ -191,37 +196,43 @@ const styles = StyleSheet.create({
   safetyPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    backgroundColor: '#c0efdc',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     gap: 6,
     marginBottom: 20,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   safetyPillText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#000000',
+    color: '#383139',
     textTransform: 'uppercase',
   },
   metricsBox: {
     width: '100%',
     flexDirection: 'row',
     backgroundColor: '#ffffff',
-    borderRadius: 0,
+    borderRadius: 24,
     paddingVertical: 14,
     paddingHorizontal: 8,
     marginBottom: 22,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'space-around',
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   metricItem: {
     alignItems: 'center',
@@ -232,7 +243,7 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 10,
-    color: '#000000',
+    color: '#7D7582',
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -241,32 +252,32 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
   },
   metricDivider: {
-    width: 2,
+    width: 1.5,
     height: 28,
-    backgroundColor: '#000000',
+    backgroundColor: '#f1f2fa',
   },
   finishButton: {
     width: '100%',
     height: 52,
-    backgroundColor: '#ff0000',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#f6a3ca',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   finishButtonText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 16,
     fontWeight: '900',
     textTransform: 'uppercase',

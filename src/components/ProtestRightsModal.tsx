@@ -27,7 +27,7 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
       <View style={styles.header}>
             <View style={styles.headerTitleWrap}>
               <View style={styles.headerIconBadge}>
-                <Ionicons name="book" size={20} color={M3Colors.primary} />
+                <Ionicons name="book" size={20} color="#383139" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.headerTitle}>Direitos em Manifestações</Text>
@@ -37,7 +37,7 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Ionicons name="close" size={22} color={M3Colors.onSurfaceVariant} />
+              <Ionicons name="close" size={20} color="#383139" />
             </TouchableOpacity>
           </View>
 
@@ -48,7 +48,7 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
             {/* Article 45 CRP */}
             <View style={styles.lawCard}>
               <View style={styles.lawHeader}>
-                <Ionicons name="shield-checkmark" size={18} color="#38BDF8" />
+                <Ionicons name="shield-checkmark" size={18} color="#383139" />
                 <Text style={styles.lawTitle}>Direito de Reunião e Manifestação</Text>
               </View>
               <Text style={styles.lawRef}>Artigo 45.º da Constituição da República Portuguesa</Text>
@@ -61,7 +61,7 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
             {/* DL 406/74 */}
             <View style={styles.lawCard}>
               <View style={styles.lawHeader}>
-                <Ionicons name="newspaper-outline" size={18} color="#F59E0B" />
+                <Ionicons name="newspaper-outline" size={18} color="#383139" />
                 <Text style={styles.lawTitle}>Aviso Prévio e Autorizações</Text>
               </View>
               <Text style={styles.lawRef}>Decreto-Lei n.º 406/74 (Regime Jurídico das Manifestações)</Text>
@@ -75,7 +75,7 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
             {/* Identification Rights */}
             <View style={styles.lawCard}>
               <View style={styles.lawHeader}>
-                <Ionicons name="card-outline" size={18} color="#A855F7" />
+                <Ionicons name="card-outline" size={18} color="#383139" />
                 <Text style={styles.lawTitle}>Identificação Policial e Retenção</Text>
               </View>
               <Text style={styles.lawRef}>Artigo 250.º do Código de Processo Penal</Text>
@@ -91,7 +91,7 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
             {/* Filming Police in Public */}
             <View style={styles.lawCard}>
               <View style={styles.lawHeader}>
-                <Ionicons name="videocam-outline" size={18} color="#10B981" />
+                <Ionicons name="videocam-outline" size={18} color="#383139" />
                 <Text style={styles.lawTitle}>Direito a Filmar e Fotografar</Text>
               </View>
               <Text style={styles.lawRef}>Espaço Público e Exercício de Funções Oficiais</Text>
@@ -105,7 +105,7 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
             {/* In Case of Detention */}
             <View style={styles.lawCard}>
               <View style={styles.lawHeader}>
-                <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
+                <Ionicons name="alert-circle-outline" size={18} color="#383139" />
                 <Text style={styles.lawTitle}>Em Caso de Detenção</Text>
               </View>
               <Text style={styles.lawRef}>Artigos 61.º e 64.º do Código de Processo Penal</Text>
@@ -128,23 +128,23 @@ export const ProtestRightsModal: React.FC<ProtestRightsModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.78)',
+    backgroundColor: 'rgba(56, 49, 57, 0.45)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
     maxHeight: '88%',
     paddingBottom: Platform.OS === 'ios' ? 34 : 20,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
   },
   header: {
@@ -154,9 +154,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 14,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
-    backgroundColor: '#f5f4ee',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#f1f2fa',
+    backgroundColor: '#fffdf7',
   },
   headerTitleWrap: {
     flexDirection: 'row',
@@ -166,53 +166,63 @@ const styles = StyleSheet.create({
   headerIconBadge: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    backgroundColor: '#ded0f9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#000000',
+    color: '#383139',
     textTransform: 'uppercase',
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#000000',
+    color: '#7D7582',
     fontWeight: '600',
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 24,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   lawCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    padding: 14,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    padding: 16,
     marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
   lawHeader: {
     flexDirection: 'row',
@@ -220,41 +230,41 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   lawTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   lawRef: {
-    color: '#000000',
+    color: '#7D7582',
     fontSize: 11,
     fontWeight: '700',
     marginTop: 3,
     marginBottom: 8,
   },
   lawText: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
   },
   doneBtn: {
-    backgroundColor: '#ff0000',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#f6a3ca',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 10,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   doneBtnText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 15,
     fontWeight: '900',
     textTransform: 'uppercase',

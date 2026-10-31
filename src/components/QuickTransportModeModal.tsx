@@ -105,7 +105,7 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
             <Ionicons
               name={selectedMode === 'walking' ? 'radio-button-on' : 'radio-button-off'}
               size={20}
-              color={selectedMode === 'walking' ? '#10B981' : '#475569'}
+              color={selectedMode === 'walking' ? '#383139' : '#7D7582'}
             />
           </M3Pressable>
 
@@ -122,7 +122,7 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
               <MaterialCommunityIcons
                 name="bus-clock"
                 size={22}
-                color={selectedMode === 'transit' ? '#06B6D4' : '#94A3B8'}
+                color="#383139"
               />
             </View>
             <View style={styles.modeInfo}>
@@ -134,7 +134,7 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
             <Ionicons
               name={selectedMode === 'transit' ? 'radio-button-on' : 'radio-button-off'}
               size={20}
-              color={selectedMode === 'transit' ? '#06B6D4' : '#475569'}
+              color={selectedMode === 'transit' ? '#383139' : '#7D7582'}
             />
           </M3Pressable>
 
@@ -151,7 +151,7 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
               <Ionicons
                 name="car-sport"
                 size={22}
-                color={selectedMode === 'driving' ? '#38BDF8' : '#94A3B8'}
+                color="#383139"
               />
             </View>
             <View style={styles.modeInfo}>
@@ -163,7 +163,7 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
             <Ionicons
               name={selectedMode === 'driving' ? 'radio-button-on' : 'radio-button-off'}
               size={20}
-              color={selectedMode === 'driving' ? '#38BDF8' : '#475569'}
+              color={selectedMode === 'driving' ? '#383139' : '#7D7582'}
             />
           </M3Pressable>
         </View>
@@ -172,7 +172,7 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
         <M3Button
           title="Iniciar Percurso"
           variant="filled"
-          icon={<Ionicons name="navigate" size={18} color="#06140E" />}
+          icon={<Ionicons name="navigate" size={18} color="#383139" />}
           style={styles.startBtn}
           onPress={handleStart}
         />
@@ -183,32 +183,32 @@ export const QuickTransportModeModal: React.FC<QuickTransportModeModalProps> = (
 
 const styles = StyleSheet.create({
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8,
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
   },
   sheetContent: {
     paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 28,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 18,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
     paddingBottom: 12,
   },
   headerTitleWrap: {
@@ -220,48 +220,54 @@ const styles = StyleSheet.create({
   destIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   homeIconBg: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#f9e7a8',
   },
   workIconBg: {
-    backgroundColor: '#ff0000',
+    backgroundColor: '#ded0f9',
   },
   headerTextWrap: {
     flex: 1,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '900',
-    color: '#000000',
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#383139',
   },
   headerSubtitle: {
     fontSize: 13,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 2,
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   promptLabel: {
     fontSize: 13,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   modesContainer: {
     gap: 10,
@@ -270,88 +276,87 @@ const styles = StyleSheet.create({
   modeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderRadius: 24,
     padding: 14,
-    borderWidth: 3,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   modeCardSelected: {
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
+    borderColor: '#ffffff',
+    backgroundColor: '#c0efdc',
   },
   modeCardSelectedTransit: {
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
+    borderColor: '#ffffff',
+    backgroundColor: '#ded0f9',
   },
   modeCardSelectedDriving: {
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
+    borderColor: '#ffffff',
+    backgroundColor: '#f9e7a8',
   },
   modeIconCircle: {
     width: 40,
     height: 40,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   modeIconCircleActive: {
-    backgroundColor: '#000000',
+    backgroundColor: '#fffdf7',
   },
   modeIconCircleTransitActive: {
-    backgroundColor: '#000000',
+    backgroundColor: '#fffdf7',
   },
   modeIconCircleDrivingActive: {
-    backgroundColor: '#000000',
+    backgroundColor: '#fffdf7',
   },
   modeInfo: {
     flex: 1,
   },
   modeTitle: {
     fontSize: 15,
-    fontWeight: '900',
-    color: '#000000',
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#383139',
   },
   modeTitleActive: {
-    color: '#000000',
+    color: '#383139',
   },
   modeTitleTransitActive: {
-    color: '#000000',
+    color: '#383139',
   },
   modeTitleDrivingActive: {
-    color: '#000000',
+    color: '#383139',
   },
   modeDesc: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 2,
   },
   startBtn: {
-    backgroundColor: '#ff0000',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#f6a3ca',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   startBtnText: {
     fontSize: 16,

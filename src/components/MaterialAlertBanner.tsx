@@ -141,8 +141,8 @@ export const MaterialAlertBanner: React.FC<MaterialAlertBannerProps> = ({
         <View style={[styles.iconWrap, isSOS ? styles.iconWrapSOS : styles.iconWrapWarn]}>
           <Ionicons
             name={isSOS ? 'megaphone' : 'warning'}
-            size={22}
-            color={isSOS ? '#F87171' : '#FFB951'}
+            size={20}
+            color="#383139"
           />
         </View>
 
@@ -170,7 +170,7 @@ export const MaterialAlertBanner: React.FC<MaterialAlertBannerProps> = ({
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="close" size={18} color="#C4C6D0" />
+          <Ionicons name="close" size={16} color="#383139" />
         </TouchableOpacity>
       </TouchableOpacity>
     </Animated.View>
@@ -183,46 +183,46 @@ const styles = StyleSheet.create({
     left: 14,
     right: 14,
     zIndex: 99999,
-    borderRadius: 0,
-    borderWidth: 4,
-    borderColor: '#000000',
-    backgroundColor: '#f5f4ee',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8,
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
     overflow: 'hidden',
   },
   containerWarn: {
-    backgroundColor: '#ffff00',
-    borderColor: '#000000',
+    backgroundColor: '#f9e7a8',
+    borderColor: '#ffffff',
   },
   containerSOS: {
-    backgroundColor: '#ff0000',
-    borderColor: '#000000',
+    backgroundColor: '#f6a3ca',
+    borderColor: '#ffffff',
   },
   contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
   },
   iconWrap: {
     width: 44,
     height: 44,
-    borderRadius: 0,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2.5,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   iconWrapWarn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fffdf7',
   },
   iconWrapSOS: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#fffdf7',
   },
   textWrap: {
     flex: 1,
@@ -234,51 +234,54 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 14,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#383139',
     letterSpacing: 0.2,
-    textTransform: 'uppercase',
     flexShrink: 1,
   },
   pillBadge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 0,
-    borderWidth: 1.5,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#ffffff',
   },
   badgeWarn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fffdf7',
   },
   badgeSOS: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fffdf7',
   },
   pillBadgeText: {
     fontSize: 10,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   badgeTextWarn: {
-    color: '#000000',
+    color: '#383139',
   },
   badgeTextSOS: {
-    color: '#ff0000',
+    color: '#383139',
   },
   bodyText: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 2,
     lineHeight: 16,
   },
   closeBtn: {
     width: 32,
     height: 32,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
 });

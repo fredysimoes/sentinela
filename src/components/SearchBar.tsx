@@ -169,11 +169,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <View style={styles.wrapper}>
-      {/* Google M3 Floating Search Capsule */}
+      {/* Claymorphism Floating Search Capsule */}
       <View style={[styles.searchBox, isFocused && styles.searchBoxFocused]}>
         {/* Leading Sentinela Logo Badge */}
         <View style={styles.brandBadge}>
-          <Ionicons name="shield-half" size={18} color="#10B981" />
+          <Ionicons name="shield-half" size={18} color="#383139" />
           <View style={styles.liveDot} />
         </View>
 
@@ -187,7 +187,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               ? 'Destino de transportes públicos...'
               : 'Para onde vai em segurança?'
           }
-          placeholderTextColor="#64748B"
+          placeholderTextColor="#7D7582"
           value={query}
           onChangeText={setQuery}
           onFocus={() => setIsFocused(true)}
@@ -198,13 +198,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         {/* Clear Button */}
         {query.length > 0 && (
           <M3Pressable onPress={handleClear} style={styles.iconBtn}>
-            <Ionicons name="close-circle" size={19} color={M3Colors.onSurfaceVariant} />
+            <Ionicons name="close-circle" size={19} color="#7D7582" />
           </M3Pressable>
         )}
 
         {/* Loading Spinner */}
         {isLoading && (
-          <ActivityIndicator size="small" color="#10B981" style={styles.iconBtn} />
+          <ActivityIndicator size="small" color="#f6a3ca" style={styles.iconBtn} />
         )}
 
         {/* Transport Mode Toggle Button (Walk vs Transit vs Drive vs Accessible Walk) */}
@@ -227,13 +227,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           }}
         >
           {transportMode === 'driving' ? (
-            <Ionicons name="car-sport" size={16} color="#06140E" />
+            <Ionicons name="car-sport" size={16} color="#383139" />
           ) : transportMode === 'transit' ? (
-            <MaterialCommunityIcons name="bus" size={17} color="#38BDF8" />
+            <MaterialCommunityIcons name="bus" size={17} color="#383139" />
           ) : accessibleRouteOnly ? (
-            <MaterialCommunityIcons name="wheelchair" size={17} color="#06B6D4" />
+            <MaterialCommunityIcons name="wheelchair" size={17} color="#383139" />
           ) : (
-            <Ionicons name="walk" size={16} color="#10B981" />
+            <Ionicons name="walk" size={16} color="#383139" />
           )}
         </M3Pressable>
 
@@ -243,7 +243,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             style={styles.contactsActionBtn}
             onPress={onOpenSOSContacts}
           >
-            <Ionicons name="call-outline" size={16} color="#CBD5E1" />
+            <Ionicons name="call-outline" size={16} color="#383139" />
             {emergencyContactsCount > 0 && (
               <View style={styles.contactsCountBadge}>
                 <Text style={styles.contactsCountText}>{emergencyContactsCount}</Text>
@@ -258,12 +258,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             style={styles.contactsActionBtn}
             onPress={onOpenSettings}
           >
-            <Ionicons name="options-outline" size={17} color="#CBD5E1" />
+            <Ionicons name="options-outline" size={17} color="#383139" />
           </M3Pressable>
         )}
       </View>
 
-      {/* Autocomplete Suggestions Dropdown (Material Motion Container Transform) */}
+      {/* Autocomplete Suggestions Dropdown */}
       {showSuggestions && (
         <Animated.View
           style={[
@@ -275,9 +275,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           ]}
         >
           <View style={styles.dropdownHeader}>
-            <Text style={styles.dropdownHeaderText}>SUGESTÕES DE DESTINO</Text>
+            <Text style={styles.dropdownHeaderText}>Sugestões de Destino</Text>
             <TouchableOpacity onPress={() => setSuggestions([])} style={{ padding: 4 }}>
-              <Ionicons name="close" size={16} color={M3Colors.onSurfaceVariant} />
+              <Ionicons name="close" size={16} color="#383139" />
             </TouchableOpacity>
           </View>
 
@@ -299,11 +299,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                   onPress={() => handleSelect(item)}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.itemPinWrap, { backgroundColor: `${iconInfo.color}1A` }]}>
+                  <View style={[styles.itemPinWrap, { backgroundColor: '#ded0f9' }]}>
                     {iconInfo.isMci ? (
-                      <MaterialCommunityIcons name={iconInfo.name as any} size={18} color={iconInfo.color} />
+                      <MaterialCommunityIcons name={iconInfo.name as any} size={18} color="#383139" />
                     ) : (
-                      <Ionicons name={iconInfo.name as any} size={18} color={iconInfo.color} />
+                      <Ionicons name={iconInfo.name as any} size={18} color="#383139" />
                     )}
                   </View>
 
@@ -322,7 +322,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     </View>
                   )}
 
-                  <Ionicons name="chevron-forward" size={16} color={M3Colors.outline} />
+                  <Ionicons name="chevron-forward" size={16} color="#7D7582" />
                 </TouchableOpacity>
               );
             }}
@@ -344,28 +344,32 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     paddingLeft: 12,
     paddingRight: 8,
     height: 56,
-    ...M3Elevation.level2,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
     gap: 10,
   },
   searchBoxFocused: {
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
-    borderWidth: 3.5,
+    borderColor: '#f6a3ca',
+    backgroundColor: '#fffdf7',
+    borderWidth: 2,
   },
   brandBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 0,
-    backgroundColor: '#ffff00',
-    borderWidth: 2,
-    borderColor: '#000000',
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    backgroundColor: '#f6a3ca',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -374,18 +378,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: 2,
-    width: 7,
-    height: 7,
-    borderRadius: 0,
-    backgroundColor: '#ff0000',
-    borderWidth: 1,
-    borderColor: '#000000',
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#c0efdc',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
   },
   input: {
     flex: 1,
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: '700',
+    color: '#383139',
+    fontSize: 15,
+    fontWeight: '600',
     letterSpacing: 0.15,
     paddingVertical: 0,
   },
@@ -395,64 +399,78 @@ const styles = StyleSheet.create({
   modeToggleBtn: {
     width: 36,
     height: 36,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   modeToggleBtnDriving: {
-    backgroundColor: '#ffff00',
-    borderColor: '#000000',
+    backgroundColor: '#f9e7a8',
+    borderColor: '#ffffff',
   },
   modeToggleBtnTransit: {
-    backgroundColor: '#0000ff',
-    borderColor: '#000000',
+    backgroundColor: '#ded0f9',
+    borderColor: '#ffffff',
   },
   modeToggleBtnAccessible: {
-    backgroundColor: '#0000ff',
-    borderColor: '#000000',
+    backgroundColor: '#c5e5fb',
+    borderColor: '#ffffff',
   },
   contactsActionBtn: {
     width: 36,
     height: 36,
-    borderRadius: 0,
-    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    backgroundColor: '#fffdf7',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     position: 'relative',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   contactsCountBadge: {
     position: 'absolute',
-    top: -3,
-    right: -3,
-    backgroundColor: '#ff0000',
-    borderRadius: 0,
+    top: -2,
+    right: -2,
+    backgroundColor: '#f6a3ca',
+    borderRadius: 999,
     minWidth: 16,
     height: 16,
-    borderWidth: 1.5,
-    borderColor: '#000000',
-    paddingHorizontal: 3,
+    borderWidth: 1,
+    borderColor: '#ffffff',
+    paddingHorizontal: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
   contactsCountText: {
-    color: '#ffffff',
+    color: '#383139',
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   dropdown: {
     marginTop: 8,
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     maxHeight: 280,
     overflow: 'hidden',
-    ...M3Elevation.level3,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
   },
   dropdownList: {
     maxHeight: 220,
@@ -465,33 +483,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#ffff00',
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    paddingVertical: 12,
+    backgroundColor: '#ded0f9',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
   },
   dropdownHeaderText: {
-    color: '#000000',
-    fontSize: 11,
+    color: '#383139',
+    fontSize: 12,
     fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(56, 49, 57, 0.06)',
     gap: 12,
   },
   itemPinWrap: {
     width: 38,
     height: 38,
-    borderRadius: 0,
+    borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -499,26 +516,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemTitle: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   itemSubtitle: {
-    color: '#000000',
+    color: '#48404b',
     fontSize: 12,
     marginTop: 2,
     fontWeight: '500',
   },
   etaPill: {
-    backgroundColor: '#ffff00',
+    backgroundColor: '#f9e7a8',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 0,
-    borderWidth: 1.5,
-    borderColor: '#000000',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#ffffff',
   },
   etaText: {
-    color: '#000000',
+    color: '#383139',
     fontSize: 11,
     fontWeight: '800',
   },

@@ -191,7 +191,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({
           <View style={styles.content}>
             <View style={styles.workCard}>
               <View style={styles.workPinCircle}>
-                <Ionicons name="briefcase" size={26} color="#0F172A" />
+                <Ionicons name="briefcase" size={24} color="#383139" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.workCardTitle}>{currentWork.title}</Text>
@@ -204,20 +204,20 @@ export const WorkModal: React.FC<WorkModalProps> = ({
             {distanceToWork !== null && (
               <View style={styles.estimatesRow}>
                 <View style={styles.estimatePill}>
-                  <Ionicons name="navigate-outline" size={15} color="#38BDF8" />
+                  <Ionicons name="navigate-outline" size={15} color="#383139" />
                   <Text style={styles.estimateValue}>{formatDistance(distanceToWork)} de si</Text>
                 </View>
 
                 {walkMins !== null && (
                   <View style={styles.estimatePill}>
-                    <Ionicons name="walk" size={15} color="#10B981" />
+                    <Ionicons name="walk" size={15} color="#383139" />
                     <Text style={styles.estimateValue}>~{formatDuration(walkMins)} a pé</Text>
                   </View>
                 )}
 
                 {driveMins !== null && (
                   <View style={styles.estimatePill}>
-                    <Ionicons name="car-sport" size={15} color="#F59E0B" />
+                    <Ionicons name="car-sport" size={15} color="#383139" />
                     <Text style={styles.estimateValue}>~{formatDuration(driveMins)} de carro</Text>
                   </View>
                 )}
@@ -231,7 +231,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({
                 onPress={handleNavigate}
                 activeOpacity={0.85}
               >
-                <Ionicons name="navigate" size={20} color="#0F172A" />
+                <Ionicons name="navigate" size={18} color="#383139" />
                 <Text style={styles.navigateWorkBtnText}>Ir Para o Trabalho</Text>
               </TouchableOpacity>
             )}
@@ -243,7 +243,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({
                 onPress={() => setIsEditing(true)}
                 activeOpacity={0.8}
               >
-                <Ionicons name="create-outline" size={16} color="#38BDF8" />
+                <Ionicons name="create-outline" size={16} color="#383139" />
                 <Text style={styles.secondaryActionText}>Alterar Morada</Text>
               </TouchableOpacity>
 
@@ -252,8 +252,8 @@ export const WorkModal: React.FC<WorkModalProps> = ({
                 onPress={handleRemoveWork}
                 activeOpacity={0.8}
               >
-                <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                <Text style={[styles.secondaryActionText, { color: '#EF4444' }]}>
+                <Ionicons name="trash-outline" size={16} color="#383139" />
+                <Text style={styles.secondaryActionText}>
                   Remover
                 </Text>
               </TouchableOpacity>
@@ -261,7 +261,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({
 
             {/* Privacy Guarantee Banner */}
             <View style={styles.privacyCard}>
-              <Ionicons name="shield-checkmark" size={16} color="#10B981" />
+              <Ionicons name="shield-checkmark" size={16} color="#383139" />
               <Text style={styles.privacyCardText}>
                 Privacidade 100% Local: Esta morada é guardada estritamente no telemóvel e nunca é enviada para a nuvem.
               </Text>
@@ -271,7 +271,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({
           // Set / Edit Work Screen
           <View style={styles.content}>
             <View style={[styles.privacyCard, { marginBottom: 14 }]}>
-              <Ionicons name="lock-closed" size={16} color="#38BDF8" />
+              <Ionicons name="lock-closed" size={16} color="#383139" />
               <Text style={styles.privacyCardText}>
                 Privacidade Garantida: O endereço do seu trabalho é armazenado de forma privada no dispositivo para cálculo de rotas.
               </Text>
@@ -366,32 +366,32 @@ export const WorkModal: React.FC<WorkModalProps> = ({
 
 const styles = StyleSheet.create({
   sheetContainer: {
-    backgroundColor: '#f5f4ee',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 4, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8,
+    backgroundColor: '#fffdf7',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
   },
   sheetContent: {
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 14,
     paddingBottom: 28,
-    backgroundColor: '#f5f4ee',
+    backgroundColor: '#fffdf7',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#ffffff',
     paddingBottom: 12,
   },
   headerTitleWrap: {
@@ -402,32 +402,44 @@ const styles = StyleSheet.create({
   workIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    backgroundColor: '#ffff00',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#ded0f9',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: 19,
-    fontWeight: '900',
-    color: '#000000',
-    textTransform: 'uppercase',
-    letterSpacing: -0.5,
+    fontWeight: '800',
+    color: '#383139',
+    letterSpacing: -0.3,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 2,
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ffffff',
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   content: {
     gap: 12,
@@ -435,38 +447,37 @@ const styles = StyleSheet.create({
   workCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
+    backgroundColor: '#fffdf7',
+    borderRadius: 28,
     padding: 16,
     gap: 14,
-    borderWidth: 3,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   workPinCircle: {
     width: 46,
     height: 46,
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#ff0000',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#c0efdc',
     alignItems: 'center',
     justifyContent: 'center',
   },
   workCardTitle: {
     fontSize: 16,
-    fontWeight: '900',
-    color: '#000000',
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#383139',
   },
   workCardAddress: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 4,
   },
   estimatesRow: {
@@ -477,42 +488,45 @@ const styles = StyleSheet.create({
   estimatePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    paddingHorizontal: 10,
+    backgroundColor: '#fffdf7',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 12,
     paddingVertical: 6,
     gap: 6,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
   estimateValue: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#000000',
+    color: '#383139',
   },
   navigateWorkBtn: {
-    backgroundColor: '#ff0000',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#f6a3ca',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     marginTop: 4,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   navigateWorkBtnText: {
     fontSize: 15,
-    fontWeight: '900',
-    color: '#ffffff',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    color: '#383139',
   },
   cardActionsRow: {
     flexDirection: 'row',
@@ -524,61 +538,69 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
+    backgroundColor: '#ded0f9',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     paddingVertical: 10,
     gap: 6,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   secondaryActionText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#000000',
-    textTransform: 'uppercase',
+    fontWeight: '700',
+    color: '#383139',
   },
   privacyCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e8e8e8',
-    borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#000000',
-    padding: 10,
+    backgroundColor: '#fffdf7',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    padding: 12,
     gap: 8,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   privacyCardText: {
     fontSize: 11,
-    color: '#000000',
+    color: '#48404b',
     flex: 1,
     lineHeight: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   currentLocBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffff00',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#c0efdc',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     padding: 14,
     gap: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   currentLocBtnTitle: {
     fontSize: 14,
-    fontWeight: '900',
-    color: '#000000',
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#383139',
   },
   currentLocBtnSub: {
     fontSize: 11,
-    color: '#000000',
-    fontWeight: '600',
+    color: '#48404b',
+    fontWeight: '500',
     marginTop: 2,
   },
   dividerRow: {
@@ -589,70 +611,85 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-    height: 2,
-    backgroundColor: '#000000',
+    height: 1.5,
+    backgroundColor: 'rgba(56, 49, 57, 0.1)',
   },
   dividerText: {
     fontSize: 10,
-    fontWeight: '900',
-    color: '#000000',
+    fontWeight: '800',
+    color: '#7D7582',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
-    paddingHorizontal: 12,
+    backgroundColor: '#fffdf7',
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    paddingHorizontal: 16,
     height: 48,
     gap: 10,
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   input: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: '600',
+    color: '#383139',
   },
   suggestionsListContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 0,
-    borderWidth: 3,
-    borderColor: '#000000',
+    backgroundColor: '#fffdf7',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     overflow: 'hidden',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     gap: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(56, 49, 57, 0.06)',
   },
   suggestionTitle: {
     fontSize: 13,
-    fontWeight: '800',
-    color: '#000000',
+    fontWeight: '700',
+    color: '#383139',
   },
   suggestionSubtitle: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#000000',
+    color: '#48404b',
     marginTop: 2,
   },
   cancelEditBtn: {
     alignItems: 'center',
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: '#000000',
-    backgroundColor: '#e8e8e8',
+    paddingVertical: 12,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    backgroundColor: '#fffdf7',
+    shadowColor: '#383139',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   cancelEditText: {
     fontSize: 13,
-    color: '#000000',
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    color: '#383139',
+    fontWeight: '700',
   },
 });
