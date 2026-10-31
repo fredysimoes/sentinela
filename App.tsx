@@ -2682,7 +2682,7 @@ export default function App() {
                     <Ionicons
                       name={isMapActive ? 'home' : 'home-outline'}
                       size={18}
-                      color={isMapActive ? '#080A0C' : '#CBD5E1'}
+                      color="#000000"
                     />
                   </View>
                   <Text
@@ -2722,7 +2722,7 @@ export default function App() {
                   <Ionicons
                     name={showReportModal ? 'warning' : 'warning-outline'}
                     size={18}
-                    color={showReportModal ? '#080A0C' : '#CBD5E1'}
+                    color="#000000"
                   />
                   {activeStalkingSession && <View style={styles.dockLiveBadgeDotRed} />}
                 </View>
@@ -2761,7 +2761,7 @@ export default function App() {
                   <Ionicons
                     name={showTvdeModal ? 'car-sport' : 'car-sport-outline'}
                     size={18}
-                    color={showTvdeModal ? '#080A0C' : activeTvdeTrip ? '#10B981' : '#CBD5E1'}
+                    color="#000000"
                   />
                   {activeTvdeTrip && <View style={styles.dockLiveBadgeDotNeon} />}
                 </View>
@@ -2769,7 +2769,7 @@ export default function App() {
               <Text
                 style={[
                   styles.dockPillItemText,
-                  !showTvdeModal && activeTvdeTrip && { color: '#10B981', fontWeight: '800' },
+                  !showTvdeModal && activeTvdeTrip && { color: '#0000ff', fontWeight: '900' },
                   showTvdeModal && styles.dockPillItemTextSelected,
                 ]}
               >
@@ -2805,7 +2805,7 @@ export default function App() {
                   <Ionicons
                     name={showSentinelsModal ? 'shield-checkmark' : 'shield-checkmark-outline'}
                     size={18}
-                    color={showSentinelsModal ? '#080A0C' : '#CBD5E1'}
+                    color="#000000"
                   />
                   {mySentinels.length > 0 && (
                     <View style={styles.dockCountBadge}>
@@ -2846,7 +2846,7 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: M3Colors.surface,
+    backgroundColor: '#f5f4ee',
   },
   topFloatingOverlay: {
     position: 'absolute',
@@ -2868,87 +2868,94 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   compactFilterPill: {
-    height: 34,
+    height: 36,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
-    borderRadius: M3Shapes.small,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderRadius: 0,
+    backgroundColor: '#ffffff',
+    borderWidth: 3,
+    borderColor: '#000000',
     ...M3Elevation.level2,
   },
   compactFilterPillText: {
     fontSize: 12,
-    color: '#080A0C',
-    fontWeight: '700',
+    color: '#000000',
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   filtersFab: {
-    height: 34,
+    height: 36,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
-    borderRadius: M3Shapes.small,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderRadius: 0,
+    backgroundColor: '#ffff00',
+    borderWidth: 3,
+    borderColor: '#000000',
     ...M3Elevation.level2,
   },
   filtersFabActive: {
-    borderColor: '#10B981',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
+    borderColor: '#000000',
+    backgroundColor: '#ffff00',
+    borderWidth: 3.5,
   },
   filtersFabText: {
-    color: '#080A0C',
+    color: '#000000',
     fontSize: 12,
     fontWeight: '800',
-    letterSpacing: 0.2,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   filtersBadge: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#ff0000',
     minWidth: 18,
     height: 18,
-    borderRadius: 9,
+    borderRadius: 0,
+    borderWidth: 1.5,
+    borderColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
   filtersBadgeText: {
-    color: '#FFFFFF',
+    color: '#ffffff',
     fontSize: 10,
     fontWeight: '900',
   },
   activeHazardFilterPill: {
-    height: 34,
+    height: 36,
     paddingHorizontal: 10,
-    borderRadius: M3Shapes.small,
+    borderRadius: 0,
+    borderWidth: 2.5,
+    borderColor: '#000000',
     gap: 5,
   },
   activeHazardFilterPillText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 11,
     fontWeight: '800',
     maxWidth: 130,
+    textTransform: 'uppercase',
   },
   filterChipHomeActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#10B981',
-    borderWidth: 2,
+    backgroundColor: '#ffffff',
+    borderColor: '#000000',
+    borderWidth: 3,
   },
   filterChipTextHomeActive: {
-    color: '#059669',
+    color: '#000000',
     fontWeight: '800',
   },
   filterChipWorkActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#F59E0B',
-    borderWidth: 2,
+    backgroundColor: '#ffff00',
+    borderColor: '#000000',
+    borderWidth: 3,
   },
   filterChipTextWorkActive: {
-    color: '#D97706',
+    color: '#000000',
     fontWeight: '800',
   },
   tvdeActiveBanner: {
@@ -2959,17 +2966,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 16,
-    backgroundColor: 'rgba(14, 18, 23, 0.96)',
-    borderWidth: 1.5,
-    borderColor: '#10B981',
+    borderRadius: 0,
+    backgroundColor: '#f5f4ee',
+    borderWidth: 3,
+    borderColor: '#000000',
     ...M3Elevation.level3,
   },
   tvdeBannerIconCircle: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: '#10B981',
+    borderRadius: 0,
+    backgroundColor: '#0000ff',
+    borderWidth: 2,
+    borderColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2979,72 +2988,73 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tvdeBannerTitle: {
-    color: '#F8FAFC',
+    color: '#000000',
     fontSize: 13,
     fontWeight: '800',
   },
   tvdeMiniPlate: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#ffffff',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 5,
-    borderLeftWidth: 4,
-    borderLeftColor: '#1D4ED8',
+    borderRadius: 0,
+    borderWidth: 1.5,
+    borderColor: '#000000',
   },
   tvdeMiniPlateText: {
-    color: '#080A0C',
+    color: '#000000',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.8,
   },
   tvdeBannerSub: {
-    color: '#94A3B8',
+    color: '#000000',
     fontSize: 11,
     marginTop: 2,
+    fontWeight: '600',
   },
   filterChipActivePolice: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
+    borderColor: '#000000',
   },
   filterChipActivePharmacy: {
-    backgroundColor: '#10B981',
-    borderColor: '#34D399',
+    backgroundColor: '#ffff00',
+    borderColor: '#000000',
   },
   filterChipActiveHospital: {
-    backgroundColor: '#0EA5E9',
-    borderColor: '#38BDF8',
+    backgroundColor: '#0000ff',
+    borderColor: '#000000',
   },
   filterChipActiveSchool: {
-    backgroundColor: '#8B5CF6',
-    borderColor: '#C4B5FD',
+    backgroundColor: '#ffff00',
+    borderColor: '#000000',
   },
   filterChipActiveHeritage: {
-    backgroundColor: '#D97706',
-    borderColor: '#FDE68A',
+    backgroundColor: '#e8e8e8',
+    borderColor: '#000000',
   },
   filterChipActiveWheelmap: {
-    backgroundColor: '#10B981',
-    borderColor: '#6EE7B7',
+    backgroundColor: '#0000ff',
+    borderColor: '#000000',
   },
   filterChipActive: {
-    backgroundColor: M3Colors.secondaryContainer,
-    borderColor: M3Colors.secondary,
+    backgroundColor: '#ffff00',
+    borderColor: '#000000',
   },
   filterChipText: {
     fontSize: 12,
-    color: '#CBD5E1',
-    fontWeight: '600',
+    color: '#000000',
+    fontWeight: '700',
   },
   filterChipTextActive: {
-    color: M3Colors.onSecondaryContainer,
-    fontWeight: '700',
+    color: '#000000',
+    fontWeight: '800',
   },
   filterChipTextActiveWhite: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: '#ffffff',
+    fontWeight: '800',
   },
   filterChipTextActiveDark: {
-    color: '#080A0C',
+    color: '#000000',
     fontWeight: '800',
   },
   mapContainer: {
@@ -3052,9 +3062,9 @@ const styles = StyleSheet.create({
   },
   bottomDockContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'android' ? 16 : 14,
-    left: 12,
-    right: 12,
+    bottom: Platform.OS === 'android' ? 14 : 14,
+    left: 10,
+    right: 10,
     alignItems: 'center',
     zIndex: 10000,
     elevation: 28,
@@ -3064,13 +3074,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    height: 76,
-    backgroundColor: M3Colors.surfaceContainer,
-    borderRadius: 24,
-    paddingVertical: 6,
+    height: 74,
+    backgroundColor: '#f5f4ee',
+    borderRadius: 0,
+    paddingVertical: 4,
     paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 4,
+    borderColor: '#000000',
     ...M3Elevation.level4,
   },
   dockPillItem: {
@@ -3079,34 +3089,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 64,
-    borderRadius: 16,
-    gap: 3,
+    borderRadius: 0,
+    gap: 2,
   },
   dockActiveIndicator: {
-    width: 58,
+    width: 54,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
-    overflow: 'hidden',
   },
   dockActiveIndicatorSelected: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    overflow: 'hidden',
-    ...M3Elevation.level2,
+    backgroundColor: '#ffff00',
+    borderRadius: 0,
+    borderWidth: 2.5,
+    borderColor: '#000000',
+    ...M3Elevation.level1,
   },
   dockPillItemText: {
-    color: M3Colors.onSurfaceVariant,
+    color: '#000000',
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '700',
     textAlign: 'center',
-    letterSpacing: 0.1,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   dockPillItemTextSelected: {
-    color: '#F8FAFC',
-    fontWeight: '800',
+    color: '#000000',
+    fontWeight: '900',
   },
   dockIconWrap: {
     position: 'relative',
@@ -3116,42 +3127,42 @@ const styles = StyleSheet.create({
   },
   dockLiveBadgeDotRed: {
     position: 'absolute',
-    top: -1,
+    top: -2,
     right: -4,
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#EF4444',
-    borderWidth: 1,
-    borderColor: '#10141B',
+    width: 8,
+    height: 8,
+    borderRadius: 0,
+    backgroundColor: '#ff0000',
+    borderWidth: 1.5,
+    borderColor: '#000000',
   },
   dockLiveBadgeDotNeon: {
     position: 'absolute',
-    top: -1,
+    top: -2,
     right: -4,
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#10B981',
-    borderWidth: 1,
-    borderColor: '#10141B',
+    width: 8,
+    height: 8,
+    borderRadius: 0,
+    backgroundColor: '#0000ff',
+    borderWidth: 1.5,
+    borderColor: '#000000',
   },
   dockCountBadge: {
     position: 'absolute',
     top: -5,
     right: -8,
-    backgroundColor: '#38BDF8',
-    borderRadius: 8,
-    minWidth: 14,
-    height: 14,
+    backgroundColor: '#0000ff',
+    borderRadius: 0,
+    minWidth: 15,
+    height: 15,
     paddingHorizontal: 3,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#10141B',
+    borderWidth: 1.5,
+    borderColor: '#000000',
   },
   dockCountBadgeText: {
-    color: '#080A0C',
+    color: '#ffffff',
     fontSize: 8.5,
     fontWeight: '900',
   },
@@ -3159,18 +3170,18 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#DC2626',
+    backgroundColor: '#ff0000',
     paddingHorizontal: 12,
-    height: 52,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
-    ...M3Elevation.level3,
+    height: 54,
+    borderRadius: 0,
+    borderWidth: 3,
+    borderColor: '#000000',
+    ...M3Elevation.level2,
     gap: 2,
   },
   dockSosPillText: {
-    color: '#FFFFFF',
-    fontSize: 10,
+    color: '#ffffff',
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.5,
   },

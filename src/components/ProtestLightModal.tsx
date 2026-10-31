@@ -148,10 +148,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderWidth: 1.5,
+    borderWidth: 3,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 24,
+    borderRadius: 0,
   },
   pillText: {
     fontSize: 13,
