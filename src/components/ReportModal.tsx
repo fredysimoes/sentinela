@@ -408,8 +408,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             {isAccessibility ? 'SELECIONE A BARREIRA ENCONTRADA' : 'TIPO DE OCORRÊNCIA'}
           </Text>
           <View style={styles.quickActionHintBadge}>
-            <MaterialCommunityIcons name="gesture-double-tap" size={13} color="#10B981" />
-            <Text style={styles.quickActionHintText}>2x toque: sinaliza logo</Text>
+            <MaterialCommunityIcons name="gesture-double-tap" size={14} color="#059669" />
+            <Text style={styles.quickActionHintText}>2 toques sinalização rápida</Text>
           </View>
         </View>
 
@@ -863,18 +863,19 @@ const styles = StyleSheet.create({
   quickActionHintBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 2.5,
+    gap: 5,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: M3Shapes.full,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    ...M3Elevation.level1,
   },
   quickActionHintText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#10B981',
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#059669',
   },
   categoriesGrid: {
     flexDirection: 'row',

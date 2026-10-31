@@ -113,48 +113,52 @@ export const EmergencyContactsModal: React.FC<EmergencyContactsModalProps> = ({
         </TouchableOpacity>
       </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Contact List */}
-            {list.map((contact) => (
-              <View key={contact.id} style={styles.contactItem}>
-                <View style={styles.avatar}>
-                  <Ionicons name="person" size={18} color="#38BDF8" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.contactName}>{contact.name}</Text>
-                  <Text style={styles.contactPhone}>{contact.phone}</Text>
-                  <Text style={styles.contactRelation}>{contact.relation}</Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => handleRemove(contact.id)}
-                  style={styles.deleteBtn}
-                >
-                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
-                </TouchableOpacity>
-              </View>
-            ))}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Contact List */}
+        {list.map((contact) => (
+          <View key={contact.id} style={styles.contactItem}>
+            <View style={styles.avatar}>
+              <Ionicons name="person" size={18} color="#38BDF8" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.contactName}>{contact.name}</Text>
+              <Text style={styles.contactPhone}>{contact.phone}</Text>
+              <Text style={styles.contactRelation}>{contact.relation}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => handleRemove(contact.id)}
+              style={styles.deleteBtn}
+            >
+              <Ionicons name="trash-outline" size={18} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        ))}
 
-            {/* Add Contact Actions */}
-            {!showAddForm ? (
-              <View style={styles.actionButtonsStack}>
-                <TouchableOpacity
-                  style={styles.importContactsBtn}
-                  onPress={handleOpenDeviceContactPicker}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="people" size={20} color="#0F172A" />
-                  <Text style={styles.importContactsText}>Importar dos Contactos do Telemóvel</Text>
-                </TouchableOpacity>
+        {/* Add Contact Actions */}
+        {!showAddForm ? (
+          <View style={styles.actionButtonsStack}>
+            <TouchableOpacity
+              style={styles.importContactsBtn}
+              onPress={handleOpenDeviceContactPicker}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="people" size={20} color="#080A0C" />
+              <Text style={styles.importContactsText}>Importar dos Contactos do Telemóvel</Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.addToggleBtn}
-                  onPress={() => setShowAddForm(true)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="add-circle-outline" size={18} color="#38BDF8" />
-                  <Text style={styles.addToggleText}>Adicionar Manualmente</Text>
-                </TouchableOpacity>
-              </View>
+            <TouchableOpacity
+              style={styles.addToggleBtn}
+              onPress={() => setShowAddForm(true)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="add-circle" size={18} color="#080A0C" />
+              <Text style={styles.addToggleText}>Adicionar Manualmente</Text>
+            </TouchableOpacity>
+          </View>
             ) : (
               <View style={styles.addForm}>
                 <Text style={styles.formTitle}>NOVO CONTACTO</Text>
@@ -226,10 +230,13 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: M3Shapes.extraLarge,
     borderTopRightRadius: M3Shapes.extraLarge,
     maxHeight: '88%',
-    paddingBottom: Platform.OS === 'ios' ? 92 : 90,
+    paddingBottom: Platform.OS === 'ios' ? 120 : 115,
     borderTopWidth: 1,
     borderTopColor: M3Colors.outlineVariant,
     ...M3Elevation.level4,
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
@@ -323,32 +330,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: M3Colors.primaryContainer,
-    paddingVertical: 14,
-    borderRadius: M3Shapes.full,
+    backgroundColor: '#FFFFFF',
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     gap: 8,
     ...M3Elevation.level2,
   },
   importContactsText: {
-    color: M3Colors.onPrimaryContainer,
-    fontWeight: '700',
-    fontSize: 14,
+    color: '#080A0C',
+    fontWeight: '800',
+    fontSize: 15,
   },
   addToggleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-    paddingVertical: 12,
-    borderRadius: M3Shapes.full,
+    backgroundColor: '#FFFFFF',
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     gap: 8,
+    ...M3Elevation.level1,
   },
   addToggleText: {
-    color: M3Colors.primary,
-    fontWeight: '700',
-    fontSize: 14,
+    color: '#080A0C',
+    fontWeight: '800',
+    fontSize: 15,
   },
   addForm: {
     backgroundColor: M3Colors.surfaceContainerLow,

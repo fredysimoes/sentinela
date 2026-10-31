@@ -148,7 +148,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             showsVerticalScrollIndicator={false}
           >
             {/* Account & Sentinels Circle Card */}
-            <View style={[styles.sectionCard, { backgroundColor: '#1A202C', borderColor: '#2D3748' }]}>
+            <View style={[styles.sectionCard, { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }]}>
               {currentUser ? (
                 <View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -175,7 +175,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           onOpenSentinels();
                         }}
                       >
-                        <Ionicons name="shield-checkmark" size={15} color="#0F172A" style={{ marginRight: 6 }} />
+                        <Ionicons name="shield-checkmark" size={15} color="#06140E" style={{ marginRight: 6 }} />
                         <Text style={styles.openSentinelsBtnText}>Os Meus Sentinelas</Text>
                       </TouchableOpacity>
                     )}
@@ -188,7 +188,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           onSignOut();
                         }}
                       >
-                        <Ionicons name="log-out-outline" size={15} color="#94A3B8" />
+                        <Ionicons name="log-out-outline" size={15} color="#64748B" />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -196,7 +196,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               ) : (
                 <View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <Ionicons name="person-circle" size={28} color="#38BDF8" />
+                    <Ionicons name="person-circle" size={28} color="#0284C7" />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.userNameText}>Aceder à Sua Conta</Text>
                       <Text style={styles.userEmailText}>Inicie sessão para gerir os seus Sentinelas</Text>
@@ -211,7 +211,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         onOpenAuth();
                       }}
                     >
-                      <Ionicons name="log-in-outline" size={16} color="#0F172A" style={{ marginRight: 6 }} />
+                      <Ionicons name="log-in-outline" size={16} color="#06140E" style={{ marginRight: 6 }} />
                       <Text style={styles.openSentinelsBtnText}>Entrar com Google / Email</Text>
                     </TouchableOpacity>
                   )}
@@ -546,12 +546,13 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionCard: {
-    backgroundColor: M3Colors.surfaceContainerLow,
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 16,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    ...M3Elevation.level1,
   },
   userAvatarWrap: {
     width: 40,
@@ -562,17 +563,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   userAvatarText: {
-    color: '#38BDF8',
+    color: '#0284C7',
     fontSize: 16,
     fontWeight: '800',
   },
   userNameText: {
-    color: '#F8FAFC',
+    color: '#080A0C',
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   userEmailText: {
-    color: '#94A3B8',
+    color: '#64748B',
     fontSize: 12,
     marginTop: 1,
   },
@@ -585,7 +586,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(56, 189, 248, 0.25)',
   },
   userCodeText: {
-    color: '#38BDF8',
+    color: '#0284C7',
     fontSize: 12,
     fontWeight: '800',
   },
@@ -599,15 +600,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   openSentinelsBtnText: {
-    color: '#0F172A',
+    color: '#06140E',
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   signOutBtn: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#272F3C',
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -625,32 +628,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   livePill: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
     marginLeft: 8,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
   livePillText: {
-    color: '#10B981',
+    color: '#047857',
     fontSize: 10,
     fontWeight: '800',
   },
   settingTitle: {
     ...M3Typography.titleSmall,
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: '#080A0C',
+    fontWeight: '800',
     fontSize: 15,
   },
   settingDesc: {
     ...M3Typography.bodySmall,
-    color: '#94A3B8',
+    color: '#475569',
     marginTop: 3,
     lineHeight: 18,
   },
   sectionHeaderTitle: {
     ...M3Typography.titleSmall,
-    color: '#FFFFFF',
+    color: '#080A0C',
     fontWeight: '800',
     fontSize: 15,
     marginBottom: 4,
@@ -664,25 +669,26 @@ const styles = StyleSheet.create({
   radiusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#282A2F',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#373A42',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    ...M3Elevation.level1,
   },
   radiusPillSelected: {
     backgroundColor: '#0284C7',
-    borderColor: '#38BDF8',
+    borderColor: '#0284C7',
   },
   radiusPillText: {
-    color: '#CBD5E1',
+    color: '#334155',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   radiusPillTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '900',
   },
   categoryList: {
     marginTop: 12,
@@ -692,7 +698,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#282A2F',
+    borderBottomColor: '#F1F5F9',
   },
   catIconWrap: {
     width: 38,
@@ -707,7 +713,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   catLabel: {
-    color: '#F1F5F9',
+    color: '#080A0C',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -719,13 +725,14 @@ const styles = StyleSheet.create({
   feedbackActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#16191E',
-    borderWidth: 1,
-    borderColor: '#2D323B',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     borderRadius: 14,
     padding: 12,
     marginTop: 12,
     gap: 12,
+    ...M3Elevation.level1,
   },
   feedbackIconBadge: {
     width: 38,
@@ -736,12 +743,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   feedbackActionTitle: {
-    color: '#FFFFFF',
+    color: '#080A0C',
     fontSize: 14,
     fontWeight: '700',
   },
   feedbackActionSub: {
-    color: '#94A3B8',
+    color: '#64748B',
     fontSize: 11,
     marginTop: 2,
   },
@@ -754,25 +761,27 @@ const styles = StyleSheet.create({
     borderTopColor: M3Colors.outlineVariant,
   },
   saveBtn: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#FFFFFF',
     height: 52,
     borderRadius: 26,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
     ...M3Elevation.level2,
   },
   saveBtnText: {
-    color: '#06140E',
+    color: '#080A0C',
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   protestCardActive: {
-    borderColor: 'rgba(245, 158, 11, 0.4)',
-    backgroundColor: '#1E1B15',
+    borderColor: '#F59E0B',
+    backgroundColor: '#FFFBEB',
   },
   protestTitleActive: {
-    color: '#FBBF24',
+    color: '#B45309',
   },
   protestIconPill: {
     width: 24,
@@ -800,7 +809,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(245, 158, 11, 0.2)',
+    borderTopColor: '#FDE68A',
   },
   protestFeatureList: {
     gap: 8,
@@ -812,24 +821,25 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   protestFeatureText: {
-    color: '#CBD5E1',
+    color: '#475569',
     fontSize: 12,
     fontWeight: '500',
   },
   protestRightsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.35)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#FCD34D',
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
     gap: 8,
     marginBottom: 10,
+    ...M3Elevation.level1,
   },
   protestRightsBtnText: {
-    color: '#F59E0B',
+    color: '#D97706',
     fontSize: 12,
     fontWeight: '700',
     flex: 1,
@@ -838,15 +848,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
     borderRadius: 12,
     paddingVertical: 10,
     gap: 6,
+    ...M3Elevation.level1,
   },
   exitProtestBtnText: {
-    color: '#EF4444',
+    color: '#DC2626',
     fontSize: 13,
     fontWeight: '700',
   },

@@ -121,33 +121,20 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
       {/* Drag handle */}
       <View style={styles.handle} />
 
-      {/* Top row */}
-      <View style={styles.topRow}>
-        <View style={styles.badgesWrapper}>
-          <View style={[styles.categoryBadge, { backgroundColor: meta.badgeBg, borderColor: meta.color }]}>
-            <MaterialCommunityIcons
-              name={(meta.mciIcon || 'alert-circle') as any}
-              size={14}
-              color={meta.color}
-            />
-            <Text style={[styles.categoryBadgeText, { color: meta.color }]}>{meta.label}</Text>
-          </View>
-
-          {isAccess && (
-            <View style={styles.accessBadge}>
-              <MaterialCommunityIcons name="wheelchair" size={12} color="#06B6D4" />
-              <Text style={styles.accessBadgeText}>Acessibilidade</Text>
-            </View>
-          )}
+      {/* Header Row with Icon, Title and Close Button (Removidas as caixas de texto redundantes) */}
+      <View style={styles.headerRow}>
+        <View style={[styles.titleIconSquircle, { backgroundColor: `${meta.color}25`, borderColor: meta.color }]}>
+          <MaterialCommunityIcons
+            name={(meta.mciIcon || 'alert-circle') as any}
+            size={22}
+            color={meta.color}
+          />
         </View>
-
+        <Text style={styles.title} numberOfLines={2}>{incident.title}</Text>
         <TouchableOpacity onPress={handleAnimatedClose} style={styles.closeBtn}>
-          <Ionicons name="close" size={20} color="#94A3B8" />
+          <Ionicons name="close" size={22} color="#94A3B8" />
         </TouchableOpacity>
       </View>
-
-      {/* Title */}
-      <Text style={styles.title}>{incident.title}</Text>
 
       {/* Date, Time & Distance meta */}
       <View style={styles.dateMetaContainer}>
@@ -205,7 +192,7 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
           onPress={() => onNavigate(incident)}
           activeOpacity={0.85}
         >
-          <Ionicons name="navigate" size={18} color="#FFFFFF" />
+          <Ionicons name="navigate" size={18} color="#080A0C" />
           <Text style={styles.navigateBtnText}>Navegar com Rota Segura (A Pé)</Text>
         </TouchableOpacity>
       )}
@@ -214,9 +201,9 @@ export const IncidentDetailSheet: React.FC<IncidentDetailSheetProps> = ({
       <TouchableOpacity
         style={styles.mapsBtn}
         onPress={handleOpenMaps}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
-        <Ionicons name="map-outline" size={18} color="#FFFFFF" />
+        <Ionicons name="map-outline" size={18} color="#080A0C" />
         <Text style={styles.mapsBtnText}>Ver no Google Maps</Text>
       </TouchableOpacity>
 
@@ -258,56 +245,29 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 12,
   },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  badgesWrapper: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
-    flex: 1,
+    gap: 12,
+    marginBottom: 10,
   },
-  accessBadge: {
-    flexDirection: 'row',
+  titleIconSquircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    borderWidth: 1.5,
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: M3Shapes.small,
-    backgroundColor: 'rgba(6, 182, 212, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.35)',
-  },
-  accessBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#06B6D4',
-  },
-  categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: M3Shapes.small,
-    borderWidth: 1,
-  },
-  categoryBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
+    justifyContent: 'center',
   },
   closeBtn: {
     padding: 6,
   },
   title: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: M3Colors.onSurface,
-    marginBottom: 6,
+    flex: 1,
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
   },
   dateMetaContainer: {
     gap: 6,
@@ -343,19 +303,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   votingContainer: {
-    backgroundColor: M3Colors.surfaceContainerHigh,
-    borderRadius: M3Shapes.medium,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: M3Shapes.large,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   votingTitle: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
     color: M3Colors.onSurfaceVariant,
-    letterSpacing: 0.8,
-    marginBottom: 8,
+    letterSpacing: 0.6,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   votingActions: {
     flexDirection: 'row',
@@ -366,27 +327,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    height: 42,
     borderRadius: M3Shapes.full,
     gap: 6,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    ...M3Elevation.level1,
   },
   confirmBtn: {
-    backgroundColor: 'rgba(109, 213, 140, 0.12)',
-    borderColor: M3Colors.success,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#10B981',
   },
   confirmBtnText: {
-    color: M3Colors.success,
-    fontWeight: '700',
+    color: '#059669',
+    fontWeight: '800',
     fontSize: 12,
   },
   dismissBtn: {
-    backgroundColor: M3Colors.surfaceContainerLow,
-    borderColor: M3Colors.outlineVariant,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#EF4444',
   },
   dismissBtnText: {
-    color: M3Colors.onSurfaceVariant,
-    fontWeight: '600',
+    color: '#DC2626',
+    fontWeight: '800',
     fontSize: 12,
   },
   votingHint: {
@@ -399,32 +361,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: M3Colors.surfaceContainerHigh,
-    paddingVertical: 12,
-    borderRadius: M3Shapes.full,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
+    backgroundColor: '#FFFFFF',
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     gap: 8,
+    ...M3Elevation.level2,
   },
   navigateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: M3Colors.primaryContainer,
-    paddingVertical: 13,
-    borderRadius: M3Shapes.full,
+    backgroundColor: '#FFFFFF',
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     gap: 8,
     marginBottom: 10,
     ...M3Elevation.level2,
   },
   navigateBtnText: {
-    color: M3Colors.onPrimaryContainer,
-    fontWeight: '700',
-    fontSize: 14,
+    color: '#080A0C',
+    fontWeight: '800',
+    fontSize: 15,
   },
   mapsBtnText: {
-    color: M3Colors.onSurface,
-    fontWeight: '600',
+    color: '#080A0C',
+    fontWeight: '800',
     fontSize: 14,
   },
   deleteBtn: {

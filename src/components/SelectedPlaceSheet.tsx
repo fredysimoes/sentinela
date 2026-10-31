@@ -255,55 +255,25 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
       {/* Quick Accessibility Mode Switcher (Before computing route) */}
       {onToggleAccessibilityRoute && (
         <TouchableOpacity
-          style={[
-            styles.accessToggleCard,
-            accessibleRouteOnly && styles.accessToggleCardActive,
-          ]}
+          style={styles.accessToggleCard}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             onToggleAccessibilityRoute(!accessibleRouteOnly);
           }}
           activeOpacity={0.82}
         >
-          <View
-            style={[
-              styles.accessIconWrap,
-              accessibleRouteOnly && styles.accessIconWrapActive,
-            ]}
-          >
+          <View style={styles.accessIconWrap}>
             <MaterialCommunityIcons
               name="wheelchair"
-              size={18}
-              color={accessibleRouteOnly ? '#FFFFFF' : '#06B6D4'}
+              size={22}
+              color="#06140E"
             />
           </View>
 
           <View style={{ flex: 1 }}>
-            <View style={styles.accessTitleRow}>
-              <Text
-                style={[
-                  styles.accessTitle,
-                  accessibleRouteOnly && styles.accessTitleActive,
-                ]}
-              >
-                Caminho com Acessibilidade
-              </Text>
-              <View
-                style={[
-                  styles.accessBadge,
-                  accessibleRouteOnly && styles.accessBadgeActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.accessBadgeText,
-                    accessibleRouteOnly && styles.accessBadgeTextActive,
-                  ]}
-                >
-                  {accessibleRouteOnly ? 'ATIVADO' : 'DESLIGADO'}
-                </Text>
-              </View>
-            </View>
+            <Text style={styles.accessTitle}>
+              Caminho com Acessibilidade
+            </Text>
             <Text style={styles.accessSub} numberOfLines={1}>
               {accessibleRouteOnly
                 ? 'Evita degraus, obras intransitáveis e calçada estragada'
@@ -314,7 +284,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           <Ionicons
             name={accessibleRouteOnly ? 'checkmark-circle' : 'ellipse-outline'}
             size={22}
-            color={accessibleRouteOnly ? '#06B6D4' : '#64748B'}
+            color="#06140E"
           />
         </TouchableOpacity>
       )}
@@ -323,17 +293,14 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
       <View style={styles.actionButtonsRow}>
         {/* Navigate Walking */}
         <TouchableOpacity
-          style={[
-            styles.navBtn,
-            accessibleRouteOnly ? styles.navBtnAccessible : styles.navBtnWalking,
-          ]}
+          style={[styles.navBtn, styles.navBtnWhite]}
           onPress={handleStartWalkRoute}
           activeOpacity={0.85}
         >
           {accessibleRouteOnly ? (
             <MaterialCommunityIcons name="wheelchair" size={19} color="#080A0C" />
           ) : (
-            <Ionicons name="walk" size={18} color="#0F172A" />
+            <Ionicons name="walk" size={18} color="#10B981" />
           )}
           <Text style={styles.navBtnTextDark}>
             {accessibleRouteOnly ? 'A Pé (Sem Barreiras)' : 'A Pé em Segurança'}
@@ -342,17 +309,17 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
 
         {/* Navigate Driving */}
         <TouchableOpacity
-          style={[styles.navBtn, styles.navBtnDriving]}
+          style={[styles.navBtn, styles.navBtnWhite]}
           onPress={handleStartDriveRoute}
           activeOpacity={0.85}
         >
-          <Ionicons name="car-sport" size={17} color="#F8FAFC" />
-          <Text style={styles.navBtnTextLight}>De Carro</Text>
+          <Ionicons name="car-sport" size={17} color="#F59E0B" />
+          <Text style={styles.navBtnTextDark}>De Carro</Text>
         </TouchableOpacity>
 
         {/* Navigate Transit (STCP / Metro do Porto) */}
         <TouchableOpacity
-          style={[styles.navBtn, styles.navBtnTransit]}
+          style={[styles.navBtn, styles.navBtnWhite]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             onNavigate(
@@ -363,8 +330,8 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
           }}
           activeOpacity={0.85}
         >
-          <MaterialCommunityIcons name="bus-side" size={17} color="#F8FAFC" />
-          <Text style={styles.navBtnTextLight}>Transportes</Text>
+          <MaterialCommunityIcons name="bus-side" size={17} color="#0284C7" />
+          <Text style={styles.navBtnTextDark}>Transportes</Text>
         </TouchableOpacity>
       </View>
 
@@ -372,7 +339,7 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
       <View style={styles.secondaryRow}>
         {onSetAsOrigin && (
           <TouchableOpacity
-            style={[styles.secondaryBtn, { borderColor: 'rgba(16, 185, 129, 0.4)', backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}
+            style={styles.secondaryBtnWhite}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               onSetAsOrigin(place.name, { latitude: place.latitude, longitude: place.longitude });
@@ -380,28 +347,28 @@ export const SelectedPlaceSheet: React.FC<SelectedPlaceSheetProps> = ({
             activeOpacity={0.8}
           >
             <Ionicons name="play-circle-outline" size={16} color="#10B981" />
-            <Text style={[styles.secondaryBtnText, { color: '#10B981', fontWeight: '700' }]}>
+            <Text style={styles.secondaryBtnTextDark}>
               Partir Daqui (A)
             </Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
-          style={styles.secondaryBtn}
+          style={styles.secondaryBtnWhite}
           onPress={handleReportHere}
           activeOpacity={0.8}
         >
           <Ionicons name="alert-circle-outline" size={16} color="#F59E0B" />
-          <Text style={styles.secondaryBtnText}>Sinalizar Perigo</Text>
+          <Text style={styles.secondaryBtnTextDark}>Sinalizar Perigo</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.secondaryBtn}
+          style={styles.secondaryBtnWhite}
           onPress={handleOpenGoogleMaps}
           activeOpacity={0.8}
         >
-          <Ionicons name="map-outline" size={16} color="#94A3B8" />
-          <Text style={styles.secondaryBtnText}>Google Maps</Text>
+          <Ionicons name="map-outline" size={16} color="#475569" />
+          <Text style={styles.secondaryBtnTextDark}>Google Maps</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -549,72 +516,35 @@ const styles = StyleSheet.create({
   accessToggleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(6, 182, 212, 0.08)',
+    backgroundColor: '#38BDF8',
     borderWidth: 1.5,
-    borderColor: 'rgba(6, 182, 212, 0.35)',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: '#0284C7',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     marginBottom: 12,
-    gap: 10,
-  },
-  accessToggleCardActive: {
-    backgroundColor: 'rgba(6, 182, 212, 0.16)',
-    borderColor: '#06B6D4',
+    gap: 12,
+    ...M3Elevation.level2,
   },
   accessIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(6, 182, 212, 0.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.45)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  accessIconWrapActive: {
-    backgroundColor: '#06B6D4',
-    borderColor: '#38BDF8',
-  },
-  accessTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
   accessTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#E2E8F0',
-  },
-  accessTitleActive: {
-    color: '#FFFFFF',
-  },
-  accessBadge: {
-    backgroundColor: 'rgba(148, 163, 184, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.25)',
-  },
-  accessBadgeActive: {
-    backgroundColor: 'rgba(6, 182, 212, 0.25)',
-    borderColor: '#06B6D4',
-  },
-  accessBadgeText: {
-    fontSize: 9,
+    fontSize: 14,
     fontWeight: '800',
-    color: '#94A3B8',
-    letterSpacing: 0.5,
-  },
-  accessBadgeTextActive: {
-    color: '#06B6D4',
+    color: '#06140E',
   },
   accessSub: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#0F172A',
+    fontWeight: '600',
     lineHeight: 14,
+    marginTop: 1,
   },
   actionButtonsRow: {
     flexDirection: 'row',
@@ -631,49 +561,39 @@ const styles = StyleSheet.create({
     gap: 8,
     height: 48,
   },
-  navBtnWalking: {
-    backgroundColor: M3Colors.primaryContainer,
+  navBtnWhite: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     ...M3Elevation.level2,
-  },
-  navBtnAccessible: {
-    backgroundColor: '#06B6D4',
-    ...M3Elevation.level2,
-  },
-  navBtnDriving: {
-    backgroundColor: M3Colors.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: M3Colors.outlineVariant,
-  },
-  navBtnTransit: {
-    backgroundColor: '#0284C7',
-    borderWidth: 1,
-    borderColor: '#38BDF8',
   },
   navBtnTextDark: {
-    color: M3Colors.onPrimaryContainer,
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  navBtnTextLight: {
-    color: M3Colors.onSurface,
-    fontWeight: '600',
+    color: '#080A0C',
+    fontWeight: '800',
     fontSize: 13,
   },
   secondaryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 8,
     paddingTop: 4,
   },
-  secondaryBtn: {
+  secondaryBtnWhite: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    paddingVertical: 6,
+    paddingVertical: 10,
     paddingHorizontal: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    ...M3Elevation.level1,
   },
-  secondaryBtnText: {
-    color: M3Colors.onSurfaceVariant,
+  secondaryBtnTextDark: {
+    color: '#080A0C',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
